@@ -1,9 +1,9 @@
 <?php
 
-use App\Http\Controllers\Admin\Auth\AuthController;
-use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Web\Auth\AuthController as WebAuthController;
 use App\Http\Controllers\Web\HomeController;
+use App\Http\Controllers\Web\PackageController;
+use App\Http\Controllers\Web\PaddleWebhookController;
 use App\Http\Controllers\Web\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
@@ -21,21 +21,14 @@ Route::group([
     Route::post('/register', [WebAuthController::class, 'register']);
     Route::post('/logout', [WebAuthController::class, 'logout'])->name('logout');
 
+    // Public packages page (no auth required)
+    Route::get('/packages', [PackageController::class, 'index'])->name('packages.index');
+
     Route::middleware('auth')->group(function () {
         Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
         Route::put('/profile', [ProfileController::class, 'update']);
     });
 });
 
-// Admin Routes (no locale prefix, Turkish only)
-Route::prefix('admin')->group(function () {
-    Route::middleware('guest:admin')->group(function () {
-        Route::get('/login', [AuthController::class, 'showLogin'])->name('admin.login');
-        Route::post('/login', [AuthController::class, 'login']);
-    });
-
-    Route::middleware('auth:admin')->group(function () {
-        Route::post('/logout', [AuthController::class, 'logout'])->name('admin.logout');
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
-    });
-});
+// Paddle Webhook (outside locale group)
+Route::post('/webhook/paddle', [PaddleWebhookController::class, 'handle'])->name('webhook.paddle');

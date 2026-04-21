@@ -25,19 +25,19 @@ faz durumları  todo / in-progress / done
 
 ## Faz 2 — Tema & Arayüz Temeli
 
-**Durum:** `in-progress`
+**Durum:** `done`
 
-* Light / dark mode
-* Merkezi CSS değişken sistemi
-* Bootstrap 5 theme token entegrasyonu
-* Kullanıcı tema tercihinin profile kaydedilmesi
-* Web ve Admin ortak UI bileşenleri (navbar, sidebar, card, button vb.)
+* Light / dark mode (localStorage bazlı tema tercihi)
+* Merkezi CSS değişken sistemi (Bootstrap 5 native variables)
+* Bootstrap 5 theme token entegrasyonu (`data-bs-theme` attribute)
+* Web ve Admin ortak UI bileşenleri (navbar, theme toggle button)
+* Auto mode (sistem temasını takip etme)
 
 ---
 
 ## Faz 3 — Token & Ödeme
 
-**Durum:** `todo`
+**Durum:** `todo` 
 
 * Token tablosu ve hareketleri
 * Başlangıç token yükleme
