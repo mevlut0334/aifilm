@@ -10,7 +10,7 @@ faz durumları  todo / in-progress / done
 
 ## Faz 1 — Altyapı & Auth
 
-**Durum:** `in-progress`
+**Durum:** `done`
 
 * Docker + Docker Compose kurulumu
 * Veritabanı ve migration altyapısı
@@ -25,7 +25,7 @@ faz durumları  todo / in-progress / done
 
 ## Faz 2 — Tema & Arayüz Temeli
 
-**Durum:** `todo`
+**Durum:** `in-progress`
 
 * Light / dark mode
 * Merkezi CSS değişken sistemi
