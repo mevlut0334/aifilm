@@ -20,15 +20,13 @@ class PurchaseController extends Controller
         $request->validate([
             'product_id' => 'required|string',
             'receipt_data' => 'required|string',
-            'token_amount' => 'required|integer|min:1',
         ]);
 
         try {
             $result = $this->appleIAPService->verifyPurchase(
                 auth()->id(),
                 $request->input('product_id'),
-                $request->input('receipt_data'),
-                $request->input('token_amount')
+                $request->input('receipt_data')
             );
 
             return response()->json([
@@ -49,7 +47,6 @@ class PurchaseController extends Controller
             'product_id' => 'required|string',
             'purchase_token' => 'required|string',
             'package_name' => 'required|string',
-            'token_amount' => 'required|integer|min:1',
         ]);
 
         try {
@@ -57,8 +54,7 @@ class PurchaseController extends Controller
                 auth()->id(),
                 $request->input('product_id'),
                 $request->input('purchase_token'),
-                $request->input('package_name'),
-                $request->input('token_amount')
+                $request->input('package_name')
             );
 
             return response()->json([

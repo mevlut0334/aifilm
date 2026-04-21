@@ -42,4 +42,9 @@ class PackageRepository
     {
         return Package::where('paddle_price_id', $paddlePriceId)->first();
     }
+
+    public function findByProductId(string $productId): ?Package
+    {
+        return Package::where('product_id', $productId)->first();
+    }
 }

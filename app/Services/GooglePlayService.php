@@ -17,8 +17,16 @@ class GooglePlayService
         private TokenService $tokenService
     ) {}
 
-    public function verifyPurchase(int $userId, string $productId, string $purchaseToken, string $packageName, int $tokenAmount): array
+    public function verifyPurchase(int $userId, string $productId, string $purchaseToken, string $packageName): array
     {
+        // Get package by product_id to determine token amount
+        $package = $this->packageRepository->findByProductId($productId);
+        if (! $package) {
+            throw new Exception("Invalid product ID: {$productId}");
+        }
+
+        $tokenAmount = $package->token_amount;
+
         // Verify with Google Play Developer API
         $result = $this->verifyWithGoogle($packageName, $productId, $purchaseToken);
 
@@ -36,10 +44,10 @@ class GooglePlayService
 
         DB::beginTransaction();
         try {
-            // Create purchase record (no package_id for mobile)
+            // Create purchase record
             $purchase = $this->purchaseRepository->create([
                 'user_id' => $userId,
-                'package_id' => null,
+                'package_id' => $package->id,
                 'platform' => 'android',
                 'amount_paid' => null,
                 'currency' => null,

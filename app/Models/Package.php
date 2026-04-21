@@ -11,6 +11,7 @@ class Package extends Model
         'description',
         'token_amount',
         'paddle_price_id',
+        'product_id',
         'is_active',
         'order',
     ];

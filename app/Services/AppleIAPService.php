@@ -21,8 +21,16 @@ class AppleIAPService
         private TokenService $tokenService
     ) {}
 
-    public function verifyPurchase(int $userId, string $productId, string $receiptData, int $tokenAmount): array
+    public function verifyPurchase(int $userId, string $productId, string $receiptData): array
     {
+        // Get package by product_id to determine token amount
+        $package = $this->packageRepository->findByProductId($productId);
+        if (! $package) {
+            throw new Exception("Invalid product ID: {$productId}");
+        }
+
+        $tokenAmount = $package->token_amount;
+
         // Try production first
         $result = $this->verifyWithApple($receiptData, self::PRODUCTION_URL);
 
@@ -48,10 +56,10 @@ class AppleIAPService
 
         DB::beginTransaction();
         try {
-            // Create purchase record (no package_id for mobile)
+            // Create purchase record
             $purchase = $this->purchaseRepository->create([
                 'user_id' => $userId,
-                'package_id' => null,
+                'package_id' => $package->id,
                 'platform' => 'ios',
                 'amount_paid' => null,
                 'currency' => null,
