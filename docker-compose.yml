@@ -1,0 +1,52 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: aifilm_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: aifilm
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: aifilm
+      MYSQL_PASSWORD: aifilmpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - aifilm_network
+
+  redis:
+    image: redis:alpine
+    container_name: aifilm_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - aifilm_network
+
+  laravel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aifilm_app
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+      - /var/www/html/vendor
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - aifilm_network
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  aifilm_network:
+    driver: bridge
