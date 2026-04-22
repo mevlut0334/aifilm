@@ -34,7 +34,6 @@ POST   /generation-requests
 GET    /generation-requests
 GET    /generation-requests/{uuid}
 DELETE /generation-requests/{uuid}
-POST   /generation-requests/{uuid}/recreate
 ```
 
 POST body örneği (custom görsel):

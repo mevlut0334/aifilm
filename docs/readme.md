@@ -14,7 +14,6 @@ Kullanıcılar:
 * hazır video template
 * custom görsel talepleri (yatay / dikey / kare seçeneğiyle)
 * custom video talepleri
-* recreate işlemleri
 
 oluşturabilir.
 

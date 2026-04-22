@@ -74,16 +74,6 @@ HasOrientation (Trait)
 
 ---
 
-## Recreate Sistemi
-
-* yeniden üretim
-* segment bazlı recreate
-* output replace
-* tekrar token düşümü
-* recreate sırasında orientation değiştirilebilir
-
----
-
 ## Blog Sistemi
 
 * çok dilli blog

@@ -75,19 +75,7 @@ faz durumları  todo / in-progress / done
 
 ---
 
-## Faz 6 — Recreate Sistemi
-
-**Durum:** `todo`
-
-* Mevcut output üzerinden yeniden üretim talebi
-* Segment bazlı recreate
-* Output replace
-* Orientation değiştirerek recreate
-* Token düşümü
-
----
-
-## Faz 7 — Blog Sistemi
+## Faz 6 — Blog Sistemi
 
 **Durum:** `todo`
 
@@ -100,7 +88,7 @@ faz durumları  todo / in-progress / done
 
 ---
 
-## Faz 8 — SEO
+## Faz 7 — SEO
 
 **Durum:** `todo`
 
