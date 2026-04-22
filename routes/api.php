@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\V1\PackageController;
 use App\Http\Controllers\Api\V1\PurchaseController;
+use App\Http\Controllers\Api\V1\TemplateController;
 use App\Http\Controllers\Api\V1\TokenController;
 use Illuminate\Support\Facades\Route;
 
@@ -24,6 +25,10 @@ Route::prefix('v1')->middleware('setLocaleFromHeader')->group(function () {
 
         // Packages
         Route::get('/packages', [PackageController::class, 'index']);
+
+        // Templates
+        Route::get('/templates', [TemplateController::class, 'index']);
+        Route::get('/templates/{uuid}', [TemplateController::class, 'show']);
 
         // Purchases
         Route::post('/purchases/ios/verify', [PurchaseController::class, 'verifyIOS']);

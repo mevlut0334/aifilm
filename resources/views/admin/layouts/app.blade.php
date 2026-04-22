@@ -175,6 +175,12 @@
                 </a>
             </li>
             <li class="sidebar-nav-item">
+                <a class="sidebar-nav-link {{ request()->routeIs('admin.templates.*') ? 'active' : '' }}" 
+                   href="{{ route('admin.templates.index') }}">
+                    Templates
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
                 <a class="sidebar-nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" 
                    href="{{ route('admin.settings.index') }}">
                     {{ __('admin.Settings') }}

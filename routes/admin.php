@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\Auth\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PackageController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\TemplateController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\UserTokenController;
 use Illuminate\Support\Facades\Route;
@@ -31,6 +32,11 @@ Route::prefix('admin')->group(function () {
 
         // Packages
         Route::resource('packages', PackageController::class)->names('admin.packages');
+
+        // Templates
+        Route::resource('templates', TemplateController::class)->except(['show'])->names('admin.templates');
+        Route::post('/templates/{uuid}/toggle-active', [TemplateController::class, 'toggleActive'])->name('admin.templates.toggle-active');
+        Route::delete('/templates/{uuid}/videos/{orientation}', [TemplateController::class, 'deleteVideo'])->name('admin.templates.delete-video');
 
         // Settings
         Route::get('/settings', [SettingsController::class, 'index'])->name('admin.settings.index');

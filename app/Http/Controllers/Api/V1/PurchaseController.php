@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Services\AppleIAPService;
 use App\Services\GooglePlayService;
+use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PurchaseController extends Controller
 {
+    use ApiResponse;
+
     public function __construct(
         private AppleIAPService $appleIAPService,
         private GooglePlayService $googlePlayService
@@ -29,15 +32,14 @@ class PurchaseController extends Controller
                 $request->input('receipt_data')
             );
 
-            return response()->json([
-                'success' => true,
-                'data' => $result,
-            ]);
+            return $this->successResponse(
+                data: $result
+            );
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 400);
+            return $this->errorResponse(
+                message: $e->getMessage(),
+                status: 400
+            );
         }
     }
 
@@ -57,15 +59,14 @@ class PurchaseController extends Controller
                 $request->input('package_name')
             );
 
-            return response()->json([
-                'success' => true,
-                'data' => $result,
-            ]);
+            return $this->successResponse(
+                data: $result
+            );
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 400);
+            return $this->errorResponse(
+                message: $e->getMessage(),
+                status: 400
+            );
         }
     }
 }

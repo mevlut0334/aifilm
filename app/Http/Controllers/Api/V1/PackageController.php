@@ -5,12 +5,15 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Repositories\PackageRepository;
 use App\Services\PaddleService;
+use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
 class PackageController extends Controller
 {
+    use ApiResponse;
+
     public function __construct(
         private PackageRepository $packageRepository,
         private PaddleService $paddleService
@@ -35,9 +38,8 @@ class PackageController extends Controller
             return $package;
         });
 
-        return response()->json([
-            'success' => true,
-            'data' => $packages->map(function ($package) {
+        return $this->successResponse(
+            data: $packages->map(function ($package) {
                 return [
                     'id' => $package->id,
                     'title' => $package->getTitle(),
@@ -46,7 +48,7 @@ class PackageController extends Controller
                     'paddle_price_id' => $package->paddle_price_id,
                     'price_details' => $package->price_details ?? null,
                 ];
-            }),
-        ]);
+            })
+        );
     }
 }

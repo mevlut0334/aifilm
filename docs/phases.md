@@ -37,7 +37,7 @@ faz durumları  todo / in-progress / done
 
 ## Faz 3 — Token & Ödeme
 
-**Durum:** `todo` 
+**Durum:** `done` 
 
 * Token tablosu ve hareketleri
 * Başlangıç token yükleme
@@ -51,7 +51,7 @@ faz durumları  todo / in-progress / done
 
 ## Faz 4 — Template Sistemi
 
-**Durum:** `todo`
+**Durum:** `done`
 
 * Template oluşturma / düzenleme / silme (Admin)
 * Her template için landscape / portrait / square asset yükleme (Admin)

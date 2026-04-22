@@ -37,11 +37,22 @@ services:
     volumes:
       - .:/var/www/html
       - /var/www/html/vendor
+      - /var/www/html/node_modules
     depends_on:
       - mysql
       - redis
     networks:
       - aifilm_network
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+    command: >
+      sh -c "php artisan migrate --force &&
+             php artisan config:clear &&
+             php artisan route:clear &&
+             php artisan view:clear &&
+             php artisan storage:link &&
+             apache2-foreground"
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin

@@ -5,6 +5,7 @@ use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Web\PackageController;
 use App\Http\Controllers\Web\PaddleWebhookController;
 use App\Http\Controllers\Web\ProfileController;
+use App\Http\Controllers\Web\TemplateController;
 use Illuminate\Support\Facades\Route;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 
@@ -23,6 +24,10 @@ Route::group([
 
     // Public packages page (no auth required)
     Route::get('/packages', [PackageController::class, 'index'])->name('packages.index');
+
+    // Public templates pages (no auth required)
+    Route::get('/templates', [TemplateController::class, 'index'])->name('templates.index');
+    Route::get('/templates/{uuid}', [TemplateController::class, 'show'])->name('templates.show');
 
     Route::middleware('auth')->group(function () {
         Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
