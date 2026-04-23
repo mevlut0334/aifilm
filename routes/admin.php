@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\Auth\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\GenerationRequestController as AdminGenerationRequestController;
 use App\Http\Controllers\Admin\PackageController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\TemplateController;
@@ -37,6 +38,12 @@ Route::prefix('admin')->group(function () {
         Route::resource('templates', TemplateController::class)->except(['show'])->names('admin.templates');
         Route::post('/templates/{uuid}/toggle-active', [TemplateController::class, 'toggleActive'])->name('admin.templates.toggle-active');
         Route::delete('/templates/{uuid}/videos/{orientation}', [TemplateController::class, 'deleteVideo'])->name('admin.templates.delete-video');
+
+        // Generation Requests
+        Route::get('/generation-requests', [AdminGenerationRequestController::class, 'index'])->name('admin.generation-requests.index');
+        Route::get('/generation-requests/{uuid}', [AdminGenerationRequestController::class, 'show'])->name('admin.generation-requests.show');
+        Route::post('/generation-requests/{uuid}/progress', [AdminGenerationRequestController::class, 'updateProgress'])->name('admin.generation-requests.update-progress');
+        Route::post('/generation-requests/{uuid}/status', [AdminGenerationRequestController::class, 'updateStatus'])->name('admin.generation-requests.update-status');
 
         // Settings
         Route::get('/settings', [SettingsController::class, 'index'])->name('admin.settings.index');

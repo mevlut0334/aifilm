@@ -109,17 +109,49 @@
     @auth
     <div class="upload-area">
 
-        <form onsubmit="handleUploadSubmit(event)">
-            <input type="file" class="form-control" accept="image/*" required onchange="previewImage(event)">
+        @php
+            $userBalance = \App\Services\TokenService::class;
+            $userBalance = app($userBalance)->getBalance(auth()->id());
+            $hasEnoughTokens = $userBalance >= $template->token_cost;
+        @endphp
 
-            <div id="preview-container" style="display:none;">
-                <img id="preview-image">
+        @if(!$hasEnoughTokens)
+            <div class="alert alert-warning">
+                {{ __('Yetersiz token. Bu template için :cost token gerekiyor, mevcut bakiyeniz: :balance', [
+                    'cost' => $template->token_cost,
+                    'balance' => $userBalance
+                ]) }}
+            </div>
+            <a href="{{ route('packages.index') }}" class="btn btn-primary">
+                {{ __('Token Satın Al') }}
+            </a>
+        @else
+            <div class="mb-3">
+                <small class="text-muted">
+                    {{ __('Bu template :cost token kullanır. Mevcut bakiyeniz: :balance', [
+                        'cost' => $template->token_cost,
+                        'balance' => $userBalance
+                    ]) }}
+                </small>
             </div>
 
-            <button type="submit" class="btn-submit">
-                {{ __('templates.Submit Image') }}
-            </button>
-        </form>
+            <form method="POST" action="{{ route('generation-requests.store') }}" enctype="multipart/form-data" onsubmit="return confirmSubmit(event)">
+                @csrf
+                <input type="hidden" name="template_id" value="{{ $template->uuid }}">
+                <input type="hidden" name="type" value="template_image">
+                <input type="hidden" name="orientation" value="{{ $displayOrientation }}">
+                
+                <input type="file" name="input_image" class="form-control" accept="image/*" required onchange="previewImage(event)">
+
+                <div id="preview-container" style="display:none;">
+                    <img id="preview-image">
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    {{ __('templates.Submit Image') }}
+                </button>
+            </form>
+        @endif
 
     </div>
     @else
@@ -146,9 +178,9 @@ function previewImage(e){
     reader.readAsDataURL(file);
 }
 
-function handleUploadSubmit(e){
-    e.preventDefault();
-    alert("{{ __('templates.Template processing will be implemented here') }}");
+function confirmSubmit(e){
+    const cost = {{ $template->token_cost }};
+    return confirm('Bu işlem ' + cost + ' token kullanacaktır. Devam etmek istiyor musunuz?');
 }
 </script>
 

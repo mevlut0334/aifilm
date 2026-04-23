@@ -47,7 +47,7 @@ class GenerationRequestService
             $this->tokenService->deductTokens(
                 userId: $userId,
                 amount: $tokenCost,
-                type: 'generation_request',
+                type: 'usage',
                 note: 'Token deduction for generation request',
                 referenceId: (string) $request->id,
                 referenceType: GenerationRequest::class
@@ -126,7 +126,7 @@ class GenerationRequestService
                 $this->tokenService->addTokens(
                     userId: $request->user_id,
                     amount: $request->token_cost,
-                    type: 'refund',
+                    type: 'admin_grant',
                     note: 'Token refund for cancelled generation request',
                     referenceId: (string) $request->id,
                     referenceType: GenerationRequest::class
@@ -166,7 +166,7 @@ class GenerationRequestService
                 $this->tokenService->addTokens(
                     userId: $request->user_id,
                     amount: $request->token_cost,
-                    type: 'refund',
+                    type: 'admin_grant',
                     note: 'Token refund for failed generation request',
                     referenceId: (string) $request->id,
                     referenceType: GenerationRequest::class

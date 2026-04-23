@@ -181,6 +181,12 @@
                 </a>
             </li>
             <li class="sidebar-nav-item">
+                <a class="sidebar-nav-link {{ request()->routeIs('admin.generation-requests.*') ? 'active' : '' }}" 
+                   href="{{ route('admin.generation-requests.index') }}">
+                    Talepler
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
                 <a class="sidebar-nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" 
                    href="{{ route('admin.settings.index') }}">
                     {{ __('admin.Settings') }}

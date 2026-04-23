@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\V1\GenerationRequestController;
 use App\Http\Controllers\Api\V1\PackageController;
 use App\Http\Controllers\Api\V1\PurchaseController;
 use App\Http\Controllers\Api\V1\TemplateController;
@@ -29,6 +30,12 @@ Route::prefix('v1')->middleware('setLocaleFromHeader')->group(function () {
         // Templates
         Route::get('/templates', [TemplateController::class, 'index']);
         Route::get('/templates/{uuid}', [TemplateController::class, 'show']);
+
+        // Generation Requests
+        Route::get('/generation-requests', [GenerationRequestController::class, 'index']);
+        Route::post('/generation-requests', [GenerationRequestController::class, 'store']);
+        Route::get('/generation-requests/{uuid}', [GenerationRequestController::class, 'show']);
+        Route::delete('/generation-requests/{uuid}', [GenerationRequestController::class, 'destroy']);
 
         // Purchases
         Route::post('/purchases/ios/verify', [PurchaseController::class, 'verifyIOS']);

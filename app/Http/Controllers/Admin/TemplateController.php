@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Template;
 use App\Services\TemplateService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -75,71 +76,77 @@ class TemplateController extends Controller
             ->with('success', 'Template başarıyla oluşturuldu.');
     }
 
-    public function edit(string $uuid): View
+    public function edit(Template $template): View
     {
-        $template = $this->templateService->getTemplateByUuid($uuid);
-        abort_if(! $template, 404);
-
         return view('admin.templates.edit', [
             'template' => $template,
         ]);
     }
 
-    public function update(Request $request, string $uuid): RedirectResponse
+    public function update(Request $request, Template $template): RedirectResponse
     {
-        $template = $this->templateService->getTemplateByUuid($uuid);
-        abort_if(! $template, 404);
+        try {
+            $validated = $request->validate([
+                'title_en' => 'required|string|max:255',
+                'title_tr' => 'nullable|string|max:255',
+                'description_en' => 'nullable|string',
+                'description_tr' => 'nullable|string',
+                'token_cost' => 'required|integer|min:0',
+                'is_active' => 'boolean',
+                'order' => 'nullable|integer|min:0',
+                'landscape_video' => 'nullable|file|mimes:mp4,mov,avi,webm|max:51200',
+                'portrait_video' => 'nullable|file|mimes:mp4,mov,avi,webm|max:51200',
+                'square_video' => 'nullable|file|mimes:mp4,mov,avi,webm|max:51200',
+            ]);
 
-        $validated = $request->validate([
-            'title_en' => 'required|string|max:255',
-            'title_tr' => 'nullable|string|max:255',
-            'description_en' => 'nullable|string',
-            'description_tr' => 'nullable|string',
-            'token_cost' => 'required|integer|min:0',
-            'is_active' => 'boolean',
-            'order' => 'nullable|integer|min:0',
-            'landscape_video' => 'nullable|file|mimes:mp4,mov,avi,webm|max:51200',
-            'portrait_video' => 'nullable|file|mimes:mp4,mov,avi,webm|max:51200',
-            'square_video' => 'nullable|file|mimes:mp4,mov,avi,webm|max:51200',
-        ]);
+            $oldTokenCost = $template->token_cost;
 
-        $data = [
-            'title' => [
-                'en' => $validated['title_en'],
-                'tr' => $validated['title_tr'] ?? $validated['title_en'],
-            ],
-            'description' => [
-                'en' => $validated['description_en'] ?? '',
-                'tr' => $validated['description_tr'] ?? $validated['description_en'] ?? '',
-            ],
-            'token_cost' => $validated['token_cost'],
-            'is_active' => $request->boolean('is_active'),
-            'order' => $validated['order'] ?? $template->order,
-        ];
+            $data = [
+                'title' => [
+                    'en' => $validated['title_en'],
+                    'tr' => $validated['title_tr'] ?? $validated['title_en'],
+                ],
+                'description' => [
+                    'en' => $validated['description_en'] ?? '',
+                    'tr' => $validated['description_tr'] ?? $validated['description_en'] ?? '',
+                ],
+                'token_cost' => $validated['token_cost'],
+                'is_active' => $request->boolean('is_active'),
+                'order' => $validated['order'] ?? $template->order,
+            ];
 
-        $this->templateService->updateTemplate($template, $data);
+            $this->templateService->updateTemplate($template, $data);
 
-        // Upload new videos if provided
-        foreach (['landscape', 'portrait', 'square'] as $orientation) {
-            $fileKey = "{$orientation}_video";
-            if ($request->hasFile($fileKey)) {
-                $this->templateService->uploadVideo(
-                    $template,
-                    $request->file($fileKey),
-                    $orientation
-                );
+            // Upload new videos if provided
+            foreach (['landscape', 'portrait', 'square'] as $orientation) {
+                $fileKey = "{$orientation}_video";
+                if ($request->hasFile($fileKey)) {
+                    $this->templateService->uploadVideo(
+                        $template,
+                        $request->file($fileKey),
+                        $orientation
+                    );
+                }
             }
-        }
 
-        return redirect()->route('admin.templates.index')
-            ->with('success', 'Template başarıyla güncellendi.');
+            $template->refresh();
+
+            $message = 'Template başarıyla güncellendi.';
+            if ($oldTokenCost != $template->token_cost) {
+                $message .= ' Token maliyeti '.$oldTokenCost.' → '.$template->token_cost.' olarak değiştirildi.';
+            }
+
+            return redirect()->route('admin.templates.index')
+                ->with('success', $message);
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Güncelleme sırasında hata oluştu: '.$e->getMessage());
+        }
     }
 
-    public function destroy(string $uuid): RedirectResponse
+    public function destroy(Template $template): RedirectResponse
     {
-        $template = $this->templateService->getTemplateByUuid($uuid);
-        abort_if(! $template, 404);
-
         $this->templateService->deleteTemplate($template);
 
         return redirect()->route('admin.templates.index')

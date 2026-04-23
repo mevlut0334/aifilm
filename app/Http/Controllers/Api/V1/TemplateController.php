@@ -44,7 +44,7 @@ class TemplateController extends Controller
                         : null,
                     'created_at' => $template->created_at->toIso8601String(),
                 ];
-            })
+            })->values()
         );
     }
 

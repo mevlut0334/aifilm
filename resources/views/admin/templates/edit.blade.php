@@ -3,6 +3,7 @@
 @section('title', 'Template Düzenle')
 
 @section('content')
+<!-- Cache Buster: {{ now() }} -->
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-10">
@@ -11,8 +12,26 @@
                     <h4>Template Düzenle</h4>
                 </div>
                 <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>Mevcut Token Maliyeti:</strong> {{ $template->token_cost }}
+                    </div>
+
                     @if(session('success'))
                         <div class="alert alert-success">{{ session('success') }}</div>
+                    @endif
+
+                    @if(session('error'))
+                        <div class="alert alert-danger">{{ session('error') }}</div>
+                    @endif
+
+                    @if($errors->any())
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
                     @endif
 
                     <form method="POST" action="{{ route('admin.templates.update', $template->uuid) }}" enctype="multipart/form-data">
@@ -113,13 +132,7 @@
                                             <source src="{{ $template->getVideoUrlForOrientation('landscape') }}" type="{{ $template->getVideoMimeType('landscape') }}">
                                             Tarayıcınız video oynatmayı desteklemiyor.
                                         </video>
-                                        <form method="POST" action="{{ route('admin.templates.delete-video', [$template->uuid, 'landscape']) }}" class="mt-1">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger w-100" onclick="return confirm('Video silinecek, emin misiniz?')">
-                                                Videoyu Sil
-                                            </button>
-                                        </form>
+                                        <small class="text-muted d-block mt-1">Mevcut video var</small>
                                     </div>
                                 @endif
                                 <input type="file" 
@@ -140,13 +153,7 @@
                                             <source src="{{ $template->getVideoUrlForOrientation('portrait') }}" type="{{ $template->getVideoMimeType('portrait') }}">
                                             Tarayıcınız video oynatmayı desteklemiyor.
                                         </video>
-                                        <form method="POST" action="{{ route('admin.templates.delete-video', [$template->uuid, 'portrait']) }}" class="mt-1">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger w-100" onclick="return confirm('Video silinecek, emin misiniz?')">
-                                                Videoyu Sil
-                                            </button>
-                                        </form>
+                                        <small class="text-muted d-block mt-1">Mevcut video var</small>
                                     </div>
                                 @endif
                                 <input type="file" 
@@ -167,13 +174,7 @@
                                             <source src="{{ $template->getVideoUrlForOrientation('square') }}" type="{{ $template->getVideoMimeType('square') }}">
                                             Tarayıcınız video oynatmayı desteklemiyor.
                                         </video>
-                                        <form method="POST" action="{{ route('admin.templates.delete-video', [$template->uuid, 'square']) }}" class="mt-1">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger w-100" onclick="return confirm('Video silinecek, emin misiniz?')">
-                                                Videoyu Sil
-                                            </button>
-                                        </form>
+                                        <small class="text-muted d-block mt-1">Mevcut video var</small>
                                     </div>
                                 @endif
                                 <input type="file" 

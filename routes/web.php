@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Web\Auth\AuthController as WebAuthController;
+use App\Http\Controllers\Web\GenerationRequestController as WebGenerationRequestController;
 use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Web\PackageController;
 use App\Http\Controllers\Web\PaddleWebhookController;
@@ -32,6 +33,13 @@ Route::group([
     Route::middleware('auth')->group(function () {
         Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
         Route::put('/profile', [ProfileController::class, 'update']);
+
+        // Generation Requests
+        Route::get('/generation-requests', [WebGenerationRequestController::class, 'index'])->name('generation-requests.index');
+        Route::get('/generation-requests/create', [WebGenerationRequestController::class, 'create'])->name('generation-requests.create');
+        Route::post('/generation-requests', [WebGenerationRequestController::class, 'store'])->name('generation-requests.store');
+        Route::get('/generation-requests/{uuid}', [WebGenerationRequestController::class, 'show'])->name('generation-requests.show');
+        Route::delete('/generation-requests/{uuid}', [WebGenerationRequestController::class, 'destroy'])->name('generation-requests.destroy');
     });
 });
 

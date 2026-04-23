@@ -4,7 +4,6 @@ namespace App\Repositories;
 
 use App\Models\GenerationRequest;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Collection;
 
 class GenerationRequestRepository
 {
@@ -21,12 +20,11 @@ class GenerationRequestRepository
             ->paginate($perPage);
     }
 
-    public function getPendingRequests(): Collection
+    public function getPendingRequests(int $perPage = 20): LengthAwarePaginator
     {
-        return GenerationRequest::pending()
-            ->with(['user', 'template'])
-            ->orderBy('created_at', 'asc')
-            ->get();
+        return GenerationRequest::with(['user', 'template'])
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
     }
 
     public function create(array $data): GenerationRequest

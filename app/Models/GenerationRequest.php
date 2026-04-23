@@ -17,12 +17,15 @@ class GenerationRequest extends Model
         'description',
         'token_cost',
         'status',
+        'progress',
         'output_url',
+        'input_image_path',
         'failure_reason',
     ];
 
     protected $casts = [
         'token_cost' => 'integer',
+        'progress' => 'integer',
     ];
 
     protected static function boot()
@@ -48,7 +51,7 @@ class GenerationRequest extends Model
 
     public function template(): BelongsTo
     {
-        return $this->belongsTo(Template::class);
+        return $this->belongsTo(Template::class, 'template_id', 'uuid');
     }
 
     public function scopePending($query)
