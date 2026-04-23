@@ -180,7 +180,8 @@ function previewImage(e){
 
 function confirmSubmit(e){
     const cost = {{ $template->token_cost }};
-    return confirm('Bu işlem ' + cost + ' token kullanacaktır. Devam etmek istiyor musunuz?');
+    const message = "{{ __('templates.This action will use :cost tokens. Do you want to continue?', ['cost' => ':cost']) }}";
+    return confirm(message.replace(':cost', cost));
 }
 </script>
 

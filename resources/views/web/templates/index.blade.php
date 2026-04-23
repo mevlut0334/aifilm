@@ -38,7 +38,7 @@
     </div>
 
     <div id="loading" style="text-align:center; padding:20px; display:none;">
-        Yükleniyor...
+        {{ __('templates.Loading...') }}
     </div>
 </div>
 
@@ -135,7 +135,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 if (items.length === 0) {
                     hasMore = false;
-                    document.getElementById('loading').innerText = "Bitti";
+                    document.getElementById('loading').innerText = "{{ __('templates.Done') }}";
                     return;
                 }
 

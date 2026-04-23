@@ -38,4 +38,11 @@ return [
     'Template processing will be implemented here' => 'Şablon işleme buraya eklenecek',
     'Login required to use this template' => 'Bu şablonu kullanmak için giriş yapmalısınız',
     'Login Now' => 'Giriş Yap',
+
+    // Loading and pagination
+    'Loading...' => 'Yükleniyor...',
+    'Done' => 'Bitti',
+
+    // Confirmation messages
+    'This action will use :cost tokens. Do you want to continue?' => 'Bu işlem :cost token kullanacaktır. Devam etmek istiyor musunuz?',
 ];

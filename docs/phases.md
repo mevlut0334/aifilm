@@ -55,6 +55,7 @@ faz durumları  todo / in-progress / done
 
 * Template oluşturma / düzenleme / silme (Admin)
 * Her template için landscape / portrait / square asset yükleme (Admin)
+* Template bazlı talep oluşturma(kullanıcı)
 * Template listeleme ve detay (Web + API)
 * Orientation bazlı filtreleme
 * Token maliyeti tanımlama (Admin)
@@ -67,7 +68,6 @@ faz durumları  todo / in-progress / done
 
 * Custom görsel talebi oluşturma (orientation seçimi ile)
 * Custom video talebi oluşturma
-* Template bazlı talep oluşturma
 * Token düşümü
 * Admin talep yönetimi (listeleme, detay, durum güncelleme)
 * Admin output link teslimi

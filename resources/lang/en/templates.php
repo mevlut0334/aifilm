@@ -38,4 +38,11 @@ return [
     'Template processing will be implemented here' => 'Template processing will be implemented here',
     'Login required to use this template' => 'Login required to use this template',
     'Login Now' => 'Login Now',
+
+    // Loading and pagination
+    'Loading...' => 'Loading...',
+    'Done' => 'Done',
+
+    // Confirmation messages
+    'This action will use :cost tokens. Do you want to continue?' => 'This action will use :cost tokens. Do you want to continue?',
 ];
