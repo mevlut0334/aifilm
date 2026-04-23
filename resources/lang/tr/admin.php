@@ -30,4 +30,16 @@ return [
     'Cancel' => 'İptal',
     'Back' => 'Geri',
     'Are you sure?' => 'Emin misiniz?',
+
+    // Özel Videolar
+    'Custom Video Requests' => 'Özel Video Talepleri',
+    'Token cost set and deducted successfully' => 'Token maliyeti belirlendi ve düşüldü',
+    'Segments created successfully' => 'Segmentler başarıyla oluşturuldu',
+    'Segment added successfully' => 'Segment başarıyla eklendi',
+    'Progress updated successfully' => 'İlerleme başarıyla güncellendi',
+    'Status updated successfully' => 'Durum başarıyla güncellendi',
+    'Video URL updated successfully' => 'Video URL başarıyla güncellendi',
+    'Segment marked as failed' => 'Segment başarısız olarak işaretlendi',
+    'Edit request updated successfully' => 'Düzenleme talebi başarıyla güncellendi',
+    'Admin note is required for rejection' => 'Reddetme için admin notu gereklidir',
 ];

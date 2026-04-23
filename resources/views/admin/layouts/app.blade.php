@@ -193,6 +193,12 @@
                 </a>
             </li>
             <li class="sidebar-nav-item">
+                <a class="sidebar-nav-link {{ request()->routeIs('admin.custom-videos.*') ? 'active' : '' }}" 
+                   href="{{ route('admin.custom-videos.index') }}">
+                    Custom Videolar
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
                 <a class="sidebar-nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" 
                    href="{{ route('admin.settings.index') }}">
                     {{ __('admin.Settings') }}

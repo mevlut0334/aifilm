@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CustomImageController;
 use App\Http\Controllers\Web\Auth\AuthController as WebAuthController;
+use App\Http\Controllers\Web\CustomVideoController;
 use App\Http\Controllers\Web\GenerationRequestController as WebGenerationRequestController;
 use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Web\PackageController;
@@ -47,8 +48,16 @@ Route::group([
         Route::get('/custom-images/create', [CustomImageController::class, 'create'])->name('custom-images.create');
         Route::post('/custom-images', [CustomImageController::class, 'store'])->name('custom-images.store');
         Route::get('/custom-images/{uuid}', [CustomImageController::class, 'show'])->name('custom-images.show');
+
+        // Custom Videos
+        Route::get('/custom-videos', [CustomVideoController::class, 'index'])->name('custom-videos.index');
+        Route::get('/custom-videos/create', [CustomVideoController::class, 'create'])->name('custom-videos.create');
+        Route::post('/custom-videos', [CustomVideoController::class, 'store'])->name('custom-videos.store');
+        Route::get('/custom-videos/{uuid}', [CustomVideoController::class, 'show'])->name('custom-videos.show');
+        Route::post('/custom-videos/segments/{segment}/edit-request', [CustomVideoController::class, 'requestSegmentEdit'])->name('custom-videos.segments.request-edit');
     });
 });
 
 // Paddle Webhook (outside locale group)
 Route::post('/webhook/paddle', [PaddleWebhookController::class, 'handle'])->name('webhook.paddle');
+

@@ -1,0 +1,132 @@
+<?php
+
+return [
+    // Genel
+    'Custom Video Requests' => 'Özel Video Talepleri',
+    'Custom Videos' => 'Özel Videolar',
+    'Create Custom Video' => 'Özel Video Oluştur',
+    'My Custom Videos' => 'Özel Videolarım',
+
+    // Başlıklar
+    'title_create' => 'Özel Video Oluştur',
+    'title_index' => 'Özel Videolarım',
+    'title_detail' => 'Video Detayları',
+
+    // Form
+    'Prompt' => 'Prompt',
+    'prompt_label' => 'Video Prompt',
+    'prompt_placeholder' => 'Oluşturmak istediğiniz videoyu açıklayın...',
+    'prompt_help' => 'Oluşturmak istediğiniz videonun detaylı açıklamasını girin.',
+    'prompt_help_unlimited' => 'İstediğiniz uzunlukta detaylı açıklama girebilirsiniz. Karakter sınırı yoktur.',
+    'Enter your video prompt' => 'Video prompt\'unuzu girin',
+    'Enter detailed description for your custom video' => 'Özel videonuz için detaylı açıklama girin',
+    'Input Image' => 'Giriş Görseli',
+    'input_image_label' => 'Ana Referans Görsel',
+    'input_image_help' => 'Videonuz için referans görsel yükleyin (JPG, PNG - Maks 10MB)',
+    'input_image_help_optional' => 'Opsiyonel - Videonuz için ana referans görsel yükleyebilirsiniz (JPG, PNG - Maks 10MB)',
+    'reference_images_label' => 'Ek Referans Görseller',
+    'reference_images_help' => 'Opsiyonel - Birden fazla referans görsel yükleyebilirsiniz (JPG, PNG - Her biri Maks 10MB)',
+    'reference_images' => 'Referans Görseller',
+    'Upload Reference Image' => 'Referans Görsel Yükle',
+    'Optional reference image' => 'İsteğe bağlı referans görsel',
+    'optional' => 'Opsiyonel',
+    'Submit Request' => 'Talebi Gönder',
+    'Create Request' => 'Talep Oluştur',
+    'create_button' => 'Video Oluştur',
+    'cost' => 'Maliyet',
+    'cost_note' => 'Maliyet admin tarafından video işlendikten sonra belirlenecek ve token\'ınızdan düşülecektir.',
+    'token' => 'token',
+    'current_balance' => 'Bakiyeniz',
+    'insufficient_balance' => 'Token bakiyeniz yetersiz. Video talebi oluşturmak için en az 1 token\'ınız olmalıdır.',
+
+    // Format
+    'format_label' => 'Video Formatı',
+    'format_help' => 'Videonuzun boyut oranını seçin.',
+    'format_vertical' => 'Dikey',
+    'format_horizontal' => 'Yatay',
+    'format_square' => 'Kare',
+
+    // External links
+    'external_video_info' => 'Video harici bir kaynakta barındırılıyor. İndirmek için aşağıdaki butona tıklayın.',
+
+    // Durum
+    'Status' => 'Durum',
+    'status' => 'Durum',
+    'status_pending' => 'Beklemede',
+    'status_processing' => 'İşleniyor',
+    'status_completed' => 'Tamamlandı',
+    'status_failed' => 'Başarısız',
+    'Pending' => 'Beklemede',
+    'Processing' => 'İşleniyor',
+    'Completed' => 'Tamamlandı',
+    'Failed' => 'Başarısız',
+
+    // Segmentler
+    'Segments' => 'Segmentler',
+    'segments' => 'Video Segmentleri',
+    'Segment' => 'Segment',
+    'segment_number' => 'Segment',
+    'Segment Number' => 'Segment',
+    'Total Segments' => 'Toplam Segment',
+    'Completed Segments' => 'Tamamlanan Segmentler',
+    'Download' => 'İndir',
+    'download' => 'İndir',
+    'Download Segment' => 'Segmenti İndir',
+    'Request Edit' => 'Düzenleme Talep Et',
+    'Edit Prompt' => 'Düzenleme Talimatı',
+    'edit_prompt_help' => 'Bu segment için yapmak istediğiniz değişiklikleri detaylıca açıklayın.',
+    'Enter your edit instructions' => 'Düzenleme talimatlarınızı girin',
+    'Submit Edit Request' => 'Düzenleme Talebini Gönder',
+    'Edit Requests' => 'Düzenleme Talepleri',
+    'Has Pending Edit' => 'Bekleyen Düzenleme Var',
+    'Latest Edit Request' => 'Son Düzenleme Talebi',
+    'Admin Note' => 'Admin Notu',
+    'video' => 'Video',
+    'video_not_supported' => 'Tarayıcınız video oynatmayı desteklemiyor.',
+    'cancel' => 'İptal',
+    'status_rejected' => 'Reddedildi',
+
+    // İlerleme
+    'Progress' => 'İlerleme',
+    'progress' => 'İlerleme',
+    'Overall Progress' => 'Genel İlerleme',
+    'Segment Progress' => 'Segment İlerlemesi',
+
+    // Mesajlar
+    'Request created successfully' => 'Talep başarıyla oluşturuldu',
+    'Requests retrieved successfully' => 'Talepler başarıyla alındı',
+    'Request retrieved successfully' => 'Talep başarıyla alındı',
+    'Request deleted successfully' => 'Talep başarıyla silindi',
+    'Request not found' => 'Talep bulunamadı',
+    'Cannot delete completed request' => 'Tamamlanmış talep silinemez',
+    'Edit request submitted successfully' => 'Düzenleme talebi başarıyla gönderildi',
+    'Can only request edits for completed segments' => 'Sadece tamamlanmış segmentler için düzenleme talep edilebilir',
+    'Segment already has a pending edit request' => 'Segment zaten bekleyen bir düzenleme talebine sahip',
+    'Segment not found' => 'Segment bulunamadı',
+
+    // Detaylar
+    'Request Details' => 'Talep Detayları',
+    'User' => 'Kullanıcı',
+    'Token Cost' => 'Token Maliyeti',
+    'token_cost' => 'Token Maliyeti',
+    'Created At' => 'Oluşturulma Tarihi',
+    'created_at' => 'Oluşturulma Tarihi',
+    'Failure Reason' => 'Başarısızlık Nedeni',
+    'failure_reason' => 'Hata Mesajı',
+    'input_image' => 'Referans Görsel',
+    'not_set' => 'Belirlenmedi',
+    'No video available yet' => 'Henüz video yok',
+    'no_videos' => 'Henüz video talebiniz bulunmamaktadır.',
+    'No segments created yet' => 'Henüz segment oluşturulmadı',
+    'Waiting for admin to create segments' => 'Admin\'in segment oluşturması bekleniyor',
+    'new_video' => 'Yeni Video',
+    'view_details' => 'Detayları Görüntüle',
+
+    // Eylemler
+    'Delete Request' => 'Talebi Sil',
+    'View Details' => 'Detayları Görüntüle',
+    'view_details' => 'Detayları Görüntüle',
+    'Back to List' => 'Listeye Dön',
+    'back' => 'Geri',
+    'Are you sure?' => 'Bu talebi silmek istediğinizden emin misiniz?',
+];

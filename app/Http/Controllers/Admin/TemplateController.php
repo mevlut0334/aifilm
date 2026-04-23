@@ -7,6 +7,8 @@ use App\Models\Template;
 use App\Services\TemplateService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class TemplateController extends Controller
@@ -40,8 +42,11 @@ class TemplateController extends Controller
             'is_active' => 'boolean',
             'order' => 'nullable|integer|min:0',
             'landscape_video' => 'nullable|file|mimes:mp4,mov,avi,webm|max:51200',
+            'landscape_video_url' => 'nullable|string',
             'portrait_video' => 'nullable|file|mimes:mp4,mov,avi,webm|max:51200',
+            'portrait_video_url' => 'nullable|string',
             'square_video' => 'nullable|file|mimes:mp4,mov,avi,webm|max:51200',
+            'square_video_url' => 'nullable|string',
         ]);
 
         $data = [
@@ -63,12 +68,16 @@ class TemplateController extends Controller
         // Upload videos if provided
         foreach (['landscape', 'portrait', 'square'] as $orientation) {
             $fileKey = "{$orientation}_video";
+            $urlKey = "{$orientation}_video_url";
+
             if ($request->hasFile($fileKey)) {
                 $this->templateService->uploadVideo(
                     $template,
                     $request->file($fileKey),
                     $orientation
                 );
+            } elseif ($request->filled($urlKey)) {
+                $this->downloadAndStoreVideo($template, $request->input($urlKey), $orientation);
             }
         }
 
@@ -95,8 +104,11 @@ class TemplateController extends Controller
                 'is_active' => 'boolean',
                 'order' => 'nullable|integer|min:0',
                 'landscape_video' => 'nullable|file|mimes:mp4,mov,avi,webm|max:51200',
+                'landscape_video_url' => 'nullable|string',
                 'portrait_video' => 'nullable|file|mimes:mp4,mov,avi,webm|max:51200',
+                'portrait_video_url' => 'nullable|string',
                 'square_video' => 'nullable|file|mimes:mp4,mov,avi,webm|max:51200',
+                'square_video_url' => 'nullable|string',
             ]);
 
             $oldTokenCost = $template->token_cost;
@@ -120,12 +132,16 @@ class TemplateController extends Controller
             // Upload new videos if provided
             foreach (['landscape', 'portrait', 'square'] as $orientation) {
                 $fileKey = "{$orientation}_video";
+                $urlKey = "{$orientation}_video_url";
+
                 if ($request->hasFile($fileKey)) {
                     $this->templateService->uploadVideo(
                         $template,
                         $request->file($fileKey),
                         $orientation
                     );
+                } elseif ($request->filled($urlKey)) {
+                    $this->downloadAndStoreVideo($template, $request->input($urlKey), $orientation);
                 }
             }
 
@@ -175,5 +191,38 @@ class TemplateController extends Controller
         $this->templateService->toggleActive($template);
 
         return back()->with('success', 'Template durumu güncellendi.');
+    }
+
+    private function downloadAndStoreVideo(Template $template, string $url, string $orientation): void
+    {
+        try {
+            if (filter_var($url, FILTER_VALIDATE_URL)) {
+                $response = Http::timeout(120)->get($url);
+
+                if ($response->successful()) {
+                    // Get extension
+                    $extension = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
+                    if (empty($extension)) {
+                        $extension = 'mp4';
+                    }
+
+                    // Delete old video if exists
+                    $oldPath = $template->getVideoPathForOrientation($orientation);
+                    if ($oldPath) {
+                        Storage::disk('public')->delete($oldPath);
+                    }
+
+                    // Store new video
+                    $path = "templates/{$template->uuid}/{$orientation}/".time().'.'.$extension;
+                    Storage::disk('public')->put($path, $response->body());
+
+                    // Update template
+                    $fieldName = "{$orientation}_video_path";
+                    $template->update([$fieldName => $path]);
+                }
+            }
+        } catch (\Exception $e) {
+            // Silently fail - video won't be updated
+        }
     }
 }

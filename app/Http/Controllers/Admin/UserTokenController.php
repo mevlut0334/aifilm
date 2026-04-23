@@ -79,7 +79,10 @@ class UserTokenController extends Controller
                 $userId,
                 $request->input('amount'),
                 'admin_deduct',
-                $request->input('note')
+                $request->input('note'),
+                null,
+                null,
+                true // Allow negative balance for admin deductions
             );
 
             return redirect()->route('admin.users.index')

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminCustomImageController;
+use App\Http\Controllers\Admin\AdminCustomVideoController;
 use App\Http\Controllers\Admin\Auth\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GenerationRequestController as AdminGenerationRequestController;
@@ -51,6 +52,22 @@ Route::prefix('admin')->group(function () {
         Route::get('/custom-images/{uuid}', [AdminCustomImageController::class, 'show'])->name('admin.custom-images.show');
         Route::post('/custom-images/{uuid}/progress', [AdminCustomImageController::class, 'updateProgress'])->name('admin.custom-images.update-progress');
         Route::post('/custom-images/{uuid}/status', [AdminCustomImageController::class, 'updateStatus'])->name('admin.custom-images.update-status');
+
+        // Custom Videos
+        Route::get('/custom-videos', [AdminCustomVideoController::class, 'index'])->name('admin.custom-videos.index');
+        Route::get('/custom-videos/{uuid}', [AdminCustomVideoController::class, 'show'])->name('admin.custom-videos.show');
+        Route::post('/custom-videos/{uuid}/token-cost', [AdminCustomVideoController::class, 'setTokenCost'])->name('admin.custom-videos.set-token-cost');
+        Route::post('/custom-videos/{uuid}/segments', [AdminCustomVideoController::class, 'createSegments'])->name('admin.custom-videos.create-segments');
+        Route::post('/custom-videos/{uuid}/add-segment', [AdminCustomVideoController::class, 'addSegment'])->name('admin.custom-videos.add-segment');
+        Route::post('/custom-videos/{uuid}/status', [AdminCustomVideoController::class, 'updateRequestStatus'])->name('admin.custom-videos.update-status');
+        Route::post('/custom-videos/segments/{segmentId}/progress', [AdminCustomVideoController::class, 'updateSegmentProgress'])->name('admin.custom-videos.segments.update-progress');
+        Route::post('/custom-videos/segments/{segmentId}/status', [AdminCustomVideoController::class, 'updateSegmentStatus'])->name('admin.custom-videos.segments.update-status');
+        Route::post('/custom-videos/segments/{segmentId}/video-url', [AdminCustomVideoController::class, 'updateSegmentVideoUrl'])->name('admin.custom-videos.segments.update-video-url');
+        Route::post('/custom-videos/segments/{segmentId}/mark-failed', [AdminCustomVideoController::class, 'markSegmentAsFailed'])->name('admin.custom-videos.segments.mark-failed');
+
+        // Custom Video Edit Requests
+        Route::get('/custom-videos/edit-requests', [AdminCustomVideoController::class, 'editRequests'])->name('admin.custom-videos.edit-requests');
+        Route::post('/custom-videos/edit-requests/{editRequestId}/status', [AdminCustomVideoController::class, 'updateEditRequestStatus'])->name('admin.custom-videos.edit-requests.update-status');
 
         // Settings
         Route::get('/settings', [SettingsController::class, 'index'])->name('admin.settings.index');

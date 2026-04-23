@@ -51,6 +51,9 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('custom-images.index') }}">Custom Görseller</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('custom-videos.index') }}">Custom Videolar</a>
+                        </li>
                     @endauth
                     <li class="nav-item">
                         <a class="nav-link" href="{{ LaravelLocalization::getLocalizedURL(null, route('packages.index', [], false)) }}">

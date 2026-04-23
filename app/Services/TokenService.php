@@ -48,14 +48,14 @@ class TokenService
         }
     }
 
-    public function deductTokens(int $userId, int $amount, string $type, ?string $note = null, ?string $referenceId = null, ?string $referenceType = null): bool
+    public function deductTokens(int $userId, int $amount, string $type, ?string $note = null, ?string $referenceId = null, ?string $referenceType = null, bool $allowNegativeBalance = false): bool
     {
         if ($amount <= 0) {
             throw new Exception('Token amount must be positive');
         }
 
         $currentBalance = $this->getBalance($userId);
-        if ($currentBalance < $amount) {
+        if (! $allowNegativeBalance && $currentBalance < $amount) {
             throw new Exception('Insufficient token balance');
         }
 

@@ -103,10 +103,16 @@
                             <div class="col-md-4 mb-3">
                                 <label for="landscape_video" class="form-label">Landscape Video (16:9)</label>
                                 <input type="file" 
-                                       class="form-control @error('landscape_video') is-invalid @enderror" 
+                                       class="form-control mb-2 @error('landscape_video') is-invalid @enderror" 
                                        id="landscape_video" 
                                        name="landscape_video"
                                        accept="video/mp4,video/quicktime,video/x-msvideo">
+                                <input type="text" 
+                                       class="form-control @error('landscape_video_url') is-invalid @enderror" 
+                                       id="landscape_video_url" 
+                                       name="landscape_video_url"
+                                       placeholder="veya URL girin">
+                                <small class="text-muted">Dosya yükleyin veya URL girin</small>
                                 @error('landscape_video')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -115,10 +121,16 @@
                             <div class="col-md-4 mb-3">
                                 <label for="portrait_video" class="form-label">Portrait Video (9:16)</label>
                                 <input type="file" 
-                                       class="form-control @error('portrait_video') is-invalid @enderror" 
+                                       class="form-control mb-2 @error('portrait_video') is-invalid @enderror" 
                                        id="portrait_video" 
                                        name="portrait_video"
                                        accept="video/mp4,video/quicktime,video/x-msvideo">
+                                <input type="text" 
+                                       class="form-control @error('portrait_video_url') is-invalid @enderror" 
+                                       id="portrait_video_url" 
+                                       name="portrait_video_url"
+                                       placeholder="veya URL girin">
+                                <small class="text-muted">Dosya yükleyin veya URL girin</small>
                                 @error('portrait_video')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -127,10 +139,16 @@
                             <div class="col-md-4 mb-3">
                                 <label for="square_video" class="form-label">Square Video (1:1)</label>
                                 <input type="file" 
-                                       class="form-control @error('square_video') is-invalid @enderror" 
+                                       class="form-control mb-2 @error('square_video') is-invalid @enderror" 
                                        id="square_video" 
                                        name="square_video"
                                        accept="video/mp4,video/quicktime,video/x-msvideo">
+                                <input type="text" 
+                                       class="form-control @error('square_video_url') is-invalid @enderror" 
+                                       id="square_video_url" 
+                                       name="square_video_url"
+                                       placeholder="veya URL girin">
+                                <small class="text-muted">Dosya yükleyin veya URL girin</small>
                                 @error('square_video')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
