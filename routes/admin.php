@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminCustomImageController;
 use App\Http\Controllers\Admin\Auth\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GenerationRequestController as AdminGenerationRequestController;
@@ -44,6 +45,12 @@ Route::prefix('admin')->group(function () {
         Route::get('/generation-requests/{uuid}', [AdminGenerationRequestController::class, 'show'])->name('admin.generation-requests.show');
         Route::post('/generation-requests/{uuid}/progress', [AdminGenerationRequestController::class, 'updateProgress'])->name('admin.generation-requests.update-progress');
         Route::post('/generation-requests/{uuid}/status', [AdminGenerationRequestController::class, 'updateStatus'])->name('admin.generation-requests.update-status');
+
+        // Custom Images
+        Route::get('/custom-images', [AdminCustomImageController::class, 'index'])->name('admin.custom-images.index');
+        Route::get('/custom-images/{uuid}', [AdminCustomImageController::class, 'show'])->name('admin.custom-images.show');
+        Route::post('/custom-images/{uuid}/progress', [AdminCustomImageController::class, 'updateProgress'])->name('admin.custom-images.update-progress');
+        Route::post('/custom-images/{uuid}/status', [AdminCustomImageController::class, 'updateStatus'])->name('admin.custom-images.update-status');
 
         // Settings
         Route::get('/settings', [SettingsController::class, 'index'])->name('admin.settings.index');

@@ -47,6 +47,11 @@
                     <li class="nav-item">
                         <button id="theme-toggle" class="btn btn-link nav-link" title="Toggle theme">🔄</button>
                     </li>
+                    @auth
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('custom-images.index') }}">Custom Görseller</a>
+                        </li>
+                    @endauth
                     <li class="nav-item">
                         <a class="nav-link" href="{{ LaravelLocalization::getLocalizedURL(null, route('packages.index', [], false)) }}">
                             {{ __('packages.Buy Tokens') }}

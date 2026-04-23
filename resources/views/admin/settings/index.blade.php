@@ -37,6 +37,25 @@
                             @enderror
                         </div>
 
+                        <div class="mb-3">
+                            <label for="custom_image_token_cost" class="form-label">
+                                Custom Image Token Cost
+                            </label>
+                            <input type="number" 
+                                   class="form-control @error('custom_image_token_cost') is-invalid @enderror" 
+                                   id="custom_image_token_cost" 
+                                   name="custom_image_token_cost" 
+                                   min="1" 
+                                   required
+                                   value="{{ old('custom_image_token_cost', $customImageTokenCost) }}">
+                            <small class="form-text text-muted">
+                                Custom görsel oluşturma için gerekli token miktarı.
+                            </small>
+                            @error('custom_image_token_cost')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
                         <div class="d-flex justify-content-end">
                             <button type="submit" class="btn btn-primary">
                                 {{ __('admin.Save') }}

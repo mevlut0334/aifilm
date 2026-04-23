@@ -187,6 +187,12 @@
                 </a>
             </li>
             <li class="sidebar-nav-item">
+                <a class="sidebar-nav-link {{ request()->routeIs('admin.custom-images.*') ? 'active' : '' }}" 
+                   href="{{ route('admin.custom-images.index') }}">
+                    Custom Görseller
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
                 <a class="sidebar-nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" 
                    href="{{ route('admin.settings.index') }}">
                     {{ __('admin.Settings') }}

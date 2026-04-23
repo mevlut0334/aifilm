@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CustomImageController;
 use App\Http\Controllers\Web\Auth\AuthController as WebAuthController;
 use App\Http\Controllers\Web\GenerationRequestController as WebGenerationRequestController;
 use App\Http\Controllers\Web\HomeController;
@@ -40,6 +41,12 @@ Route::group([
         Route::post('/generation-requests', [WebGenerationRequestController::class, 'store'])->name('generation-requests.store');
         Route::get('/generation-requests/{uuid}', [WebGenerationRequestController::class, 'show'])->name('generation-requests.show');
         Route::delete('/generation-requests/{uuid}', [WebGenerationRequestController::class, 'destroy'])->name('generation-requests.destroy');
+
+        // Custom Images
+        Route::get('/custom-images', [CustomImageController::class, 'index'])->name('custom-images.index');
+        Route::get('/custom-images/create', [CustomImageController::class, 'create'])->name('custom-images.create');
+        Route::post('/custom-images', [CustomImageController::class, 'store'])->name('custom-images.store');
+        Route::get('/custom-images/{uuid}', [CustomImageController::class, 'show'])->name('custom-images.show');
     });
 });
 
