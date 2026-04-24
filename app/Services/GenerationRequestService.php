@@ -113,36 +113,6 @@ class GenerationRequestService
 
     public function deleteRequest(GenerationRequest $request): bool
     {
-        // Only allow deletion of pending or failed requests
-        if (! in_array($request->status, ['pending', 'failed'])) {
-            throw new Exception('Cannot delete request with status: '.$request->status);
-        }
-
-        // Refund tokens if request was pending
-        if ($request->status === 'pending' && $request->token_cost > 0) {
-            try {
-                DB::beginTransaction();
-
-                $this->tokenService->addTokens(
-                    userId: $request->user_id,
-                    amount: $request->token_cost,
-                    type: 'admin_grant',
-                    note: 'Token refund for cancelled generation request',
-                    referenceId: (string) $request->id,
-                    referenceType: GenerationRequest::class
-                );
-
-                $deleted = $this->requestRepository->delete($request);
-
-                DB::commit();
-
-                return $deleted;
-            } catch (Exception $e) {
-                DB::rollBack();
-                throw $e;
-            }
-        }
-
         return $this->requestRepository->delete($request);
     }
 

@@ -8,9 +8,19 @@
         <div class="col-md-10 mx-auto">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1>Custom Görsel Detayı</h1>
-                <a href="{{ route('admin.custom-images.index') }}" class="btn btn-secondary">
-                    Geri Dön
-                </a>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('admin.custom-images.index') }}" class="btn btn-secondary">
+                        Geri Dön
+                    </a>
+                    <form method="POST" action="{{ route('admin.custom-images.destroy', $image->uuid) }}" 
+                          onsubmit="return confirm('Bu talebi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Talebi Sil
+                        </button>
+                    </form>
+                </div>
             </div>
 
             @if(session('success'))

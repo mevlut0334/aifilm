@@ -12,8 +12,6 @@ use App\Services\CustomVideoRequestService;
 use App\Services\CustomVideoSegmentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class AdminCustomVideoController extends Controller
@@ -166,31 +164,10 @@ class AdminCustomVideoController extends Controller
         ]);
 
         try {
+            // Admin panelden girilen linki olduğu gibi sakla
             $videoUrl = $validated['video_url'];
 
-            // Check if URL and try to download
-            if (filter_var($videoUrl, FILTER_VALIDATE_URL)) {
-                try {
-                    $response = Http::timeout(120)->get($videoUrl);
-
-                    if ($response->successful()) {
-                        // Get file extension
-                        $extension = pathinfo(parse_url($videoUrl, PHP_URL_PATH), PATHINFO_EXTENSION);
-                        if (empty($extension)) {
-                            $extension = 'mp4'; // default
-                        }
-
-                        $filename = 'custom-videos/segments/'.$segment->id.'_'.time().'.'.$extension;
-                        Storage::disk('public')->put($filename, $response->body());
-                        $videoUrl = $filename; // Store local path
-                    }
-                    // If download fails, keep original URL
-                } catch (\Exception $e) {
-                    // If any error, keep original URL
-                }
-            }
-
-            // Store URL or local path
+            // Store URL as-is
             $this->customVideoSegmentService->updateSegmentVideoUrl($segment, $videoUrl);
 
             return back()->with('success', __('admin.Video URL updated successfully'));
@@ -294,5 +271,16 @@ class AdminCustomVideoController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }
+    }
+
+    /**
+     * Delete custom video request
+     */
+    public function destroy(string $uuid): RedirectResponse
+    {
+        $request = CustomVideoRequest::where('uuid', $uuid)->firstOrFail();
+        $request->delete();
+
+        return redirect()->route('admin.custom-videos.index')->with('success', 'Talep başarıyla silindi.');
     }
 }

@@ -80,4 +80,18 @@ class GenerationRequestController extends Controller
 
         return back()->with('success', 'Durum güncellendi.');
     }
+
+    public function destroy(string $uuid): RedirectResponse
+    {
+        $generationRequest = $this->generationRequestService->getRequestByUuid($uuid);
+        abort_if(! $generationRequest, 404);
+
+        try {
+            $this->generationRequestService->deleteRequest($generationRequest);
+
+            return redirect()->route('admin.generation-requests.index')->with('success', 'Talep başarıyla silindi.');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
 }

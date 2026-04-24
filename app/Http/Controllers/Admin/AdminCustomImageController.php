@@ -6,8 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\CustomImage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class AdminCustomImageController extends Controller
@@ -58,42 +56,8 @@ class AdminCustomImageController extends Controller
         $updateData = ['status' => $validated['status']];
 
         if ($validated['status'] === 'completed' && ! empty($validated['admin_image_url'])) {
-            try {
-                // Check if URL or local path
-                if (filter_var($validated['admin_image_url'], FILTER_VALIDATE_URL)) {
-                    // Download from URL and store locally
-                    $response = Http::timeout(60)->get($validated['admin_image_url']);
-
-                    if ($response->successful()) {
-                        // Get file extension from URL or content type
-                        $extension = pathinfo(parse_url($validated['admin_image_url'], PHP_URL_PATH), PATHINFO_EXTENSION);
-                        if (empty($extension)) {
-                            $contentType = $response->header('Content-Type');
-                            $extension = match ($contentType) {
-                                'image/jpeg' => 'jpg',
-                                'image/png' => 'png',
-                                'image/gif' => 'gif',
-                                'image/webp' => 'webp',
-                                default => 'jpg'
-                            };
-                        }
-
-                        $filename = 'custom-images/output/'.$image->uuid.'_'.time().'.'.$extension;
-                        Storage::disk('public')->put($filename, $response->body());
-                        $updateData['admin_image_url'] = asset('storage/'.$filename);
-                    } else {
-                        // If download fails, keep the URL as-is
-                        $updateData['admin_image_url'] = $validated['admin_image_url'];
-                    }
-                } else {
-                    // Local path or direct URL, use as-is
-                    $updateData['admin_image_url'] = $validated['admin_image_url'];
-                }
-            } catch (\Exception $e) {
-                // If any error occurs, keep the URL as-is
-                $updateData['admin_image_url'] = $validated['admin_image_url'];
-            }
-
+            // Admin panelden girilen linki olduğu gibi sakla
+            $updateData['admin_image_url'] = $validated['admin_image_url'];
             $updateData['progress'] = 100;
         }
 
@@ -108,5 +72,13 @@ class AdminCustomImageController extends Controller
         $image->update($updateData);
 
         return back()->with('success', 'Durum güncellendi.');
+    }
+
+    public function destroy(string $uuid): RedirectResponse
+    {
+        $image = CustomImage::where('uuid', $uuid)->firstOrFail();
+        $image->delete();
+
+        return redirect()->route('admin.custom-images.index')->with('success', 'Talep başarıyla silindi.');
     }
 }

@@ -204,6 +204,12 @@
                     {{ __('admin.Settings') }}
                 </a>
             </li>
+            <li class="sidebar-nav-item">
+                <a class="sidebar-nav-link {{ request()->routeIs('admin.admins.*') ? 'active' : '' }}" 
+                   href="{{ route('admin.admins.index') }}">
+                    Admin Yönetimi
+                </a>
+            </li>
         </ul>
         
         <!-- User Info -->

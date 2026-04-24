@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminCustomImageController;
 use App\Http\Controllers\Admin\AdminCustomVideoController;
+use App\Http\Controllers\Admin\AdminManagementController;
 use App\Http\Controllers\Admin\Auth\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GenerationRequestController as AdminGenerationRequestController;
@@ -46,12 +47,14 @@ Route::prefix('admin')->group(function () {
         Route::get('/generation-requests/{uuid}', [AdminGenerationRequestController::class, 'show'])->name('admin.generation-requests.show');
         Route::post('/generation-requests/{uuid}/progress', [AdminGenerationRequestController::class, 'updateProgress'])->name('admin.generation-requests.update-progress');
         Route::post('/generation-requests/{uuid}/status', [AdminGenerationRequestController::class, 'updateStatus'])->name('admin.generation-requests.update-status');
+        Route::delete('/generation-requests/{uuid}', [AdminGenerationRequestController::class, 'destroy'])->name('admin.generation-requests.destroy');
 
         // Custom Images
         Route::get('/custom-images', [AdminCustomImageController::class, 'index'])->name('admin.custom-images.index');
         Route::get('/custom-images/{uuid}', [AdminCustomImageController::class, 'show'])->name('admin.custom-images.show');
         Route::post('/custom-images/{uuid}/progress', [AdminCustomImageController::class, 'updateProgress'])->name('admin.custom-images.update-progress');
         Route::post('/custom-images/{uuid}/status', [AdminCustomImageController::class, 'updateStatus'])->name('admin.custom-images.update-status');
+        Route::delete('/custom-images/{uuid}', [AdminCustomImageController::class, 'destroy'])->name('admin.custom-images.destroy');
 
         // Custom Videos
         Route::get('/custom-videos', [AdminCustomVideoController::class, 'index'])->name('admin.custom-videos.index');
@@ -60,6 +63,7 @@ Route::prefix('admin')->group(function () {
         Route::post('/custom-videos/{uuid}/segments', [AdminCustomVideoController::class, 'createSegments'])->name('admin.custom-videos.create-segments');
         Route::post('/custom-videos/{uuid}/add-segment', [AdminCustomVideoController::class, 'addSegment'])->name('admin.custom-videos.add-segment');
         Route::post('/custom-videos/{uuid}/status', [AdminCustomVideoController::class, 'updateRequestStatus'])->name('admin.custom-videos.update-status');
+        Route::delete('/custom-videos/{uuid}', [AdminCustomVideoController::class, 'destroy'])->name('admin.custom-videos.destroy');
         Route::post('/custom-videos/segments/{segmentId}/progress', [AdminCustomVideoController::class, 'updateSegmentProgress'])->name('admin.custom-videos.segments.update-progress');
         Route::post('/custom-videos/segments/{segmentId}/status', [AdminCustomVideoController::class, 'updateSegmentStatus'])->name('admin.custom-videos.segments.update-status');
         Route::post('/custom-videos/segments/{segmentId}/video-url', [AdminCustomVideoController::class, 'updateSegmentVideoUrl'])->name('admin.custom-videos.segments.update-video-url');
@@ -72,5 +76,11 @@ Route::prefix('admin')->group(function () {
         // Settings
         Route::get('/settings', [SettingsController::class, 'index'])->name('admin.settings.index');
         Route::post('/settings', [SettingsController::class, 'update'])->name('admin.settings.update');
+
+        // Admin Management
+        Route::get('/admins', [AdminManagementController::class, 'index'])->name('admin.admins.index');
+        Route::get('/admins/create', [AdminManagementController::class, 'create'])->name('admin.admins.create');
+        Route::post('/admins', [AdminManagementController::class, 'store'])->name('admin.admins.store');
+        Route::delete('/admins/{id}', [AdminManagementController::class, 'destroy'])->name('admin.admins.destroy');
     });
 });
