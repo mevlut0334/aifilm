@@ -53,3 +53,8 @@ README.md
 Dockerfile
 docker-compose.yml
 .dockerignore
+
+# Deployment scripts
+deploy.sh
+redeploy.sh
+INSTALL.md

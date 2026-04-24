@@ -1,0 +1,62 @@
+FROM php:8.3-fpm
+
+# Sistem paketleri ve PHP extensions (tek layer'da, cache temizliği ile)
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    libzip-dev \
+    nodejs \
+    npm \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Composer (multi-stage build'den)
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Çalışma dizini
+WORKDIR /var/www/html
+
+# PHP config dosyalarını kopyala
+COPY docker/php/php.ini /usr/local/etc/php/conf.d/custom.ini
+COPY docker/php/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
+
+# Önce dependency dosyalarını kopyala (Docker layer cache için)
+COPY composer.json composer.lock package.json package-lock.json ./
+
+# Composer install (production optimized)
+RUN composer install \
+    --no-dev \
+    --no-scripts \
+    --no-autoloader \
+    --prefer-dist
+
+# NPM install
+RUN npm ci --ignore-scripts
+
+# Tüm uygulama dosyalarını kopyala
+COPY . .
+
+# Frontend build
+RUN npm run build
+
+# NPM temizle (image boyutunu küçült)
+RUN npm cache clean --force && rm -rf node_modules
+
+# Composer autoload optimize et
+RUN composer dump-autoload --optimize --no-dev --classmap-authoritative
+
+# İzinleri ayarla - SADECE gerekli klasörler
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
+EXPOSE 9000
+
+CMD ["php-fpm"]
