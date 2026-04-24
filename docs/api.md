@@ -574,11 +574,14 @@ Content-Type: multipart/form-data
 ```json
 {
   "prompt": "Uzayda seyahat eden bir uzay gemisi, gezegenler arası yolculuk",
+  "format": "vertical",
   "input_image": "[FILE]"
 }
 ```
 
-**Not:** `input_image` opsiyoneldir. Gönderilirse ilk frame olarak kullanılır.
+**Not:** 
+- `format` alanı opsiyoneldir. Değerler: `vertical` (9:16), `horizontal` (16:9), `square` (1:1). Varsayılan: `vertical`
+- `input_image` opsiyoneldir. Gönderilirse ilk frame olarak kullanılır.
 
 **Response (201):**
 
@@ -590,6 +593,7 @@ Content-Type: multipart/form-data
     "request": {
       "uuid": "880e8400-e29b-41d4-a716-446655440003",
       "prompt": "Uzayda seyahat eden bir uzay gemisi, gezegenler arası yolculuk",
+      "format": "vertical",
       "input_image_path": "https://example.com/storage/custom-video-requests/input.jpg",
       "status": "pending",
       "token_cost": 200,
@@ -627,6 +631,7 @@ Authorization: Bearer {token}
       {
         "uuid": "880e8400-e29b-41d4-a716-446655440003",
         "prompt": "Uzayda seyahat eden bir uzay gemisi",
+        "format": "vertical",
         "input_image_path": "https://example.com/storage/custom-video-requests/input.jpg",
         "status": "processing",
         "token_cost": 200,
@@ -674,6 +679,7 @@ Authorization: Bearer {token}
     "request": {
       "uuid": "880e8400-e29b-41d4-a716-446655440003",
       "prompt": "Uzayda seyahat eden bir uzay gemisi",
+      "format": "vertical",
       "input_image_path": "https://example.com/storage/custom-video-requests/input.jpg",
       "status": "processing",
       "token_cost": 200,

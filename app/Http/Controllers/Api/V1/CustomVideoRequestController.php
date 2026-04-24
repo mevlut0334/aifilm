@@ -37,6 +37,7 @@ class CustomVideoRequestController extends Controller
                 return [
                     'uuid' => $request->uuid,
                     'prompt' => $request->prompt,
+                    'format' => $request->format,
                     'input_image_path' => $request->input_image_path ? asset('storage/'.$request->input_image_path) : null,
                     'status' => $request->status,
                     'token_cost' => $request->token_cost,
@@ -69,12 +70,14 @@ class CustomVideoRequestController extends Controller
     {
         $validated = $request->validate([
             'prompt' => 'required|string',
+            'format' => 'nullable|in:vertical,horizontal,square',
             'input_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240',
         ]);
 
         try {
             $data = [
                 'prompt' => $validated['prompt'],
+                'format' => $validated['format'] ?? 'vertical',
             ];
 
             // Handle image upload
@@ -93,6 +96,7 @@ class CustomVideoRequestController extends Controller
                 'request' => [
                     'uuid' => $videoRequest->uuid,
                     'prompt' => $videoRequest->prompt,
+                    'format' => $videoRequest->format,
                     'input_image_path' => $videoRequest->input_image_path ? asset('storage/'.$videoRequest->input_image_path) : null,
                     'status' => $videoRequest->status,
                     'token_cost' => $videoRequest->token_cost,
@@ -116,13 +120,24 @@ class CustomVideoRequestController extends Controller
                 return $this->errorResponse(__('custom_videos.Request not found'), 404);
             }
 
-            $segments = $request->segments->map(function ($segment) {
+            $segments = $request->segments->sortBy('segment_number')->values()->map(function ($segment) {
+                // Eğer URL http veya https ile başlıyorsa, olduğu gibi döndür (Drive link vb.)
+                // Değilse storage path olarak varsay
+                $videoUrl = null;
+                if ($segment->video_url) {
+                    if (str_starts_with($segment->video_url, 'http://') || str_starts_with($segment->video_url, 'https://')) {
+                        $videoUrl = $segment->video_url;
+                    } else {
+                        $videoUrl = asset('storage/'.$segment->video_url);
+                    }
+                }
+
                 return [
                     'id' => $segment->id,
                     'segment_number' => $segment->segment_number,
-                    'video_url' => $segment->video_url ? asset('storage/'.$segment->video_url) : null,
+                    'video_url' => $videoUrl,
                     'status' => $segment->status,
-                    'progress' => $segment->progress,
+                    'progress' => $segment->progress ?? 0,
                     'failure_reason' => $segment->failure_reason,
                     'has_pending_edit' => $segment->editRequests()->pending()->exists(),
                     'latest_edit_request' => $segment->editRequests()->latest()->first() ? [
@@ -139,6 +154,7 @@ class CustomVideoRequestController extends Controller
                 'request' => [
                     'uuid' => $request->uuid,
                     'prompt' => $request->prompt,
+                    'format' => $request->format,
                     'input_image_path' => $request->input_image_path ? asset('storage/'.$request->input_image_path) : null,
                     'status' => $request->status,
                     'token_cost' => $request->token_cost,

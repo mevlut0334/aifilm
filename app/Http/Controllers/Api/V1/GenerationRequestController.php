@@ -27,8 +27,31 @@ class GenerationRequestController extends Controller
                 20
             );
 
+            $data = $requests->getCollection()->map(function ($request) {
+                return [
+                    'uuid' => $request->uuid,
+                    'type' => $request->type,
+                    'status' => $request->status,
+                    'progress' => $request->progress ?? 0,
+                    'orientation' => $request->orientation,
+                    'description' => $request->description,
+                    'token_cost' => $request->token_cost,
+                    'input_image_path' => $request->input_image_path
+                        ? asset('storage/'.$request->input_image_path)
+                        : null,
+                    'output_url' => $request->output_url,
+                    'failure_reason' => $request->failure_reason,
+                    'template' => $request->template ? [
+                        'uuid' => $request->template->uuid,
+                        'title' => $request->template->title,
+                    ] : null,
+                    'created_at' => $request->created_at->toIso8601String(),
+                    'updated_at' => $request->updated_at->toIso8601String(),
+                ];
+            });
+
             return $this->successResponse([
-                'requests' => $requests->items(),
+                'requests' => $data,
                 'pagination' => [
                     'current_page' => $requests->currentPage(),
                     'last_page' => $requests->lastPage(),

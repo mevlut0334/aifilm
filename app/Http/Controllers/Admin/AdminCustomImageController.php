@@ -4,33 +4,76 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\CustomImage;
+use App\Models\GenerationRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\View\View;
 
 class AdminCustomImageController extends Controller
 {
     public function index(): View
     {
-        $images = CustomImage::with('user')
+        // CustomImage modelinden gelen eski custom image talepleri
+        $customImages = CustomImage::with('user')
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->get();
+
+        // GenerationRequest modelinden gelen custom_image tipindeki talepler
+        $generationRequests = GenerationRequest::with('user')
+            ->where('type', 'custom_image')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // İkisini birleştir ve tarihe göre sırala
+        $allImages = $customImages->concat($generationRequests)
+            ->sortByDesc('created_at');
+
+        // Manuel pagination
+        $page = request()->get('page', 1);
+        $perPage = 20;
+        $offset = ($page - 1) * $perPage;
+
+        $images = new LengthAwarePaginator(
+            $allImages->slice($offset, $perPage)->values(),
+            $allImages->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
 
         return view('admin.custom-images.index', compact('images'));
     }
 
     public function show(string $uuid): View
     {
+        // Önce CustomImage modelinde ara
         $image = CustomImage::with('user')
             ->where('uuid', $uuid)
-            ->firstOrFail();
+            ->first();
+
+        // Bulamazsa GenerationRequest modelinde ara (custom_image tipinde)
+        if (! $image) {
+            $image = GenerationRequest::with('user')
+                ->where('uuid', $uuid)
+                ->where('type', 'custom_image')
+                ->firstOrFail();
+        }
 
         return view('admin.custom-images.show', compact('image'));
     }
 
     public function updateProgress(Request $request, string $uuid): RedirectResponse
     {
-        $image = CustomImage::where('uuid', $uuid)->firstOrFail();
+        // Önce CustomImage modelinde ara
+        $image = CustomImage::where('uuid', $uuid)->first();
+
+        // Bulamazsa GenerationRequest modelinde ara
+        if (! $image) {
+            $image = GenerationRequest::where('uuid', $uuid)
+                ->where('type', 'custom_image')
+                ->firstOrFail();
+        }
 
         $validated = $request->validate([
             'progress' => 'required|integer|min:0|max:100',
@@ -45,7 +88,15 @@ class AdminCustomImageController extends Controller
 
     public function updateStatus(Request $request, string $uuid): RedirectResponse
     {
-        $image = CustomImage::where('uuid', $uuid)->firstOrFail();
+        // Önce CustomImage modelinde ara
+        $image = CustomImage::where('uuid', $uuid)->first();
+
+        // Bulamazsa GenerationRequest modelinde ara
+        if (! $image) {
+            $image = GenerationRequest::where('uuid', $uuid)
+                ->where('type', 'custom_image')
+                ->firstOrFail();
+        }
 
         $validated = $request->validate([
             'status' => 'required|in:pending,processing,completed,failed',
@@ -57,7 +108,12 @@ class AdminCustomImageController extends Controller
 
         if ($validated['status'] === 'completed' && ! empty($validated['admin_image_url'])) {
             // Admin panelden girilen linki olduğu gibi sakla
-            $updateData['admin_image_url'] = $validated['admin_image_url'];
+            // GenerationRequest için output_url kullan
+            if ($image instanceof GenerationRequest) {
+                $updateData['output_url'] = $validated['admin_image_url'];
+            } else {
+                $updateData['admin_image_url'] = $validated['admin_image_url'];
+            }
             $updateData['progress'] = 100;
         }
 
@@ -66,7 +122,7 @@ class AdminCustomImageController extends Controller
         }
 
         if ($validated['status'] === 'processing') {
-            $updateData['progress'] = max($image->progress, 10);
+            $updateData['progress'] = max($image->progress ?? 0, 10);
         }
 
         $image->update($updateData);
@@ -76,7 +132,16 @@ class AdminCustomImageController extends Controller
 
     public function destroy(string $uuid): RedirectResponse
     {
-        $image = CustomImage::where('uuid', $uuid)->firstOrFail();
+        // Önce CustomImage modelinde ara
+        $image = CustomImage::where('uuid', $uuid)->first();
+
+        // Bulamazsa GenerationRequest modelinde ara
+        if (! $image) {
+            $image = GenerationRequest::where('uuid', $uuid)
+                ->where('type', 'custom_image')
+                ->firstOrFail();
+        }
+
         $image->delete();
 
         return redirect()->route('admin.custom-images.index')->with('success', 'Talep başarıyla silindi.');

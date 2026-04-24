@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\GenerationRequest;
 use App\Services\GenerationRequestService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,7 +17,11 @@ class GenerationRequestController extends Controller
 
     public function index(): View
     {
-        $requests = $this->generationRequestService->getPendingRequests();
+        // custom_image tipindeki talepler custom-images sayfasında gösterildiği için burada hariç tutuyoruz
+        $requests = GenerationRequest::with(['user', 'template'])
+            ->whereNotIn('type', ['custom_image'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
 
         return view('admin.generation-requests.index', [
             'requests' => $requests,

@@ -25,6 +25,7 @@ class CustomVideoRequestService
             $requestData = [
                 'user_id' => $userId,
                 'prompt' => $data['prompt'],
+                'format' => $data['format'] ?? 'vertical',
                 'input_image_path' => $data['input_image_path'] ?? null,
                 'status' => 'pending',
                 'token_cost' => 0, // Admin will set token cost manually

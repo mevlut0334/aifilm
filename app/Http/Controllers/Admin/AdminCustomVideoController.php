@@ -40,7 +40,13 @@ class AdminCustomVideoController extends Controller
      */
     public function show(string $uuid): View
     {
-        $request = CustomVideoRequest::with(['user', 'segments.editRequests'])
+        $request = CustomVideoRequest::with([
+            'user',
+            'segments' => function ($query) {
+                $query->orderBy('segment_number', 'asc');
+            },
+            'segments.editRequests',
+        ])
             ->where('uuid', $uuid)
             ->firstOrFail();
 
@@ -95,12 +101,15 @@ class AdminCustomVideoController extends Controller
         $request = CustomVideoRequest::where('uuid', $uuid)->firstOrFail();
 
         try {
-            // Get the next segment number
-            $lastSegment = $request->segments()->orderBy('segment_number', 'desc')->first();
-            $nextSegmentNumber = $lastSegment ? $lastSegment->segment_number + 1 : 1;
+            // Get the maximum segment number from database
+            $maxSegmentNumber = CustomVideoSegment::where('custom_video_request_id', $request->id)
+                ->max('segment_number');
+
+            $nextSegmentNumber = $maxSegmentNumber ? $maxSegmentNumber + 1 : 1;
 
             // Create new segment
-            $request->segments()->create([
+            CustomVideoSegment::create([
+                'custom_video_request_id' => $request->id,
                 'segment_number' => $nextSegmentNumber,
                 'status' => 'pending',
                 'progress' => 0,
