@@ -294,7 +294,7 @@ Authorization: Bearer {token}
 
 ### 2.3 Template ile Talep Oluşturma
 
-Template kullanarak görsel veya video üretim talebi oluşturur.
+Template kullanarak görsel veya video üretim talebi oluşturur. Template bazlı taleplerde kullanıcının bir görsel yüklemesi zorunludur.
 
 ```
 POST /api/v1/generation-requests
@@ -304,27 +304,32 @@ POST /api/v1/generation-requests
 
 ```
 Authorization: Bearer {token}
+Content-Type: multipart/form-data
 ```
 
-**Request Body (Template Görsel):**
+**Request Body (Template Görsel) - Form Data:**
 
 ```json
 {
   "type": "template_image",
   "template_id": "550e8400-e29b-41d4-a716-446655440000",
-  "orientation": "landscape"
+  "orientation": "landscape",
+  "input_image": "[FILE]"
 }
 ```
 
-**Request Body (Template Video):**
+**Request Body (Template Video) - Form Data:**
 
 ```json
 {
   "type": "template_video",
   "template_id": "550e8400-e29b-41d4-a716-446655440000",
-  "orientation": "portrait"
+  "orientation": "portrait",
+  "input_image": "[FILE]"
 }
 ```
+
+**Not:** Template bazlı taleplerde `input_image` parametresi **zorunludur**. Yüklenen görsel, template ile birlikte işlenir.
 
 **Response (201):**
 
@@ -853,6 +858,7 @@ Authorization: Bearer {token}
 | type        | string | Evet    | `template_image`, `template_video`                |
 | template_id | string | Evet    | Geçerli template UUID                             |
 | orientation | string | Hayır   | `landscape`, `portrait`, `square`                 |
+| input_image | file   | Evet    | jpeg,png,jpg formatı, max 10MB                    |
 
 ### Custom Video Request
 

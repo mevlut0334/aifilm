@@ -46,13 +46,25 @@ class GenerationRequestController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $type = $request->input('type');
+
+        // Base validation rules
+        $rules = [
             'template_id' => 'nullable|exists:templates,uuid',
             'type' => 'required|in:custom_image,custom_video,template_image,template_video',
             'orientation' => 'nullable|in:landscape,portrait,square',
             'description' => 'nullable|string|max:1000',
-            'input_image' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
-        ]);
+        ];
+
+        // Template-based requests require input_image
+        if (in_array($type, ['template_image', 'template_video'])) {
+            $rules['input_image'] = 'required|image|mimes:jpeg,png,jpg|max:10240';
+        } else {
+            // Custom requests have input_image optional
+            $rules['input_image'] = 'nullable|image|mimes:jpeg,png,jpg|max:10240';
+        }
+
+        $validated = $request->validate($rules);
 
         try {
             $data = [
