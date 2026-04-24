@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Repositories\PackageRepository;
 use App\Services\PaddleService;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class PackageController extends Controller
@@ -17,20 +16,38 @@ class PackageController extends Controller
 
     public function index(): View
     {
-        $packages = $this->packageRepository->getAll(true);
+        $packages = $this->packageRepository->getAll(true)->where('is_active', true);
 
-        // Enrich packages with Paddle price details (cached for 60 minutes)
-        $packages = $packages->map(function ($package) {
-            if ($package->paddle_price_id) {
-                $priceDetails = Cache::remember(
-                    "paddle_price_{$package->paddle_price_id}",
-                    3600,
-                    fn () => $this->paddleService->getPriceDetails($package->paddle_price_id)
-                );
-                $package->price_details = $priceDetails;
+        // Paddle price ID'lerini topla
+        $priceIds = $packages
+            ->whereNotNull('paddle_price_id')
+            ->pluck('paddle_price_id')
+            ->filter()
+            ->values()
+            ->toArray();
+
+        // Paddle'dan fiyatları çek
+        $paddlePrices = [];
+        if (! empty($priceIds)) {
+            try {
+                $paddlePrices = $this->paddleService->fetchPaddlePrices($priceIds);
+            } catch (\Exception $e) {
+                Log::warning('Paddle fiyatları çekilemedi: '.$e->getMessage());
             }
+        }
 
-            return $package;
+        // Her pakete paddle_price ve paddle_currency ekle
+        $packages->each(function ($package) use ($paddlePrices) {
+            $pid = $package->paddle_price_id;
+
+            // Güvenli array erişimi
+            if (isset($paddlePrices[$pid]) && is_array($paddlePrices[$pid])) {
+                $package->paddle_price = $paddlePrices[$pid]['amount'] ?? null;
+                $package->paddle_currency = $paddlePrices[$pid]['currency'] ?? 'USD';
+            } else {
+                $package->paddle_price = null;
+                $package->paddle_currency = 'USD';
+            }
         });
 
         return view('web.packages.index', [

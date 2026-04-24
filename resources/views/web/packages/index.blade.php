@@ -1,15 +1,15 @@
 @extends('web.layouts.app')
 
-@section('title', __('packages.Buy Tokens'))
+@section('title', trans('packages.Buy Tokens'))
 
 @section('content')
 <div class="container">
     <div class="text-center mb-5">
-        <h1>{{ __('packages.Buy Tokens') }}</h1>
+        <h1>@trans_safe('packages.Buy Tokens')</h1>
         @auth
-            <p class="lead">{{ __('tokens.current_balance') }}: <span class="badge bg-primary fs-5">{{ auth()->user()->tokenBalance->balance ?? 0 }} {{ __('packages.tokens') }}</span></p>
+            <p class="lead">@trans_safe('tokens.current_balance'): <span class="badge bg-primary fs-5">{{ auth()->user()->tokenBalance->balance ?? 0 }} @trans_safe('packages.tokens')</span></p>
         @else
-            <p class="lead text-muted">{{ __('packages.login_to_see_balance') }}</p>
+            <p class="lead text-muted">@trans_safe('packages.login_to_see_balance')</p>
         @endauth
     </div>
 
@@ -19,7 +19,7 @@
 
     @if($packages->isEmpty())
         <div class="alert alert-info text-center">
-            {{ __('packages.no_packages') }}
+            @trans_safe('packages.no_packages')
         </div>
     @else
         <div class="row row-cols-1 row-cols-md-3 g-4">
@@ -30,7 +30,7 @@
                             <h3 class="card-title">{{ $package->getTitle() }}</h3>
                             <div class="my-4">
                                 <h2 class="text-primary">
-                                    {{ $package->token_amount }} {{ __('packages.tokens') }}
+                                    {{ $package->token_amount }} @trans_safe('packages.tokens')
                                 </h2>
                                 @if($package->price_details)
                                     <p class="text-muted">
@@ -43,7 +43,9 @@
                                     </p>
                                 @endif
                             </div>
-                            <p class="card-text">{{ $package->getDescription() }}</p>
+                            <div class="card-text">
+                                {!! str_replace('- ', '<i class="bi bi-check-circle text-success"></i> ', nl2br(e($package->getDescription()))) !!}
+                            </div>
                         </div>
                         <div class="card-footer bg-transparent border-top-0">
                             @if($package->is_active)
@@ -51,11 +53,11 @@
                                     <button type="button" 
                                             class="btn btn-primary w-100" 
                                             onclick="purchasePackage('{{ $package->paddle_price_id }}', {{ $package->id }})">
-                                        {{ __('packages.purchase_now') }}
+                                        @trans_safe('packages.purchase_now')
                                     </button>
                                 @else
                                     <a href="{{ route('login') }}" class="btn btn-primary w-100">
-                                        {{ __('packages.login_to_purchase') }}
+                                        @trans_safe('packages.login_to_purchase')
                                     </a>
                                 @endauth
                             @else

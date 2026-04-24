@@ -6,7 +6,6 @@ use App\Http\Controllers\Web\CustomVideoController;
 use App\Http\Controllers\Web\GenerationRequestController as WebGenerationRequestController;
 use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Web\PackageController;
-use App\Http\Controllers\Web\PaddleWebhookController;
 use App\Http\Controllers\Web\ProfileController;
 use App\Http\Controllers\Web\TemplateController;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +26,11 @@ Route::group([
 
     // Public packages page (no auth required)
     Route::get('/packages', [PackageController::class, 'index'])->name('packages.index');
+
+    // Paddle success page
+    Route::get('/paddle/success', function () {
+        return redirect()->route('packages.index')->with('success', __('Payment successful! Your tokens have been added to your account.'));
+    })->name('paddle.success');
 
     // Public templates pages (no auth required)
     Route::get('/templates', [TemplateController::class, 'index'])->name('templates.index');
@@ -58,6 +62,4 @@ Route::group([
     });
 });
 
-// Paddle Webhook (outside locale group)
-Route::post('/webhook/paddle', [PaddleWebhookController::class, 'handle'])->name('webhook.paddle');
-
+// Paddle Webhook is automatically handled by Cashier at /paddle/webhook

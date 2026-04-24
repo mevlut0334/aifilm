@@ -69,10 +69,15 @@
                                    id="paddle_price_id" 
                                    name="paddle_price_id" 
                                    required
+                                   placeholder="pri_01..."
                                    value="{{ old('paddle_price_id') }}">
                             @error('paddle_price_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+                            <small class="form-text text-muted">
+                                <strong>Get Price ID from Paddle Dashboard → Products → Select Product → Copy Price ID</strong><br>
+                                <i class="bi bi-info-circle"></i> Subscription type (One-time/Recurring) will be detected automatically from Paddle.
+                            </small>
                         </div>
 
                         <div class="mb-3">

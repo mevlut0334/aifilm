@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Repositories\PackageRepository;
+use App\Services\PaddleService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -11,7 +12,8 @@ use Illuminate\View\View;
 class PackageController extends Controller
 {
     public function __construct(
-        private PackageRepository $packageRepository
+        private PackageRepository $packageRepository,
+        private PaddleService $paddleService
     ) {}
 
     public function index(): View
@@ -37,9 +39,14 @@ class PackageController extends Controller
             'description_en' => 'required|string',
             'description_tr' => 'nullable|string',
             'paddle_price_id' => 'required|string|max:255',
+            'paddle_product_id' => 'nullable|string|max:255',
+            'is_subscription' => 'boolean',
             'is_active' => 'boolean',
             'order' => 'integer|min:0',
         ]);
+
+        // Auto-detect subscription type from Paddle
+        $isSubscription = $this->paddleService->isSubscriptionPrice($validated['paddle_price_id']);
 
         $data = [
             'token_amount' => $validated['token_amount'],
@@ -52,11 +59,17 @@ class PackageController extends Controller
                 'tr' => $validated['description_tr'] ?? $validated['description_en'],
             ],
             'paddle_price_id' => $validated['paddle_price_id'],
+            'is_subscription' => $isSubscription,
             'is_active' => $request->boolean('is_active', true),
             'order' => $validated['order'] ?? 0,
         ];
 
-        $this->packageRepository->create($data);
+        $package = $this->packageRepository->create($data);
+
+        // Clear cache for this price
+        if ($package->paddle_price_id) {
+            $this->paddleService->clearPriceCache($package->paddle_price_id);
+        }
 
         return redirect()->route('admin.packages.index')
             ->with('success', __('admin.packages.created_successfully'));
@@ -88,6 +101,9 @@ class PackageController extends Controller
             'order' => 'integer|min:0',
         ]);
 
+        // Auto-detect subscription type from Paddle
+        $isSubscription = $this->paddleService->isSubscriptionPrice($validated['paddle_price_id']);
+
         $data = [
             'token_amount' => $validated['token_amount'],
             'title' => [
@@ -99,11 +115,17 @@ class PackageController extends Controller
                 'tr' => $validated['description_tr'] ?? $validated['description_en'],
             ],
             'paddle_price_id' => $validated['paddle_price_id'],
+            'is_subscription' => $isSubscription,
             'is_active' => $request->boolean('is_active'),
             'order' => $validated['order'] ?? $package->order,
         ];
 
         $this->packageRepository->update($package, $data);
+
+        // Clear cache for this price
+        if ($package->paddle_price_id) {
+            $this->paddleService->clearPriceCache($package->paddle_price_id);
+        }
 
         return redirect()->route('admin.packages.index')
             ->with('success', __('admin.packages.updated_successfully'));
