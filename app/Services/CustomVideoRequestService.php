@@ -75,18 +75,6 @@ class CustomVideoRequestService
                 }
             }
 
-            // Refund tokens if they were deducted
-            if ($request->token_deducted && $request->token_cost > 0 && in_array($request->status, ['pending', 'processing', 'failed'])) {
-                $this->tokenService->addTokens(
-                    $request->user_id,
-                    $request->token_cost,
-                    'refund',
-                    'Custom video request cancelled',
-                    $request->id,
-                    CustomVideoRequest::class
-                );
-            }
-
             $this->customVideoRequestRepository->delete($request);
 
             DB::commit();
