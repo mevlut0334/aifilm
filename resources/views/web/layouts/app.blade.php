@@ -150,6 +150,21 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="{{ LaravelLocalization::getLocalizedURL(null, route('generation-requests.index', [], false)) }}">
+                                {{ __('navigation.my_templates') }}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ LaravelLocalization::getLocalizedURL(null, route('custom-images.index', [], false)) }}">
+                                {{ __('navigation.my_images') }}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ LaravelLocalization::getLocalizedURL(null, route('custom-videos.index', [], false)) }}">
+                                {{ __('navigation.my_videos') }}
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="{{ LaravelLocalization::getLocalizedURL(null, route('profile', [], false)) }}">{{ __('auth.Profile') }}</a>
                         </li>
                         <li class="nav-item">
