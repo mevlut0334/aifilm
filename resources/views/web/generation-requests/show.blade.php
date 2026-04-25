@@ -124,19 +124,6 @@
                         <a href="{{ route('generation-requests.index') }}" class="btn btn-secondary">
                             {{ __('requests.Back') }}
                         </a>
-
-                        @if(in_array($request->status, ['pending', 'failed']))
-                            <form method="POST" 
-                                  action="{{ route('generation-requests.destroy', $request->uuid) }}" 
-                                  class="d-inline"
-                                  onsubmit="return confirm('{{ __('requests.Are you sure you want to cancel this request? Your tokens will be refunded.') }}')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger">
-                                    {{ __('requests.Cancel Request') }}
-                                </button>
-                            </form>
-                        @endif
                     </div>
                 </div>
             </div>
