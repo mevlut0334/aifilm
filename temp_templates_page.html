@@ -1,0 +1,260 @@
+﻿<!DOCTYPE html>
+<html lang="tr" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Templates</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Prevent horizontal overflow */
+        html, body {
+            overflow-x: hidden;
+            max-width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Navbar theme-aware styling */
+        .navbar {
+            background-color: var(--bs-body-bg) !important;
+            border-bottom: 1px solid var(--bs-border-color);
+        }
+        .navbar .navbar-brand,
+        .navbar .nav-link {
+            color: var(--bs-body-color) !important;
+        }
+        .navbar .nav-link:hover {
+            color: var(--bs-link-hover-color) !important;
+        }
+        .navbar .btn-link {
+            color: var(--bs-body-color) !important;
+        }
+        .navbar .btn-link:hover {
+            color: var(--bs-link-hover-color) !important;
+        }
+        
+        #theme-toggle {
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        #theme-toggle:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="http://127.0.0.1:8080/tr">aifilm</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <button id="theme-toggle" class="btn btn-link nav-link" title="Toggle theme">🔄</button>
+                    </li>
+                                        <li class="nav-item">
+                        <a class="nav-link" href="http://127.0.0.1:8080/tr/packages">
+                            Token Satın Al
+                                                    </a>
+                    </li>
+                                            <li class="nav-item">
+                            <a class="nav-link" href="http://127.0.0.1:8080/tr/login">Giriş Yap</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="http://127.0.0.1:8080/tr/register">Kayıt Ol</a>
+                        </li>
+                                    </ul>
+            </div>
+        </div>
+    </nav>
+
+            
+    <main>
+        
+<div class="templates-container">
+    <div id="masonry-grid">
+
+                    
+            <a href=" http://127.0.0.1:8080/tr/login ">
+                <div class="template-card">
+
+                    <video muted loop playsinline preload="metadata"
+                           style="aspect-ratio: 16 / 9;"
+                           onmouseenter="this.play()"
+                           onmouseleave="this.pause(); this.currentTime=0;">
+                        <source src="http://127.0.0.1:8080/storage/templates/0add9145-5931-4bda-b05c-babbc3a4ffdb/landscape/mWtZIciW2cPNY00InNYoCm63JAkSgmUJJwwoBcAc.mp4" type="video/mp4">
+                    </video>
+
+                </div>
+            </a>
+                    
+            <a href=" http://127.0.0.1:8080/tr/login ">
+                <div class="template-card">
+
+                    <video muted loop playsinline preload="metadata"
+                           style="aspect-ratio: 9 / 16;"
+                           onmouseenter="this.play()"
+                           onmouseleave="this.pause(); this.currentTime=0;">
+                        <source src="http://127.0.0.1:8080/storage/templates/e977c018-ddfb-4b07-a447-2c80f9adba98/portrait/YjQzNtqcuJe3wSBjBmWYemztZBqHomjgi8uPV3Fk.mp4" type="video/mp4">
+                    </video>
+
+                </div>
+            </a>
+                    
+            <a href=" http://127.0.0.1:8080/tr/login ">
+                <div class="template-card">
+
+                    <video muted loop playsinline preload="metadata"
+                           style="aspect-ratio: 16 / 9;"
+                           onmouseenter="this.play()"
+                           onmouseleave="this.pause(); this.currentTime=0;">
+                        <source src="http://127.0.0.1:8080/storage/templates/3d83997a-645a-4cea-9c9b-0c0532604ac4/landscape/iLVMWIbnKypxduI4kp2Z7jxFVbVjV2VPZGHPwLSP.mp4" type="video/mp4">
+                    </video>
+
+                </div>
+            </a>
+                    
+            <a href=" http://127.0.0.1:8080/tr/login ">
+                <div class="template-card">
+
+                    <video muted loop playsinline preload="metadata"
+                           style="aspect-ratio: 9 / 16;"
+                           onmouseenter="this.play()"
+                           onmouseleave="this.pause(); this.currentTime=0;">
+                        <source src="http://127.0.0.1:8080/storage/templates/e0303965-f127-4819-bf51-5942e297d659/portrait/YuWBkYkXiaDcUtcGuCJanqz0BPAIpjZoh4WSgEeC.mp4" type="video/mp4">
+                    </video>
+
+                </div>
+            </a>
+        
+    </div>
+
+    <div id="loading" style="text-align:center; padding:20px; display:none;">
+        Yükleniyor...
+    </div>
+</div>
+
+
+<style>
+.templates-container {
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+/* Kart */
+.template-card {
+    width: calc(50% - 6px);
+    margin-bottom: 6px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* Tablet */
+@media (min-width: 768px) {
+    .template-card {
+        width: calc(25% - 8px);
+        margin-bottom: 8px;
+    }
+}
+
+/* Desktop */
+@media (min-width: 1280px) {
+    .template-card {
+        width: calc(16.66% - 10px);
+        margin-bottom: 10px;
+    }
+}
+
+.template-card video {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+</style>
+
+
+<script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
+
+<script>
+let page = 2;
+let loading = false;
+let hasMore = true;
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const grid = document.querySelector('#masonry-grid');
+
+    const msnry = new Masonry(grid, {
+        itemSelector: '.template-card',
+        percentPosition: true,
+        gutter: 10
+    });
+
+    // video yüklenince layout fix
+    function bindVideoEvents(scope=document) {
+        scope.querySelectorAll('video').forEach(video => {
+            video.addEventListener('loadeddata', () => {
+                msnry.layout();
+            });
+        });
+    }
+
+    bindVideoEvents();
+
+    // 🔥 INFINITE SCROLL
+    window.addEventListener('scroll', () => {
+
+        if (loading || !hasMore) return;
+
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
+            loadMore();
+        }
+
+    });
+
+    function loadMore() {
+        loading = true;
+        document.getElementById('loading').style.display = 'block';
+
+        fetch(`?page=${page}`)
+            .then(res => res.text())
+            .then(html => {
+
+                let temp = document.createElement('div');
+                temp.innerHTML = html;
+
+                let items = temp.querySelectorAll('.template-card');
+
+                if (items.length === 0) {
+                    hasMore = false;
+                    document.getElementById('loading').innerText = "Bitti";
+                    return;
+                }
+
+                items.forEach(el => grid.appendChild(el));
+
+                msnry.appended(items);
+                bindVideoEvents(temp);
+
+                page++;
+                loading = false;
+                document.getElementById('loading').style.display = 'none';
+            })
+            .catch(() => {
+                loading = false;
+            });
+    }
+
+});
+</script>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="http://127.0.0.1:8080/js/theme.js"></script>
+</body>
+</html>
+

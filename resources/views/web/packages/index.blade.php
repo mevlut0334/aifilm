@@ -3,6 +3,18 @@
 @section('title', trans('packages.Buy Tokens'))
 
 @section('content')
+
+<style>
+.container h1 {
+    color: #FFFFFF !important;
+    font-weight: bold;
+}
+
+.container .lead {
+    color: #FFFFFF !important;
+}
+</style>
+
 <div class="container">
     <div class="text-center mb-5">
         <h1>@trans_safe('packages.Buy Tokens')</h1>

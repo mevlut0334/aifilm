@@ -11,6 +11,19 @@
 @endphp
 
 <style>
+/* 🎨 Renk Paleti */
+:root {
+    --bg-primary: #0B0B0B;
+    --bg-secondary: #121212;
+    --gold: #D4AF37;
+    --gold-hover: #F5D97A;
+    --purple: #7C3AED;
+    --blue: #3B82F6;
+    --text-primary: #FFFFFF;
+    --text-secondary: #BFBFBF;
+    --text-passive: #6B6B6B;
+}
+
 /* VIDEO İZOLASYON */
 .video-isolation {
     all: unset;
@@ -18,6 +31,7 @@
     justify-content: center;
     align-items: center;
     width: 100%;
+    background: var(--bg-primary);
 }
 
 .video-box {
@@ -50,6 +64,18 @@
     object-fit: contain !important;
     display: block !important;
     margin: 0 auto !important;
+    border-radius: 12px;
+}
+
+/* Template Show Page Container */
+.container.text-center {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.container.text-center h1 {
+    color: var(--text-primary);
+    font-weight: bold;
 }
 
 /* UPLOAD ALANI */
@@ -57,9 +83,42 @@
     max-width: 400px;
     margin: 30px auto;
     padding: 20px;
-    border: 2px solid var(--bs-border-color);
+    border: 2px solid var(--gold);
     border-radius: 16px;
     text-align: center;
+    background: var(--bg-secondary);
+}
+
+.upload-area .alert-warning {
+    background: rgba(212, 175, 55, 0.1);
+    border: 1px solid var(--gold);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.upload-area .text-muted,
+.upload-area small {
+    color: var(--text-secondary) !important;
+}
+
+.upload-area p {
+    color: var(--text-primary);
+}
+
+.upload-area .btn-primary {
+    background: linear-gradient(135deg, var(--gold), var(--gold-hover));
+    border: none;
+    color: var(--bg-primary);
+    font-weight: 600;
+    padding: 10px 30px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.upload-area .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
 }
 
 #preview-container {
@@ -69,6 +128,7 @@
 #preview-image {
     width: 100%;
     border-radius: 10px;
+    border: 2px solid var(--gold);
 }
 
 .btn-submit {
@@ -77,9 +137,46 @@
     padding: 12px;
     border-radius: 12px;
     border: none;
-    background: var(--bs-primary);
-    color: #fff;
+    background: linear-gradient(135deg, var(--gold), var(--gold-hover));
+    color: var(--bg-primary);
     font-weight: 600;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+}
+
+.custom-file-upload {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.file-label {
+    display: inline-block;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-hover));
+    color: var(--bg-primary);
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    margin: 0;
+}
+
+.file-label:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+}
+
+.file-name {
+    color: var(--text-secondary);
+    font-size: 14px;
+    flex: 1;
 }
 </style>
 
@@ -117,18 +214,18 @@
 
         @if(!$hasEnoughTokens)
             <div class="alert alert-warning">
-                {{ __('Yetersiz token. Bu template için :cost token gerekiyor, mevcut bakiyeniz: :balance', [
+                {{ __('templates.Insufficient tokens. This template requires :cost tokens, your current balance is: :balance', [
                     'cost' => $template->token_cost,
                     'balance' => $userBalance
                 ]) }}
             </div>
             <a href="{{ route('packages.index') }}" class="btn btn-primary">
-                {{ __('Token Satın Al') }}
+                {{ __('templates.Buy Tokens') }}
             </a>
         @else
             <div class="mb-3">
                 <small class="text-muted">
-                    {{ __('Bu template :cost token kullanır. Mevcut bakiyeniz: :balance', [
+                    {{ __('templates.This template uses :cost tokens. Your current balance: :balance', [
                         'cost' => $template->token_cost,
                         'balance' => $userBalance
                     ]) }}
@@ -141,7 +238,13 @@
                 <input type="hidden" name="type" value="template_image">
                 <input type="hidden" name="orientation" value="{{ $displayOrientation }}">
                 
-                <input type="file" name="input_image" class="form-control" accept="image/*" required onchange="previewImage(event)">
+                <div class="custom-file-upload">
+                    <input type="file" name="input_image" id="file-input" accept="image/*" required onchange="previewImage(event)" style="display:none;">
+                    <label for="file-input" class="file-label">
+                        {{ __('templates.Choose File') }}
+                    </label>
+                    <span id="file-name" class="file-name">{{ __('templates.No file chosen') }}</span>
+                </div>
 
                 <div id="preview-container" style="display:none;">
                     <img id="preview-image">
@@ -169,6 +272,9 @@
 function previewImage(e){
     var file = e.target.files[0];
     if (!file) return;
+
+    // Update file name display
+    document.getElementById('file-name').textContent = file.name;
 
     var reader = new FileReader();
     reader.onload = function(x){

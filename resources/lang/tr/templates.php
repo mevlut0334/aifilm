@@ -45,4 +45,13 @@ return [
 
     // Confirmation messages
     'This action will use :cost tokens. Do you want to continue?' => 'Bu işlem :cost token kullanacaktır. Devam etmek istiyor musunuz?',
+    
+    // Token messages
+    'Insufficient tokens. This template requires :cost tokens, your current balance is: :balance' => 'Yetersiz token. Bu şablon :cost token gerektiriyor, mevcut bakiyeniz: :balance',
+    'Buy Tokens' => 'Token Satın Al',
+    'This template uses :cost tokens. Your current balance: :balance' => 'Bu şablon :cost token kullanır. Mevcut bakiyeniz: :balance',
+    
+    // File upload
+    'Choose File' => 'Dosya Seç',
+    'No file chosen' => 'Dosya seçilmedi',
 ];

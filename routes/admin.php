@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GenerationRequestController as AdminGenerationRequestController;
 use App\Http\Controllers\Admin\PackageController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\SliderController;
 use App\Http\Controllers\Admin\TemplateController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\UserTokenController;
@@ -82,5 +83,9 @@ Route::prefix('admin')->group(function () {
         Route::get('/admins/create', [AdminManagementController::class, 'create'])->name('admin.admins.create');
         Route::post('/admins', [AdminManagementController::class, 'store'])->name('admin.admins.store');
         Route::delete('/admins/{id}', [AdminManagementController::class, 'destroy'])->name('admin.admins.destroy');
+
+        // Sliders
+        Route::resource('sliders', SliderController::class)->except(['show'])->names('admin.sliders');
+        Route::post('/sliders/{slider}/toggle-active', [SliderController::class, 'toggleActive'])->name('admin.sliders.toggle-active');
     });
 });

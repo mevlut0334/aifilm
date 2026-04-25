@@ -45,4 +45,13 @@ return [
 
     // Confirmation messages
     'This action will use :cost tokens. Do you want to continue?' => 'This action will use :cost tokens. Do you want to continue?',
+    
+    // Token messages
+    'Insufficient tokens. This template requires :cost tokens, your current balance is: :balance' => 'Insufficient tokens. This template requires :cost tokens, your current balance is: :balance',
+    'Buy Tokens' => 'Buy Tokens',
+    'This template uses :cost tokens. Your current balance: :balance' => 'This template uses :cost tokens. Your current balance: :balance',
+    
+    // File upload
+    'Choose File' => 'Choose File',
+    'No file chosen' => 'No file chosen',
 ];

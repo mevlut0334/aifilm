@@ -129,4 +129,9 @@ return [
     'Back to List' => 'Back to List',
     'back' => 'Back',
     'Are you sure?' => 'Are you sure you want to delete this request?',
+    
+    // File upload
+    'choose_file' => 'Choose File',
+    'choose_files' => 'Choose Files',
+    'no_file_chosen' => 'No file chosen',
 ];

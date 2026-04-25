@@ -242,6 +242,12 @@
                     Admin Yönetimi
                 </a>
             </li>
+            <li class="sidebar-nav-item">
+                <a class="sidebar-nav-link {{ request()->routeIs('admin.sliders.*') ? 'active' : '' }}" 
+                   href="{{ route('admin.sliders.index') }}">
+                    Slider Yönetimi
+                </a>
+            </li>
         </ul>
         
         <!-- User Info -->

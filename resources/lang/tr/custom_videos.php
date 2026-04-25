@@ -129,4 +129,9 @@ return [
     'Back to List' => 'Listeye Dön',
     'back' => 'Geri',
     'Are you sure?' => 'Bu talebi silmek istediğinizden emin misiniz?',
+    
+    // File upload
+    'choose_file' => 'Dosya Seç',
+    'choose_files' => 'Dosyaları Seç',
+    'no_file_chosen' => 'Dosya seçilmedi',
 ];

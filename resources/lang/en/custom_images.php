@@ -48,4 +48,9 @@ return [
     // Messages
     'insufficient_balance' => 'Insufficient token balance. Please purchase tokens.',
     'request_created' => 'Your custom image request has been created. It will be processed.',
+    
+    // File upload
+    'choose_file' => 'Choose File',
+    'choose_files' => 'Choose Files',
+    'no_file_chosen' => 'No file chosen',
 ];

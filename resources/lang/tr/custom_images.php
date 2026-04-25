@@ -48,4 +48,9 @@ return [
     // Messages
     'insufficient_balance' => 'Yetersiz token bakiyesi. Lütfen token satın alın.',
     'request_created' => 'Custom görsel talebiniz oluşturuldu. İşleme alınacaktır.',
+    
+    // File upload
+    'choose_file' => 'Dosya Seç',
+    'choose_files' => 'Dosyaları Seç',
+    'no_file_chosen' => 'Dosya seçilmedi',
 ];
