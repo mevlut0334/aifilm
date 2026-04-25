@@ -65,6 +65,11 @@
             color: white;
         }
         
+        .sidebar-nav-link .badge {
+            float: right;
+            font-size: 0.75rem;
+        }
+        
         /* Theme selector */
         .theme-selector {
             padding: 1rem 1.5rem;
@@ -160,6 +165,33 @@
                 <a class="sidebar-nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" 
                    href="{{ route('admin.dashboard') }}">
                     {{ __('admin.Dashboard') }}
+                    @php
+                        // Count all pending requests
+                        $pendingRequestsCount = 0;
+                        
+                        // 1. Custom Video Requests - pending
+                        $pendingRequestsCount += \App\Models\CustomVideoRequest::where('status', 'pending')->count();
+                        
+                        // 2. Custom Video Requests - completed with pending segments
+                        $pendingRequestsCount += \App\Models\CustomVideoRequest::where('status', 'completed')
+                            ->whereHas('segments', function ($query) {
+                                $query->where('status', 'pending');
+                            })->count();
+                        
+                        // 3. Custom Video Requests - with pending edit requests
+                        $pendingRequestsCount += \App\Models\CustomVideoRequest::whereHas('segments.editRequests', function ($query) {
+                            $query->where('status', 'pending');
+                        })->count();
+                        
+                        // 4. Generation Requests - pending
+                        $pendingRequestsCount += \App\Models\GenerationRequest::where('status', 'pending')->count();
+                        
+                        // 5. Custom Images - pending
+                        $pendingRequestsCount += \App\Models\CustomImage::where('status', 'pending')->count();
+                    @endphp
+                    @if($pendingRequestsCount > 0)
+                        <span class="badge bg-danger ms-2">{{ $pendingRequestsCount }}</span>
+                    @endif
                 </a>
             </li>
             <li class="sidebar-nav-item">
