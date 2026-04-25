@@ -93,6 +93,7 @@ return [
     'Segment Progress' => 'Segment İlerlemesi',
 
     // Mesajlar
+    'request_created' => 'Özel video talebiniz oluşturuldu ve işleme alındı.',
     'Request created successfully' => 'Talep başarıyla oluşturuldu',
     'Requests retrieved successfully' => 'Talepler başarıyla alındı',
     'Request retrieved successfully' => 'Talep başarıyla alındı',

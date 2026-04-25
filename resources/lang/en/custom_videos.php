@@ -93,6 +93,7 @@ return [
     'Segment Progress' => 'Segment Progress',
 
     // Messages
+    'request_created' => 'Your custom video request has been created and is being processed.',
     'Request created successfully' => 'Request created successfully',
     'Requests retrieved successfully' => 'Requests retrieved successfully',
     'Request retrieved successfully' => 'Request retrieved successfully',
