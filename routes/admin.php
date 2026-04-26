@@ -16,8 +16,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->group(function () {
     Route::middleware('guest:admin')->group(function () {
-        Route::get('/login', [AuthController::class, 'showLogin'])->name('admin.login');
-        Route::post('/login', [AuthController::class, 'login'])->name('admin.login');
+        Route::get('/login', [AuthController::class, 'showLogin'])->name('admin.login.show');
+        Route::post('/login', [AuthController::class, 'login'])->name('admin.login.post');
     });
 
     Route::middleware('auth:admin')->group(function () {
