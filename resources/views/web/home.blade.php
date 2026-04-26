@@ -2,6 +2,21 @@
 
 @section('title', __('home.title'))
 
+@section('meta')
+    <meta name="description"        content="{{ __('home.meta_description') }}">
+    <meta name="keywords"           content="{{ __('home.meta_keywords') }}">
+    <meta name="robots"             content="index, follow">
+    <meta property="og:type"        content="website">
+    <meta property="og:url"         content="{{ url()->current() }}">
+    <meta property="og:locale"      content="{{ app()->getLocale() == 'tr' ? 'tr_TR' : 'en_US' }}">
+    <meta property="og:site_name"   content="{{ config('app.name') }}">
+    <meta property="og:title"       content="{{ config('app.name') }} - {{ __('home.meta_og_title') }}">
+    <meta property="og:description" content="{{ __('home.meta_og_desc') }}">
+    <meta name="twitter:card"       content="summary_large_image">
+    <meta name="twitter:title"      content="{{ config('app.name') }} - {{ __('home.meta_tw_title') }}">
+    <meta name="twitter:description" content="{{ __('home.meta_tw_desc') }}">
+@endsection
+
 @section('content')
 <style>
     /* Color Palette */
@@ -356,7 +371,7 @@
         function showSlide(index) {
             slides.forEach(slide => slide.classList.remove('active'));
             dots.forEach(dot => dot.classList.remove('active'));
-            
+
             slides[index].classList.add('active');
             dots[index].classList.add('active');
         }

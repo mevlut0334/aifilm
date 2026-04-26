@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', config('app.name'))</title>
+    @yield('meta')
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         /* 🎨 Renk Paleti */
@@ -27,7 +28,7 @@
             padding: 0;
             background: var(--bg-primary);
         }
-        
+
         /* Navbar styling */
         .navbar {
             background: var(--bg-secondary) !important;
@@ -189,7 +190,7 @@
             <div class="alert alert-danger">{{ session('error') }}</div>
         </div>
     @endif
-    
+
     <main>
         @yield('content')
     </main>
