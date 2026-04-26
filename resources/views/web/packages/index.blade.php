@@ -9,12 +9,15 @@
     color: #FFFFFF !important;
     font-weight: bold;
 }
-
 .container .lead {
     color: #FFFFFF !important;
 }
-
-/* Consent note */
+.price-amount {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #D4AF37;
+    line-height: 1.1;
+}
 .purchase-consent {
     margin-top: 2.5rem;
     padding: 1rem 1.4rem;
@@ -26,7 +29,6 @@
     color: #BFBFBF;
     line-height: 1.7;
 }
-
 .purchase-consent a {
     color: #D4AF37;
     text-decoration: underline;
@@ -34,7 +36,6 @@
     text-decoration-color: rgba(212, 175, 55, 0.4);
     transition: color 0.2s;
 }
-
 .purchase-consent a:hover {
     color: #F5D97A;
 }
@@ -70,9 +71,8 @@
                                     {{ $package->token_amount }} @trans_safe('packages.tokens')
                                 </h2>
                                 @if($package->price_details)
-                                    <p class="text-muted">
-                                        {{ $package->price_details['amount'] ?? 'N/A' }}
-                                        {{ $package->price_details['currency'] ?? '' }}
+                                    <p class="price-amount">
+                                        ${{ number_format($package->price_details['amount'] ?? 0, 2) }}
                                     </p>
                                 @else
                                     <p class="text-danger fw-bold">
@@ -108,24 +108,22 @@
             @endforeach
         </div>
 
-        {{-- Consent Note --}}
         <div class="purchase-consent">
             {{ __('packages.consent_text') }}
             <a href="{{ LaravelLocalization::getLocalizedURL(null, route('terms', [], false)) }}">{{ __('packages.consent_terms') }}</a>
             {{ __('packages.consent_and') }}
             <a href="{{ LaravelLocalization::getLocalizedURL(null, route('refund', [], false)) }}">{{ __('packages.consent_refund') }}</a>{{ __('packages.consent_end') }}
         </div>
-
     @endif
 </div>
 
 @auth
-<script src="https://cdn.paddle.com/paddle/paddle.js"></script>
+<script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
 <script>
-    Paddle.Setup({
-        vendor: {{ config('services.paddle.vendor_id', 0) }},
+    Paddle.Initialize({
+        token: '{{ config('cashier.client_side_token') }}',
         eventCallback: function(data) {
-            if (data.event === 'Checkout.Complete') {
+            if (data.name === 'checkout.completed') {
                 window.location.reload();
             }
         }
@@ -133,12 +131,14 @@
 
     function purchasePackage(priceId, packageId) {
         Paddle.Checkout.open({
-            product: priceId,
-            email: '{{ auth()->user()->email }}',
-            passthrough: JSON.stringify({
+            items: [{ priceId: priceId, quantity: 1 }],
+            customer: {
+                email: '{{ auth()->user()->email }}'
+            },
+            customData: {
                 user_id: {{ auth()->id() }},
                 package_id: packageId
-            })
+            }
         });
     }
 </script>
