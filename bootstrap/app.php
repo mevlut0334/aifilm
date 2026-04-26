@@ -31,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'localizationRedirect' => LaravelLocalizationRedirectFilter::class,
             'localeViewPath' => LaravelLocalizationViewPath::class,
             'setLocaleFromHeader' => SetLocaleFromHeader::class,
+            'api.key'                => \App\Http\Middleware\ApiKeyMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
