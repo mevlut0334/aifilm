@@ -5,7 +5,7 @@
 @section('content')
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>{{ __('custom_videos.title_index') }}</h1>
+        <h1 class="fw-bold fs-2 text-white">{{ __('custom_videos.title_index') }}</h1>
         <a href="{{ route('custom-videos.create') }}" class="btn btn-primary">
             {{ __('custom_videos.new_video') }}
         </a>
@@ -40,10 +40,10 @@
                                 {{ Str::limit($request->prompt, 100) }}
                             </p>
                             <div class="progress mb-3" style="height: 20px;">
-                                <div class="progress-bar" role="progressbar" 
+                                <div class="progress-bar" role="progressbar"
                                      style="width: {{ $request->getOverallProgress() }}%;"
-                                     aria-valuenow="{{ $request->getOverallProgress() }}" 
-                                     aria-valuemin="0" 
+                                     aria-valuenow="{{ $request->getOverallProgress() }}"
+                                     aria-valuemin="0"
                                      aria-valuemax="100">
                                     {{ $request->getOverallProgress() }}%
                                 </div>

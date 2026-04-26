@@ -5,7 +5,7 @@
 @section('content')
 
 <div class="container mt-4">
-    <h1 class="mb-4">{{ __('requests.My Requests') }}</h1>
+    <h1 class="mb-4 fw-bold fs-2 text-white">{{ __('requests.My Requests') }}</h1>
 
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
@@ -63,17 +63,17 @@
                             </td>
                             <td>
                                 <div class="progress" style="width: 100px; height: 20px;">
-                                    <div class="progress-bar" role="progressbar" 
+                                    <div class="progress-bar" role="progressbar"
                                          style="width: {{ $request->progress }}%;"
-                                         aria-valuenow="{{ $request->progress }}" 
-                                         aria-valuemin="0" 
+                                         aria-valuenow="{{ $request->progress }}"
+                                         aria-valuemin="0"
                                          aria-valuemax="100">
                                         {{ $request->progress }}%
                                     </div>
                                 </div>
                             </td>
                             <td>
-                                <a href="{{ route('generation-requests.show', $request->uuid) }}" 
+                                <a href="{{ route('generation-requests.show', $request->uuid) }}"
                                    class="btn btn-sm btn-primary">
                                     {{ __('requests.Detail') }}
                                 </a>
