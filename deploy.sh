@@ -217,9 +217,8 @@ docker exec aifilm_app php artisan storage:link || echo "⚠ Storage link zaten 
 # Cache temizle ve optimize et
 echo "🔧 Laravel optimize ediliyor..."
 docker exec aifilm_app php artisan config:cache
-docker exec aifilm_app php artisan route:cache
+docker exec aifilm_app php artisan event:cache
 docker exec aifilm_app php artisan view:cache
-docker exec aifilm_app php artisan optimize
 
 # OPcache'i temizle
 echo "🔄 OPcache temizleniyor..."

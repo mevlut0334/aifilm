@@ -36,7 +36,9 @@ echo "🗄️ Migration çalıştırılıyor..."
 docker exec aifilm_app php artisan migrate --force
 
 echo "⚡ Laravel optimize ediliyor..."
-docker exec aifilm_app php artisan optimize
+docker exec aifilm_app php artisan config:cache
+docker exec aifilm_app php artisan event:cache
+docker exec aifilm_app php artisan view:cache
 
 echo "🔄 OPcache temizleniyor..."
 docker exec aifilm_app php -r "opcache_reset();" 2>/dev/null || echo "⚠ OPcache reset edilemedi"
