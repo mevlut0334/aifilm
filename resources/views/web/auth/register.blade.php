@@ -3,7 +3,67 @@
 @section('title', __('auth.Register'))
 
 @section('content')
-<div class="container">
+<style>
+    .register-wrapper .card {
+        background-color: #121212;
+        border: 1px solid #2a2a2a;
+        color: #FFFFFF;
+    }
+    .register-wrapper .card-header {
+        background-color: #1a1a1a;
+        border-bottom: 1px solid #2a2a2a;
+        color: #D4AF37;
+        font-weight: 600;
+    }
+    .register-wrapper .form-label {
+        color: #BFBFBF;
+    }
+    .register-wrapper .form-control,
+    .register-wrapper .form-select {
+        background-color: #1a1a1a;
+        border: 1px solid #2e2e2e;
+        color: #FFFFFF;
+    }
+    .register-wrapper .form-control:focus,
+    .register-wrapper .form-select:focus {
+        background-color: #1a1a1a;
+        border-color: #D4AF37;
+        color: #FFFFFF;
+        box-shadow: 0 0 0 0.2rem rgba(212, 175, 55, 0.15);
+    }
+    .register-wrapper .form-control::placeholder {
+        color: #6B6B6B;
+    }
+    .register-wrapper .form-select option {
+        background-color: #1a1a1a;
+        color: #FFFFFF;
+    }
+    .register-wrapper .form-control.is-invalid,
+    .register-wrapper .form-select.is-invalid {
+        border-color: #ef4444;
+    }
+    .register-wrapper .invalid-feedback {
+        color: #ef4444;
+    }
+    .register-wrapper .btn-primary {
+        background-color: #D4AF37;
+        border-color: #D4AF37;
+        color: #0B0B0B;
+        font-weight: 600;
+        transition: background-color 0.2s, border-color 0.2s;
+    }
+    .register-wrapper .btn-primary:hover,
+    .register-wrapper .btn-primary:focus {
+        background-color: #F5D97A;
+        border-color: #F5D97A;
+        color: #0B0B0B;
+    }
+    .register-wrapper .container {
+        background-color: transparent;
+    }
+</style>
+
+<div class="container register-wrapper" style="background-color: #0B0B0B; min-height: 100vh; padding-top: 2rem; padding-bottom: 2rem;">
     <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="card">
