@@ -12,7 +12,8 @@ class PackageController extends Controller
     public function __construct(
         private PackageRepository $packageRepository,
         private PaddleService $paddleService
-    ) {}
+    ) {
+    }
 
     public function index(): View
     {
@@ -28,11 +29,11 @@ class PackageController extends Controller
 
         // Paddle'dan fiyatları çek
         $paddlePrices = [];
-        if (! empty($priceIds)) {
+        if (!empty($priceIds)) {
             try {
                 $paddlePrices = $this->paddleService->fetchPaddlePrices($priceIds);
             } catch (\Exception $e) {
-                Log::warning('Paddle fiyatları çekilemedi: '.$e->getMessage());
+                Log::warning('Paddle fiyatları çekilemedi: ' . $e->getMessage());
             }
         }
 
@@ -44,6 +45,7 @@ class PackageController extends Controller
             if (isset($paddlePrices[$pid]) && is_array($paddlePrices[$pid])) {
                 $package->paddle_price = $paddlePrices[$pid]['amount'] ?? null;
                 $package->paddle_currency = $paddlePrices[$pid]['currency'] ?? 'USD';
+                $package->price_details = $paddlePrices[$pid];
             } else {
                 $package->paddle_price = null;
                 $package->paddle_currency = 'USD';
