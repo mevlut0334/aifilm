@@ -64,22 +64,19 @@ class HandlePaddleWebhook
                     'status' => 'completed',
                 ]);
 
-                $this->tokenService->addTokens(
+                $this->tokenService->resetAndAddTokens(
                     $userId,
                     $package->token_amount,
                     'purchase',
-                    $package->is_subscription
-                        ? "Monthly subscription: {$package->getTitle()}"
-                        : "Package purchase: {$package->getTitle()}",
+                    "Package purchase: {$package->getTitle()}",
                     $transaction->id,
                     'paddle'
                 );
 
                 DB::commit();
 
-                Log::info('Tokens added successfully', [
+                Log::info('Tokens reset and added successfully', [
                     'user_id' => $userId,
-                    'package_id' => $packageId,
                     'tokens' => $package->token_amount,
                     'purchase_id' => $purchase->id,
                 ]);
@@ -113,9 +110,6 @@ class HandlePaddleWebhook
         ]);
     }
 
-    /**
-     * Handle raw webhook payload (WebhookReceived fallback)
-     */
     public function handleRawTransaction(array $transaction): void
     {
         $customData = $transaction['custom_data'] ?? [];
@@ -158,20 +152,18 @@ class HandlePaddleWebhook
                 'status' => 'completed',
             ]);
 
-            $this->tokenService->addTokens(
+            $this->tokenService->resetAndAddTokens(
                 $userId,
                 $package->token_amount,
                 'purchase',
-                $package->is_subscription
-                    ? "Monthly subscription: {$package->getTitle()}"
-                    : "Package purchase: {$package->getTitle()}",
+                "Package purchase: {$package->getTitle()}",
                 $transactionId,
                 'paddle'
             );
 
             DB::commit();
 
-            Log::info('Tokens added via raw webhook', [
+            Log::info('Tokens reset and added via raw webhook', [
                 'user_id' => $userId,
                 'tokens' => $package->token_amount,
                 'purchase_id' => $purchase->id,

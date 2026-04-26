@@ -21,15 +21,45 @@ class TokenService
         try {
             DB::beginTransaction();
 
-            // Ensure balance record exists
             if (! $this->tokenRepository->hasBalance($userId)) {
                 $this->tokenRepository->createOrUpdateBalance($userId, 0);
             }
 
-            // Increment balance
             $this->tokenRepository->incrementBalance($userId, $amount);
 
-            // Create transaction record
+            $this->tokenRepository->createTransaction([
+                'user_id' => $userId,
+                'amount' => $amount,
+                'type' => $type,
+                'reference_id' => $referenceId,
+                'reference_type' => $referenceType,
+                'note' => $note,
+            ]);
+
+            DB::commit();
+
+            return true;
+        } catch (Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
+    public function resetAndAddTokens(int $userId, int $amount, string $type, ?string $note = null, ?string $referenceId = null, ?string $referenceType = null): bool
+    {
+        if ($amount <= 0) {
+            throw new Exception('Token amount must be positive');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Mevcut bakiyeyi sıfırla
+            $this->tokenRepository->createOrUpdateBalance($userId, 0);
+
+            // Yeni tokenları ekle
+            $this->tokenRepository->incrementBalance($userId, $amount);
+
             $this->tokenRepository->createTransaction([
                 'user_id' => $userId,
                 'amount' => $amount,
@@ -62,10 +92,8 @@ class TokenService
         try {
             DB::beginTransaction();
 
-            // Decrement balance
             $this->tokenRepository->decrementBalance($userId, $amount);
 
-            // Create transaction record (negative amount)
             $this->tokenRepository->createTransaction([
                 'user_id' => $userId,
                 'amount' => -$amount,
