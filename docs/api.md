@@ -8,11 +8,28 @@
 
 ## Authentication
 
-Laravel Sanctum Bearer Token sistemi kullanılır.
+Tüm API isteklerinde iki katmanlı kimlik doğrulama kullanılır.
+
+### 1. API Key Authentication (Zorunlu — Tüm İstekler)
+
+Her istekte aşağıdaki header'lar zorunludur:
+
+```http
+X-App-Key: {app_key}
+X-Secret-Key: {secret_key}
+```
+
+Bu header'lar eksik veya hatalı olduğunda tüm istekler `401 Unauthorized` döner.
+
+### 2. Bearer Token Authentication (Korumalı Endpoint'ler)
+
+Kullanıcı girişi gerektiren endpoint'lerde ek olarak Sanctum Bearer Token kullanılır:
 
 ```http
 Authorization: Bearer {token}
 ```
+
+Bearer token, `/api/v1/login` endpoint'inden alınır.
 
 ## Language Header
 
