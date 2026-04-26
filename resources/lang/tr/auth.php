@@ -24,4 +24,11 @@ return [
     'throttle' => 'Çok fazla giriş denemesi. Lütfen :seconds saniye sonra tekrar deneyin.',
     'registered_successfully' => 'Kayıt başarılı. Lütfen giriş yapınız.',
     'logged_out' => 'Başarıyla çıkış yaptınız.',
+
+    // Consent
+    'consent_register' => 'Kayıt olarak',
+    'consent_terms' => 'Kullanım Şartları',
+    'consent_and' => 've',
+    'consent_privacy' => 'Gizlilik Politikası',
+    'consent_end' => '\'nı kabul etmiş olursunuz.',
 ];

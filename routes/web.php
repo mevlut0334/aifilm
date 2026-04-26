@@ -27,6 +27,29 @@ Route::group([
     // Public packages page (no auth required)
     Route::get('/packages', [PackageController::class, 'index'])->name('packages.index');
 
+    // Legal pages (public, no auth required)
+    Route::get('/privacy-policy', function () {
+        return view('privacy');
+    })->name('privacy');
+
+    Route::get('/terms-of-service', function () {
+        return view('terms');
+    })->name('terms');
+
+    Route::get('/refund-policy', function () {
+        return view('refund');
+    })->name('refund');
+
+    Route::get('/contact', function () {
+        return view('contact');
+    })->name('contact');
+
+    Route::get('/about', function () {
+        return view('about');
+    })->name('about');
+
+
+
     // Paddle success page
     Route::get('/paddle/success', function () {
         return redirect()->route('packages.index')->with('success', __('Payment successful! Your tokens have been added to your account.'));

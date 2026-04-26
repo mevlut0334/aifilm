@@ -24,4 +24,11 @@ return [
     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
     'registered_successfully' => 'Registration successful. Please login.',
     'logged_out' => 'You have been logged out successfully.',
+
+    // Consent
+    'consent_register' => 'By registering, you agree to our',
+    'consent_terms' => 'Terms of Service',
+    'consent_and' => 'and',
+    'consent_privacy' => 'Privacy Policy',
+    'consent_end' => '.',
 ];

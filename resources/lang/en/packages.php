@@ -38,4 +38,11 @@ return [
     // Info
     'platform_info' => 'Web packages require title, description and Paddle Price ID. iOS and Android packages only require Product ID (defined in App Store / Play Store).',
     'product_id_help' => 'The product ID defined in Apple App Store or Google Play Console (e.g., com.aifilm.tokens.100)',
+
+    // Consent
+    'consent_text' => 'By purchasing, you confirm that you have read and agreed to our',
+    'consent_terms' => 'Terms of Service',
+    'consent_and' => 'and',
+    'consent_refund' => 'Refund Policy',
+    'consent_end' => '.',
 ];

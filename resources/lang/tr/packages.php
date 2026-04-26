@@ -38,4 +38,11 @@ return [
     // Info
     'platform_info' => 'Web paketleri için başlık, açıklama ve Paddle Price ID gereklidir. iOS ve Android paketleri için sadece Product ID (App Store / Play Store\'da tanımlı) yeterlidir.',
     'product_id_help' => 'Apple App Store veya Google Play Console\'da tanımlı ürün ID (örn: com.aifilm.tokens.100)',
+
+    // Consent
+    'consent_text' => 'Satın alarak',
+    'consent_terms' => 'Kullanım Şartları',
+    'consent_and' => 've',
+    'consent_refund' => 'İade Politikası',
+    'consent_end' => '\'nı okuduğunuzu ve kabul ettiğinizi onaylıyorsunuz.',
 ];

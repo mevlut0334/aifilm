@@ -13,6 +13,31 @@
 .container .lead {
     color: #FFFFFF !important;
 }
+
+/* Consent note */
+.purchase-consent {
+    margin-top: 2.5rem;
+    padding: 1rem 1.4rem;
+    background: rgba(212, 175, 55, 0.05);
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    border-radius: 10px;
+    text-align: center;
+    font-size: 0.88rem;
+    color: #BFBFBF;
+    line-height: 1.7;
+}
+
+.purchase-consent a {
+    color: #D4AF37;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: rgba(212, 175, 55, 0.4);
+    transition: color 0.2s;
+}
+
+.purchase-consent a:hover {
+    color: #F5D97A;
+}
 </style>
 
 <div class="container">
@@ -46,7 +71,7 @@
                                 </h2>
                                 @if($package->price_details)
                                     <p class="text-muted">
-                                        {{ $package->price_details['amount'] ?? 'N/A' }} 
+                                        {{ $package->price_details['amount'] ?? 'N/A' }}
                                         {{ $package->price_details['currency'] ?? '' }}
                                     </p>
                                 @else
@@ -62,8 +87,8 @@
                         <div class="card-footer bg-transparent border-top-0">
                             @if($package->is_active)
                                 @auth
-                                    <button type="button" 
-                                            class="btn btn-primary w-100" 
+                                    <button type="button"
+                                            class="btn btn-primary w-100"
                                             onclick="purchasePackage('{{ $package->paddle_price_id }}', {{ $package->id }})">
                                         @trans_safe('packages.purchase_now')
                                     </button>
@@ -82,14 +107,22 @@
                 </div>
             @endforeach
         </div>
+
+        {{-- Consent Note --}}
+        <div class="purchase-consent">
+            {{ __('packages.consent_text') }}
+            <a href="{{ LaravelLocalization::getLocalizedURL(null, route('terms', [], false)) }}">{{ __('packages.consent_terms') }}</a>
+            {{ __('packages.consent_and') }}
+            <a href="{{ LaravelLocalization::getLocalizedURL(null, route('refund', [], false)) }}">{{ __('packages.consent_refund') }}</a>{{ __('packages.consent_end') }}
+        </div>
+
     @endif
 </div>
 
 @auth
 <script src="https://cdn.paddle.com/paddle/paddle.js"></script>
 <script>
-    // Initialize Paddle
-    Paddle.Setup({ 
+    Paddle.Setup({
         vendor: {{ config('services.paddle.vendor_id', 0) }},
         eventCallback: function(data) {
             if (data.event === 'Checkout.Complete') {
