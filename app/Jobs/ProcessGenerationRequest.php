@@ -43,7 +43,7 @@ class ProcessGenerationRequest implements ShouldQueue
 
         try {
             // Zaten pending olarak oluşturuldu, processing'e al
-            $service->markAsProcessing($this->request);
+
 
             // TODO: Buraya harici AI API çağrısı gelecek
             // Örnek:
