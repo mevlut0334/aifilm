@@ -54,6 +54,30 @@ services:
              php artisan storage:link &&
              apache2-foreground"
 
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aifilm_queue
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+      - /var/www/html/vendor
+      - /var/www/html/node_modules
+    depends_on:
+      - mysql
+      - redis
+      - laravel
+    networks:
+      - aifilm_network
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+    command: >
+      sh -c "sleep 15 &&
+             php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600 --verbose"
+
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: aifilm_phpmyadmin

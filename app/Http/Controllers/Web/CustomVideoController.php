@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\ProcessCustomVideoRequest;
+use App\Jobs\ProcessCustomVideoSegmentEdit;
 use App\Models\CustomVideoEditRequest;
 use App\Models\CustomVideoRequest;
 use App\Models\CustomVideoSegment;
@@ -40,10 +42,10 @@ class CustomVideoController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'prompt' => 'required|string', // No length limit
+            'prompt' => 'required|string',
             'format' => 'required|in:vertical,horizontal,square',
-            'input_image' => 'nullable|image|max:10240', // Optional main image
-            'reference_images.*' => 'nullable|image|max:10240', // Multiple reference images
+            'input_image' => 'nullable|image|max:10240',
+            'reference_images.*' => 'nullable|image|max:10240',
         ]);
 
         $user = Auth::user();
@@ -60,14 +62,14 @@ class CustomVideoController extends Controller
             $inputImagePath = $request->file('input_image')->store('custom-videos/inputs', 'public');
         }
 
-        // Create custom video request (no tokens deducted yet)
+        // Token admin tarafından belirleneceği için şimdi kesilmez
         $customVideoRequest = CustomVideoRequest::create([
             'user_id' => $user->id,
             'prompt' => $validated['prompt'],
             'format' => $validated['format'],
             'input_image_path' => $inputImagePath,
             'status' => 'pending',
-            'token_cost' => null, // Will be set by admin
+            'token_cost' => null,
             'token_deducted' => false,
         ]);
 
@@ -81,6 +83,9 @@ class CustomVideoController extends Controller
                 ]);
             }
         }
+
+        // Arka planda işleme al
+        ProcessCustomVideoRequest::dispatch($customVideoRequest);
 
         return redirect()
             ->route('custom-videos.show', $customVideoRequest->uuid)
@@ -100,7 +105,7 @@ class CustomVideoController extends Controller
     public function requestSegmentEdit(Request $request, int $segmentId): RedirectResponse
     {
         $validated = $request->validate([
-            'edit_prompt' => 'required|string', // No length limit
+            'edit_prompt' => 'required|string',
         ]);
 
         $segment = CustomVideoSegment::findOrFail($segmentId);
@@ -124,12 +129,15 @@ class CustomVideoController extends Controller
             return back()->withErrors(['error' => __('custom_videos.Segment already has a pending edit request')]);
         }
 
-        // Create edit request
-        CustomVideoEditRequest::create([
+        // Token admin tarafından belirleneceği için şimdi kesilmez
+        $editRequest = CustomVideoEditRequest::create([
             'custom_video_segment_id' => $segmentId,
             'edit_prompt' => $validated['edit_prompt'],
             'status' => 'pending',
         ]);
+
+        // Arka planda işleme al
+        ProcessCustomVideoSegmentEdit::dispatch($editRequest);
 
         return back()->with('success', __('custom_videos.Edit request submitted successfully'));
     }

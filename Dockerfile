@@ -12,7 +12,7 @@ RUN pecl install redis && docker-php-ext-enable redis
 RUN a2enmod rewrite
 
 # Copy custom PHP configuration
-COPY docker/php.ini /usr/local/etc/php/conf.d/uploads.ini
+COPY docker/php/php.ini /usr/local/etc/php/conf.d/uploads.ini
 
 # Apache configuration
 RUN echo '<Directory /var/www/html/public>\n\

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\ProcessGenerationRequest;
 use App\Services\GenerationRequestService;
 use App\Services\TokenService;
 use Illuminate\Http\RedirectResponse;
@@ -68,10 +69,14 @@ class GenerationRequestController extends Controller
                 $data['input_image_path'] = $path;
             }
 
+            // Token bu satırda kesilir, request oluşturulur
             $generationRequest = $this->generationRequestService->createRequest(
                 auth()->id(),
                 $data
             );
+
+            // Arka planda işleme al
+            ProcessGenerationRequest::dispatch($generationRequest);
 
             return redirect()->route('generation-requests.show', $generationRequest->uuid)
                 ->with('success', __('Talebiniz başarıyla oluşturuldu.'));

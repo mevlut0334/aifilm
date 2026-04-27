@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ProcessCustomImageRequest;
 use App\Models\CustomImage;
 use App\Models\Setting;
 use App\Services\TokenService;
@@ -41,9 +42,9 @@ class CustomImageController extends Controller
         $validated = $request->validate([
             'prompt' => 'required|string|max:2000',
             'format' => 'required|in:vertical,horizontal,square',
-            'input_image' => 'nullable|image|max:10240', // 10MB max (backward compatibility)
+            'input_image' => 'nullable|image|max:10240',
             'reference_images' => 'nullable|array',
-            'reference_images.*' => 'image|max:10240', // 10MB max per image
+            'reference_images.*' => 'image|max:10240',
         ]);
 
         $tokenCost = Setting::get('custom_image_token_cost', 50);
@@ -79,6 +80,8 @@ class CustomImageController extends Controller
             'progress' => 0,
             'token_cost' => $tokenCost,
         ]);
+
+        ProcessCustomImageRequest::dispatch($customImage);
 
         // Handle multiple reference images
         if ($request->hasFile('reference_images')) {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\ProcessGenerationRequest;
 use App\Services\GenerationRequestService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -108,10 +109,14 @@ class GenerationRequestController extends Controller
                 $data['input_image_path'] = $path;
             }
 
+            // Token bu satırda kesilir, request oluşturulur
             $generationRequest = $this->generationRequestService->createRequest(
                 auth()->id(),
                 $data
             );
+
+            // Arka planda işleme al
+            ProcessGenerationRequest::dispatch($generationRequest);
 
             return $this->successResponse([
                 'request' => [

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\ProcessCustomVideoRequest;
+use App\Jobs\ProcessCustomVideoSegmentEdit;
 use App\Repositories\CustomVideoRequestRepository;
 use App\Repositories\CustomVideoSegmentRepository;
 use App\Services\CustomVideoEditRequestService;
@@ -92,6 +94,8 @@ class CustomVideoRequestController extends Controller
                 $data
             );
 
+            ProcessCustomVideoRequest::dispatch($videoRequest);
+
             return $this->successResponse([
                 'request' => [
                     'uuid' => $videoRequest->uuid,
@@ -121,8 +125,6 @@ class CustomVideoRequestController extends Controller
             }
 
             $segments = $request->segments->sortBy('segment_number')->values()->map(function ($segment) {
-                // Eğer URL http veya https ile başlıyorsa, olduğu gibi döndür (Drive link vb.)
-                // Değilse storage path olarak varsay
                 $videoUrl = null;
                 if ($segment->video_url) {
                     if (str_starts_with($segment->video_url, 'http://') || str_starts_with($segment->video_url, 'https://')) {
@@ -228,6 +230,8 @@ class CustomVideoRequestController extends Controller
                 $segment,
                 $validated['edit_prompt']
             );
+
+            ProcessCustomVideoSegmentEdit::dispatch($editRequest);
 
             return $this->successResponse([
                 'edit_request' => [
