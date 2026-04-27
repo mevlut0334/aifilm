@@ -211,7 +211,7 @@
 
     .nav-cards-container {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         gap: 12px;
         max-width: 1200px;
         margin: 0 auto;
@@ -249,7 +249,7 @@
     /* Responsive for Navigation Cards */
     @media (max-width: 992px) {
         .nav-cards-container {
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 10px;
             padding: 0 15px;
         }
@@ -270,7 +270,7 @@
         }
 
         .nav-cards-container {
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 8px;
             padding: 0 12px;
         }
@@ -291,7 +291,7 @@
         }
 
         .nav-cards-container {
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 6px;
             padding: 0 8px;
         }
@@ -400,10 +400,10 @@
 <!-- Section 2: Navigation Cards -->
 <section class="nav-cards-section">
     <div class="nav-cards-container">
-        <!-- Card 1: Templates -->
-        <a href="{{ route('templates.index') }}" class="nav-card">
+        {{-- Card 1: Templates (kaldırıldı) --}}
+        {{-- <a href="{{ route('templates.index') }}" class="nav-card">
             <h3 class="nav-card-title">{{ __('home.nav_templates') }}</h3>
-        </a>
+        </a> --}}
 
         <!-- Card 2: Custom Images -->
         <a href="{{ route('custom-images.create') }}" class="nav-card">
