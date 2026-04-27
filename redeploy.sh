@@ -25,6 +25,13 @@ if ! docker ps | grep -q aifilm_app; then
     exit 1
 fi
 
+if ! docker ps | grep -q aifilm_queue; then
+    echo "❌ Queue worker başlatılamadı!"
+    docker logs aifilm_queue --tail=30
+    exit 1
+fi
+echo "✅ Queue worker çalışıyor"
+
 echo "📁 Storage izinleri ayarlanıyor..."
 docker exec aifilm_app chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 docker exec aifilm_app chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache

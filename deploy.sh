@@ -198,6 +198,13 @@ if ! docker ps | grep -q aifilm_app; then
     exit 1
 fi
 
+if ! docker ps | grep -q aifilm_queue; then
+    echo "❌ Queue worker başlatılamadı!"
+    docker logs aifilm_queue 2>/dev/null || true
+    exit 1
+fi
+echo "✅ Queue worker çalışıyor"
+
 echo "✅ Container'lar çalışıyor"
 
 # Storage izinlerini Docker içinde ayarla
