@@ -439,14 +439,15 @@
                             - Intersection Observer JS kısmı iOS için görünüme girince oynatır
                         --}}
                         <video
-                            autoplay
                             muted
                             loop
                             playsinline
-                            preload="none"
+                            preload="metadata"
                             style="aspect-ratio: {{ $aspectRatio }};"
                             onmouseenter="this.play()"
                             onmouseleave="this.pause(); this.currentTime=0;"
+                            ontouchstart="this.play()"
+                            ontouchend="this.pause(); this.currentTime=0;"
                         >
                             <source src="{{ $template->getVideoUrlForOrientation($previewOrientation) }}" type="video/mp4">
                         </video>
@@ -546,10 +547,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const grid = document.querySelector('#masonry-grid');
     if (!grid) return;
 
-    // iOS tespiti
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
     // Masonry başlat
     const msnry = new Masonry(grid, {
         itemSelector: '.template-card',
@@ -563,47 +560,7 @@ document.addEventListener("DOMContentLoaded", function () {
         video.addEventListener('loadeddata', () => msnry.layout());
     });
 
-    // ─── iOS / Mobil: Intersection Observer ile görünüme girince oynat ───
-    // Masaüstünde hover zaten çalışıyor, mobilde hover yok → Observer gerekli
-    if (isMobile || isIOS) {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach(entry => {
-                    const video = entry.target.querySelector('video');
-                    if (!video) return;
 
-                    if (entry.isIntersecting) {
-                        // iOS'ta play() promise döndürür, hata yönetimi şart
-                        const playPromise = video.play();
-                        if (playPromise !== undefined) {
-                            playPromise.catch(() => {
-                                // Autoplay engellendi — sessizce geç
-                                // video siyah kalmaz çünkü poster veya ilk frame gösterilir
-                            });
-                        }
-                    } else {
-                        video.pause();
-                        video.currentTime = 0;
-                    }
-                });
-            },
-            {
-                root: null,
-                rootMargin: '0px',
-                threshold: 0.25 // %25 görününce oynat
-            }
-        );
-
-        grid.querySelectorAll('.template-card').forEach(card => {
-            observer.observe(card);
-        });
-
-        // Mobilde hover eventlarını kaldır (gereksiz)
-        grid.querySelectorAll('.template-card video').forEach(video => {
-            video.removeAttribute('onmouseenter');
-            video.removeAttribute('onmouseleave');
-        });
-    }
 });
 </script>
 @endsection
