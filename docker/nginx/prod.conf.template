@@ -24,11 +24,23 @@ server {
     # SSL Sertifikaları
     ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+
+    # Protokoller - TLS 1.2 eski cihazlar için gerekli
     ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-CHACHA20-POLY1305;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
     ssl_prefer_server_ciphers off;
+
+    # Session
     ssl_session_cache shared:SSL:10m;
-    ssl_session_timeout 10m;
+    ssl_session_timeout 1d;
+    ssl_session_tickets off;
+
+    # OCSP Stapling - "Güvenli Değil" uyarısını önler
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    ssl_trusted_certificate /etc/letsencrypt/live/${DOMAIN}/chain.pem;
+    resolver 8.8.8.8 8.8.4.4 1.1.1.1 valid=300s;
+    resolver_timeout 5s;
 
     # Güvenlik Headers
     add_header X-Frame-Options "SAMEORIGIN" always;
@@ -36,6 +48,7 @@ server {
     add_header X-XSS-Protection "1; mode=block" always;
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
     add_header Referrer-Policy "no-referrer-when-downgrade" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
 
     index index.php;
     charset utf-8;
@@ -124,5 +137,13 @@ server {
         access_log off;
         add_header Cache-Control "public, immutable";
         add_header Access-Control-Allow-Origin "*";
+    }
+
+    # Video dosyaları için özel ayar
+    location ~* \.(mp4|webm|ogg)$ {
+        expires 7d;
+        access_log off;
+        add_header Cache-Control "public";
+        add_header Accept-Ranges bytes;
     }
 }

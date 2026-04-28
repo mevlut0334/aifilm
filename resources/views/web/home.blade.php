@@ -400,11 +400,6 @@
 <!-- Section 2: Navigation Cards -->
 <section class="nav-cards-section">
     <div class="nav-cards-container">
-        {{-- Card 1: Templates (kaldırıldı) --}}
-        {{-- <a href="{{ route('templates.index') }}" class="nav-card">
-            <h3 class="nav-card-title">{{ __('home.nav_templates') }}</h3>
-        </a> --}}
-
         <!-- Card 2: Custom Images -->
         <a href="{{ route('custom-images.create') }}" class="nav-card">
             <h3 class="nav-card-title">{{ __('home.nav_images') }}</h3>
@@ -436,17 +431,29 @@
 
                 <a href="@guest {{ route('login') }} @else {{ route('templates.show', $template->uuid) }} @endguest" class="template-link">
                     <div class="template-card">
-                        <video muted loop playsinline preload="metadata"
-                               style="aspect-ratio: {{ $aspectRatio }};"
-                               onmouseenter="this.play()"
-                               onmouseleave="this.pause(); this.currentTime=0;">
+                        {{--
+                            iOS FIX:
+                            - autoplay muted playsinline: iOS Safari muted+playsinline ile autoplay'e izin verir
+                            - preload="none": mobilde bant genişliği tasarrufu
+                            - onmouseenter/onmouseleave: masaüstü hover oynatma korundu
+                            - Intersection Observer JS kısmı iOS için görünüme girince oynatır
+                        --}}
+                        <video
+                            autoplay
+                            muted
+                            loop
+                            playsinline
+                            preload="none"
+                            style="aspect-ratio: {{ $aspectRatio }};"
+                            onmouseenter="this.play()"
+                            onmouseleave="this.pause(); this.currentTime=0;"
+                        >
                             <source src="{{ $template->getVideoUrlForOrientation($previewOrientation) }}" type="video/mp4">
                         </video>
                     </div>
                 </a>
             @endforeach
         </div>
-
     </div>
 </section>
 
@@ -489,6 +496,11 @@
         width: 100%;
         height: auto;
         display: block;
+        /* iOS GPU render fix - siyah ekran önleme */
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
     }
 
     /* Tablet */
@@ -532,9 +544,13 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const grid = document.querySelector('#masonry-grid');
-
     if (!grid) return;
 
+    // iOS tespiti
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    // Masonry başlat
     const msnry = new Masonry(grid, {
         itemSelector: '.template-card',
         percentPosition: true,
@@ -543,10 +559,51 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Video yüklenince layout fix
     grid.querySelectorAll('.template-card video').forEach(video => {
-        video.addEventListener('loadeddata', () => {
-            msnry.layout();
-        });
+        video.addEventListener('loadedmetadata', () => msnry.layout());
+        video.addEventListener('loadeddata', () => msnry.layout());
     });
+
+    // ─── iOS / Mobil: Intersection Observer ile görünüme girince oynat ───
+    // Masaüstünde hover zaten çalışıyor, mobilde hover yok → Observer gerekli
+    if (isMobile || isIOS) {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach(entry => {
+                    const video = entry.target.querySelector('video');
+                    if (!video) return;
+
+                    if (entry.isIntersecting) {
+                        // iOS'ta play() promise döndürür, hata yönetimi şart
+                        const playPromise = video.play();
+                        if (playPromise !== undefined) {
+                            playPromise.catch(() => {
+                                // Autoplay engellendi — sessizce geç
+                                // video siyah kalmaz çünkü poster veya ilk frame gösterilir
+                            });
+                        }
+                    } else {
+                        video.pause();
+                        video.currentTime = 0;
+                    }
+                });
+            },
+            {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.25 // %25 görününce oynat
+            }
+        );
+
+        grid.querySelectorAll('.template-card').forEach(card => {
+            observer.observe(card);
+        });
+
+        // Mobilde hover eventlarını kaldır (gereksiz)
+        grid.querySelectorAll('.template-card video').forEach(video => {
+            video.removeAttribute('onmouseenter');
+            video.removeAttribute('onmouseleave');
+        });
+    }
 });
 </script>
 @endsection
