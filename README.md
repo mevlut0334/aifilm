@@ -83,8 +83,12 @@ chmod +x deploy.sh
 **Kullanımı:**
 ```bash
 cd /var/www/aifilm
+chmod +x redeploy.sh
 ./redeploy.sh
 ```
+veya 
+
+bash redeploy.sh
 
 **Downtime:** ~15-30 saniye
 
