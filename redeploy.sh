@@ -44,6 +44,7 @@ docker exec aifilm_app php artisan migrate --force
 
 echo "⚡ Laravel optimize ediliyor..."
 docker exec aifilm_app php artisan config:cache
+docker exec aifilm_app php artisan route:cache
 docker exec aifilm_app php artisan event:cache
 docker exec aifilm_app php artisan view:cache
 
