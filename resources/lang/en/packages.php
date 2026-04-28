@@ -45,4 +45,6 @@ return [
     'consent_and' => 'and',
     'consent_refund' => 'Refund Policy',
     'consent_end' => '.',
+
+    'payment_successful' => 'Payment successful! Your tokens have been added to your account.',
 ];

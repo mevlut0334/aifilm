@@ -52,7 +52,7 @@ Route::group([
 
     // Paddle success page
     Route::get('/paddle/success', function () {
-        return redirect()->route('packages.index')->with('success', __('Payment successful! Your tokens have been added to your account.'));
+        return redirect()->route('packages.index')->with('success', __('packages.payment_successful'));
     })->name('paddle.success');
 
     // Public templates pages (no auth required)

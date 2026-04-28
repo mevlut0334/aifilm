@@ -45,4 +45,6 @@ return [
     'consent_and' => 've',
     'consent_refund' => 'İade Politikası',
     'consent_end' => '\'nı okuduğunuzu ve kabul ettiğinizi onaylıyorsunuz.',
+
+    'payment_successful' => 'Ödeme başarılı! krediniz hesabınıza eklendi.',
 ];
