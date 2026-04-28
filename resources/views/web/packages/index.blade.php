@@ -190,7 +190,7 @@
         token: '{{ config('cashier.client_side_token') }}',
         eventCallback: function(data) {
             if (data.name === 'checkout.completed') {
-                window.location.reload();
+                window.location.href = '{{ route('paddle.success') }}';
             }
         }
     });
