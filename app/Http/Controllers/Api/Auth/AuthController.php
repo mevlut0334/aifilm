@@ -8,6 +8,8 @@ use App\Http\Requests\Api\Auth\RegisterRequest;
 use App\Services\ApiAuthService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Password;
 
 class AuthController extends Controller
 {
@@ -60,5 +62,33 @@ class AuthController extends Controller
         return $this->successResponse(
             data: ['user' => $user]
         );
+    }
+
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $status = $this->authService->sendResetLink($request->email);
+
+        return $status === Password::RESET_LINK_SENT
+            ? $this->successResponse(message: __($status))
+            : $this->errorResponse(message: __($status), status: 422);
+    }
+
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'token'    => 'required',
+            'email'    => 'required|email',
+            'password' => 'required|min:8|confirmed',
+        ]);
+
+        $status = $this->authService->resetPassword($request->only(
+            'token', 'email', 'password', 'password_confirmation'
+        ));
+
+        return $status === Password::PASSWORD_RESET
+            ? $this->successResponse(message: __($status))
+            : $this->errorResponse(message: __($status), status: 422);
     }
 }

@@ -152,7 +152,90 @@ Bu token'ı sonraki isteklerde `Authorization: Bearer {token}` olarak kullanın.
 
 ---
 
-### 1.3 Çıkış Yap (Logout)
+### 1.3 Şifremi Unuttum (Forgot Password)
+
+Kullanıcının e-posta adresine şifre sıfırlama bağlantısı gönderir.
+
+```
+POST /api/v1/forgot-password
+```
+
+**Request Body:**
+
+```json
+{
+  "email": "ahmet@example.com"
+}
+```
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "We have emailed your password reset link.",
+  "data": null,
+  "locale": "tr"
+}
+```
+
+**Hata Response (422):**
+
+```json
+{
+  "success": false,
+  "message": "We can't find a user with that email address.",
+  "data": null,
+  "locale": "tr"
+}
+```
+
+---
+
+### 1.4 Şifre Sıfırla (Reset Password)
+
+E-posta ile gelen token kullanılarak şifre sıfırlanır.
+
+```
+POST /api/v1/reset-password
+```
+
+**Request Body:**
+
+```json
+{
+  "token": "4587bec6c4152b27431ebd240a43ff73395f5d11",
+  "email": "ahmet@example.com",
+  "password": "yeni_sifre123",
+  "password_confirmation": "yeni_sifre123"
+}
+```
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "Your password has been reset.",
+  "data": null,
+  "locale": "tr"
+}
+```
+
+**Hata Response (422):**
+
+```json
+{
+  "success": false,
+  "message": "This password reset token is invalid.",
+  "data": null,
+  "locale": "tr"
+}
+```
+
+---
+
+### 1.5 Çıkış Yap (Logout)
 
 Kullanıcı oturumunu sonlandırır ve token'ı geçersiz kılar.
 
@@ -179,7 +262,7 @@ Authorization: Bearer {token}
 
 ---
 
-### 1.4 Profil Bilgileri (Profile)
+### 1.6 Profil Bilgileri (Profile)
 
 Giriş yapmış kullanıcının profil bilgilerini getirir.
 

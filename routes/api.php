@@ -10,13 +10,16 @@ use App\Http\Controllers\Api\V1\TokenController;
 use App\Http\Middleware\ApiKeyMiddleware;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('v1')->middleware(['setLocaleFromHeader',ApiKeyMiddleware::class])->group(function () {
+Route::prefix('v1')->middleware(['setLocaleFromHeader', ApiKeyMiddleware::class])->group(function () {
     Route::get('/health', function () {
         return response()->json(['status' => 'ok', 'locale' => app()->getLocale()]);
     });
 
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
