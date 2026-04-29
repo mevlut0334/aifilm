@@ -59,6 +59,14 @@ services:
       - REDIS_HOST=redis
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_PORT=6379
+      - MAIL_MAILER=smtp
+      - MAIL_SCHEME=tls
+      - MAIL_HOST=smtp.resend.com
+      - MAIL_PORT=465
+      - MAIL_USERNAME=resend
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_FROM_ADDRESS=noreply@asilov.com
+      - MAIL_FROM_NAME=aifilm
     networks:
       - aifilm_network
     depends_on:
@@ -96,6 +104,14 @@ services:
       - REDIS_HOST=redis
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_PORT=6379
+      - MAIL_MAILER=smtp
+      - MAIL_SCHEME=tls
+      - MAIL_HOST=smtp.resend.com
+      - MAIL_PORT=465
+      - MAIL_USERNAME=resend
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_FROM_ADDRESS=noreply@asilov.com
+      - MAIL_FROM_NAME=aifilm
     networks:
       - aifilm_network
     depends_on:
