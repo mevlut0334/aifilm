@@ -24,6 +24,11 @@ Route::group([
     Route::post('/register', [WebAuthController::class, 'register']);
     Route::post('/logout', [WebAuthController::class, 'logout'])->name('logout');
 
+    Route::get('/forgot-password', [WebAuthController::class, 'showForgotPassword'])->name('password.request');
+    Route::post('/forgot-password', [WebAuthController::class, 'sendResetLink'])->name('password.email');
+    Route::get('/reset-password/{token}', [WebAuthController::class, 'showResetPassword'])->name('password.reset');
+    Route::post('/reset-password', [WebAuthController::class, 'resetPassword'])->name('password.update');
+
     // Public packages page (no auth required)
     Route::get('/packages', [PackageController::class, 'index'])->name('packages.index');
 

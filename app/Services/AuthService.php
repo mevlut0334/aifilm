@@ -7,7 +7,10 @@ use App\Http\Requests\Web\Auth\RegisterRequest;
 use App\Models\User;
 use App\Repositories\SettingRepository;
 use App\Repositories\UserRepository;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 
 class AuthService
 {
@@ -48,5 +51,25 @@ class AuthService
     public function getUser(): ?User
     {
         return Auth::guard('web')->user();
+    }
+
+    public function sendResetLink(string $email): string
+    {
+        return Password::sendResetLink(['email' => $email]);
+    }
+
+    public function resetPassword(array $data): string
+    {
+        return Password::reset(
+            $data,
+            function (User $user, string $password) {
+                $user->forceFill([
+                    'password' => bcrypt($password),
+                    'remember_token' => Str::random(60),
+                ])->save();
+
+                event(new PasswordReset($user));
+            }
+        );
     }
 }

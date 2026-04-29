@@ -8,6 +8,8 @@ use App\Http\Requests\Web\Auth\RegisterRequest;
 use App\Services\AuthService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Password;
 use Illuminate\View\View;
 
 class AuthController extends Controller
@@ -25,9 +27,11 @@ class AuthController extends Controller
 
     public function register(RegisterRequest $request): RedirectResponse
     {
-        $this->authService->register($request);
+        $user = $this->authService->register($request);
 
-        return redirect()->route('login')->with('success', __('auth.registered_successfully'));
+        Auth::login($user);
+
+        return redirect()->route('home');
     }
 
     public function showLogin(): View
@@ -50,5 +54,43 @@ class AuthController extends Controller
         $request->session()->invalidate();
 
         return redirect()->route('home');
+    }
+
+    public function showForgotPassword(): View
+    {
+        return view('web.auth.forgot-password');
+    }
+
+    public function sendResetLink(Request $request): RedirectResponse
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $status = $this->authService->sendResetLink($request->email);
+
+        return $status === Password::RESET_LINK_SENT
+            ? back()->with('success', __('auth.reset_link_sent'))
+            : back()->withErrors(['email' => __('auth.reset_link_failed')]);
+    }
+
+    public function showResetPassword(string $token): View
+    {
+        return view('web.auth.reset-password', ['token' => $token]);
+    }
+
+    public function resetPassword(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'token'    => 'required',
+            'email'    => 'required|email',
+            'password' => 'required|min:8|confirmed',
+        ]);
+
+        $status = $this->authService->resetPassword($request->only(
+            'token', 'email', 'password', 'password_confirmation'
+        ));
+
+        return $status === Password::PASSWORD_RESET
+            ? redirect()->route('login')->with('success', __('auth.password_reset_success'))
+            : back()->withErrors(['email' => __('auth.' . $status)]);
     }
 }

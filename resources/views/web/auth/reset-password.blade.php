@@ -1,75 +1,59 @@
 @extends('web.layouts.app')
 
-@section('title', __('auth.Login'))
+@section('title', __('auth.Reset Password'))
 
 @section('content')
 <style>
-    .login-wrapper .card {
+    .reset-wrapper .card {
         background-color: #121212;
         border: 1px solid #2a2a2a;
         color: #FFFFFF;
     }
-    .login-wrapper .card-header {
+    .reset-wrapper .card-header {
         background-color: #1a1a1a;
         border-bottom: 1px solid #2a2a2a;
         color: #D4AF37;
         font-weight: 600;
     }
-    .login-wrapper .form-label {
-        color: #BFBFBF;
-    }
-    .login-wrapper .form-control {
+    .reset-wrapper .form-label { color: #BFBFBF; }
+    .reset-wrapper .form-control {
         background-color: #1a1a1a;
         border: 1px solid #2e2e2e;
         color: #FFFFFF;
     }
-    .login-wrapper .form-control:focus {
+    .reset-wrapper .form-control:focus {
         background-color: #1a1a1a;
         border-color: #D4AF37;
         color: #FFFFFF;
         box-shadow: 0 0 0 0.2rem rgba(212, 175, 55, 0.15);
     }
-    .login-wrapper .form-control::placeholder {
-        color: #6B6B6B;
-    }
-    .login-wrapper .form-control.is-invalid {
-        border-color: #ef4444;
-    }
-    .login-wrapper .invalid-feedback {
-        color: #ef4444;
-    }
-    .login-wrapper .btn-primary {
+    .reset-wrapper .form-control::placeholder { color: #6B6B6B; }
+    .reset-wrapper .form-control.is-invalid { border-color: #ef4444; }
+    .reset-wrapper .invalid-feedback { color: #ef4444; }
+    .reset-wrapper .btn-primary {
         background-color: #D4AF37;
         border-color: #D4AF37;
         color: #0B0B0B;
         font-weight: 600;
         transition: background-color 0.2s, border-color 0.2s;
     }
-    .login-wrapper .btn-primary:hover,
-    .login-wrapper .btn-primary:focus {
+    .reset-wrapper .btn-primary:hover,
+    .reset-wrapper .btn-primary:focus {
         background-color: #F5D97A;
         border-color: #F5D97A;
         color: #0B0B0B;
     }
-    .login-wrapper .auth-link {
-        color: #D4AF37;
-        text-decoration: none;
-        font-size: 0.85rem;
-    }
-    .login-wrapper .auth-link:hover {
-        color: #F5D97A;
-        text-decoration: underline;
-    }
 </style>
 
-<div class="container login-wrapper" style="background-color: #0B0B0B; min-height: 100vh; padding-top: 2rem; padding-bottom: 2rem;">
+<div class="container reset-wrapper" style="background-color: #0B0B0B; min-height: 100vh; padding-top: 2rem; padding-bottom: 2rem;">
     <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="card">
-                <div class="card-header">{{ __('auth.Login') }}</div>
+                <div class="card-header">{{ __('auth.Reset Password') }}</div>
                 <div class="card-body">
-                    <form method="POST" action="{{ route('login') }}">
+                    <form method="POST" action="{{ route('password.update') }}">
                         @csrf
+                        <input type="hidden" name="token" value="{{ $token }}">
                         <div class="mb-3">
                             <label for="email" class="form-label">{{ __('auth.Email') }}</label>
                             <input type="email" class="form-control @error('email') is-invalid @enderror"
@@ -79,25 +63,20 @@
                             @enderror
                         </div>
                         <div class="mb-3">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <label for="password" class="form-label mb-0">{{ __('auth.Password') }}</label>
-                                <a href="{{ route('password.request') }}" class="auth-link">
-                                    {{ __('auth.Forgot Password') }}
-                                </a>
-                            </div>
+                            <label for="password" class="form-label">{{ __('auth.Password') }}</label>
                             <input type="password" class="form-control @error('password') is-invalid @enderror"
                                 id="password" name="password" required>
                             @error('password')
                                 <span class="invalid-feedback">{{ $message }}</span>
                             @enderror
                         </div>
-                        <button type="submit" class="btn btn-primary w-100">{{ __('auth.Login') }}</button>
+                        <div class="mb-3">
+                            <label for="password_confirmation" class="form-label">{{ __('auth.Confirm Password') }}</label>
+                            <input type="password" class="form-control"
+                                id="password_confirmation" name="password_confirmation" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">{{ __('auth.Reset Password') }}</button>
                     </form>
-
-                    <p class="text-center mt-3 mb-0" style="font-size:0.85rem; color:#6B6B6B;">
-                        {{ __('auth.No Account') }}
-                        <a href="{{ route('register') }}" class="auth-link">{{ __('auth.Register') }}</a>
-                    </p>
                 </div>
             </div>
         </div>
