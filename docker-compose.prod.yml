@@ -60,7 +60,7 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_PORT=6379
       - MAIL_MAILER=smtp
-      - MAIL_SCHEME=tls
+      - MAIL_SCHEME=smtps
       - MAIL_HOST=smtp.resend.com
       - MAIL_PORT=465
       - MAIL_USERNAME=resend
@@ -105,7 +105,7 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_PORT=6379
       - MAIL_MAILER=smtp
-      - MAIL_SCHEME=tls
+      - MAIL_SCHEME=smtps
       - MAIL_HOST=smtp.resend.com
       - MAIL_PORT=465
       - MAIL_USERNAME=resend
