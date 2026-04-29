@@ -111,6 +111,20 @@ cd /var/www/aifilm
 
 ---
 
+## Environment Dosyaları
+
+| Dosya | Kullanım | Git'te var mı? |
+|-------|----------|----------------|
+| `.env` | Laravel config (APP_KEY, DB, MAIL vb.) | ❌ .gitignore'da |
+| `.env.docker` | Docker Compose değişkenleri (DB şifresi, domain vb.) | ❌ .gitignore'da |
+| `.env.example` | Örnek şablon | ✅ Git'te |
+
+### Sunucu Kurulumu
+- `/var/www/aifilm/.env` → Laravel okur
+- `/var/www/aifilm/.env.docker` → Docker Compose okur (`--env-file .env.docker`)
+- MAIL ayarları: `.env.docker`'a eklenir, `docker-compose.prod.yml` üzerinden container'a aktarılır
+- MAIL_PASSWORD: Sadece sunucudaki `.env.docker`'da tutulur, asla git'e pushlama
+
 ## 📋 Günlük İş Akışı
 
 1. **Local'de kod yaz** (Windows/Mac bilgisayarında)
