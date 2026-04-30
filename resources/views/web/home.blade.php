@@ -183,14 +183,36 @@
             text-align: center;
             text-decoration: none;
             transition: all 0.3s ease;
-            border: 2px solid transparent;
+            border: 2px solid rgba(212, 175, 55, 0.18);
             min-height: 220px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.35);
         }
 
         .nav-card:hover {
             transform: translateY(-5px);
             border-color: var(--gold);
-            box-shadow: 0 8px 24px rgba(212,175,55,0.2);
+            box-shadow: 0 8px 32px rgba(212,175,55,0.22);
+        }
+
+        /* Icon wrapper */
+        .nav-card-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 18px;
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+
+        .nav-card-icon svg {
+            width: 56px;
+            height: 56px;
+            filter: drop-shadow(0 0 8px rgba(212,175,55,0.35));
+            transition: filter 0.3s ease, transform 0.3s ease;
+        }
+
+        .nav-card:hover .nav-card-icon svg {
+            filter: drop-shadow(0 0 14px rgba(245,217,122,0.6));
+            transform: scale(1.08);
         }
 
         .nav-card-title { color: var(--text-primary); font-size: 1.5rem; font-weight: bold; margin: 0; }
@@ -199,6 +221,7 @@
             .nav-cards-container { gap: 10px; padding: 0 15px; }
             .nav-card { padding: 30px 15px; min-height: 180px; }
             .nav-card-title { font-size: 1.3rem; }
+            .nav-card-icon svg { width: 46px; height: 46px; }
         }
 
         @media (max-width: 768px) {
@@ -206,6 +229,8 @@
             .nav-cards-container { gap: 8px; padding: 0 12px; }
             .nav-card { padding: 25px 12px; min-height: 150px; }
             .nav-card-title { font-size: 1.1rem; }
+            .nav-card-icon { margin-bottom: 14px; }
+            .nav-card-icon svg { width: 40px; height: 40px; }
         }
 
         @media (max-width: 576px) {
@@ -213,12 +238,15 @@
             .nav-cards-container { gap: 6px; padding: 0 8px; }
             .nav-card { padding: 20px 8px; min-height: 120px; }
             .nav-card-title { font-size: 0.9rem; }
+            .nav-card-icon { margin-bottom: 10px; }
+            .nav-card-icon svg { width: 32px; height: 32px; }
         }
 
         @media (max-width: 375px) {
             .nav-cards-container { gap: 5px; padding: 0 5px; }
             .nav-card { padding: 15px 5px; min-height: 100px; }
             .nav-card-title { font-size: 0.8rem; }
+            .nav-card-icon svg { width: 28px; height: 28px; }
         }
 
         /* Templates Section */
@@ -366,9 +394,54 @@
     <section class="nav-cards-section">
         <div class="nav-cards-container">
             <a href="{{ route('custom-images.create') }}" class="nav-card">
+                <div class="nav-card-icon">
+                    <!-- AI Image / Görsel ikonu -->
+                    <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Fotoğraf çerçevesi -->
+                        <rect x="4" y="8" width="48" height="36" rx="4" stroke="#D4AF37" stroke-width="2.5" fill="none"/>
+                        <!-- Dağ / manzara -->
+                        <polyline points="4,34 16,20 26,30 34,22 52,34" stroke="#D4AF37" stroke-width="2.2" stroke-linejoin="round" fill="none"/>
+                        <!-- Güneş / daire -->
+                        <circle cx="40" cy="18" r="5" stroke="#D4AF37" stroke-width="2.2" fill="none"/>
+                        <!-- AI kıvılcım – sol alt -->
+                        <line x1="10" y1="48" x2="10" y2="52" stroke="#F5D97A" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="8"  y1="50" x2="12" y2="50" stroke="#F5D97A" stroke-width="2" stroke-linecap="round"/>
+                        <!-- AI kıvılcım – orta -->
+                        <line x1="28" y1="47" x2="28" y2="55" stroke="#F5D97A" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="24" y1="51" x2="32" y2="51" stroke="#F5D97A" stroke-width="2" stroke-linecap="round"/>
+                        <!-- AI kıvılcım – sağ alt -->
+                        <line x1="46" y1="48" x2="46" y2="52" stroke="#F5D97A" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="44" y1="50" x2="48" y2="50" stroke="#F5D97A" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </div>
                 <h3 class="nav-card-title">{{ __('home.nav_images') }}</h3>
             </a>
             <a href="{{ route('custom-videos.create') }}" class="nav-card">
+                <div class="nav-card-icon">
+                    <!-- AI Video / Film ikonu (klapör) -->
+                    <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Klapör gövdesi -->
+                        <rect x="4" y="16" width="48" height="34" rx="4" stroke="#D4AF37" stroke-width="2.5" fill="none"/>
+                        <!-- Klapör üst parça (hareketli kısım) -->
+                        <rect x="4" y="8" width="48" height="10" rx="3" stroke="#D4AF37" stroke-width="2.5" fill="none"/>
+                        <!-- Diyagonal çizgiler klapörde -->
+                        <line x1="14" y1="8"  x2="10" y2="18" stroke="#D4AF37" stroke-width="2.2" stroke-linecap="round"/>
+                        <line x1="24" y1="8"  x2="20" y2="18" stroke="#D4AF37" stroke-width="2.2" stroke-linecap="round"/>
+                        <line x1="34" y1="8"  x2="30" y2="18" stroke="#D4AF37" stroke-width="2.2" stroke-linecap="round"/>
+                        <line x1="44" y1="8"  x2="40" y2="18" stroke="#D4AF37" stroke-width="2.2" stroke-linecap="round"/>
+                        <!-- Oynat üçgeni -->
+                        <polygon points="22,26 22,40 36,33" stroke="#D4AF37" stroke-width="2.2" stroke-linejoin="round" fill="rgba(212,175,55,0.15)"/>
+                        <!-- AI kıvılcım – sol dış -->
+                        <line x1="0"  y1="30" x2="0"  y2="36" stroke="#F5D97A" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="-3" y1="33" x2="3"  y2="33" stroke="#F5D97A" stroke-width="2" stroke-linecap="round"/>
+                        <!-- AI kıvılcım – sağ dış -->
+                        <line x1="56" y1="30" x2="56" y2="36" stroke="#F5D97A" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="53" y1="33" x2="59" y2="33" stroke="#F5D97A" stroke-width="2" stroke-linecap="round"/>
+                        <!-- AI kıvılcım – sağ üst köşe -->
+                        <line x1="52" y1="3"  x2="52" y2="7"  stroke="#F5D97A" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="50" y1="5"  x2="54" y2="5"  stroke="#F5D97A" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </div>
                 <h3 class="nav-card-title">{{ __('home.nav_videos') }}</h3>
             </a>
         </div>
