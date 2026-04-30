@@ -290,12 +290,26 @@
             background: var(--bg-secondary);
         }
 
+        /* Poster img — arka planda görünür, video başlayınca gizlenir */
+        .video-ratio-box .poster-img {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            display: block;
+            z-index: 1;
+            transition: opacity 0.3s ease;
+        }
+
         .video-ratio-box video {
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
             object-fit: cover;
             display: block;
+            z-index: 2;
+            opacity: 0;
+            transition: opacity 0.3s ease;
             -webkit-transform: translateZ(0);
             transform: translateZ(0);
             backface-visibility: hidden;
@@ -473,12 +487,18 @@
                        class="template-link">
                         <div class="template-card">
                             <div class="video-ratio-box" style="padding-bottom: {{ $paddingBottom }};">
+                                @if($template->poster_url)
+                                    <img
+                                        src="{{ $template->poster_url }}"
+                                        alt=""
+                                        loading="lazy"
+                                        class="poster-img">
+                                @endif
                                 <video
                                     muted
                                     loop
                                     playsinline
                                     preload="none"
-                                    @if($template->poster_url) poster="{{ $template->poster_url }}" @endif
                                     data-src="{{ $template->getVideoUrlForOrientation($previewOrientation) }}"
                                     onmouseenter="startVideo(this)"
                                     onmouseleave="stopVideo(this)"
@@ -494,17 +514,26 @@
     </section>
 
     <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
+    <script src="https://unpkg.com/imagesloaded@5/imagesloaded.pkgd.min.js"></script>
 
     <script>
         function startVideo(video) {
             if (!video.dataset.src) return;
             if (!video.src) video.src = video.dataset.src;
             video.play().catch(() => {});
+            // Poster img'yi gizle, videoyu göster
+            video.style.opacity = 1;
+            const poster = video.parentElement.querySelector('.poster-img');
+            if (poster) poster.style.opacity = 0;
         }
 
         function stopVideo(video) {
             video.pause();
             video.currentTime = 0;
+            // Videoyu gizle, poster img'yi tekrar göster
+            video.style.opacity = 0;
+            const poster = video.parentElement.querySelector('.poster-img');
+            if (poster) poster.style.opacity = 1;
         }
 
         document.addEventListener("DOMContentLoaded", function () {
@@ -518,16 +547,12 @@
                 percentPosition: true,
             });
 
-            // Poster yüklenince masonry yeniden hesapla
-            grid.querySelectorAll('video').forEach(function (video) {
-                if (video.poster) {
-                    const img = new Image();
-                    img.onload = function () { msnry.layout(); };
-                    img.src = video.poster;
-                }
+            // imagesLoaded: her poster yüklenince masonry yeniden hesapla
+            imagesLoaded(grid).on('progress', function () {
+                msnry.layout();
             });
 
-            // IntersectionObserver: görünüme girince lazy load
+            // IntersectionObserver: görünüme girince video lazy load
             const observer = new IntersectionObserver(function (entries) {
                 entries.forEach(function (entry) {
                     const video = entry.target;
