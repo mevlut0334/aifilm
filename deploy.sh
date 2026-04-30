@@ -233,7 +233,7 @@ docker exec aifilm_app php -r "opcache_reset();" || echo "⚠ OPcache reset edil
 
 # SSL otomatik yenileme için cron job ekle
 echo "🔄 SSL otomatik yenileme ayarlanıyor..."
-(crontab -l 2>/dev/null | grep -v certbot; echo "0 3 * * * certbot renew --quiet --deploy-hook 'docker restart aifilm_nginx'") | crontab -
+(crontab -l 2>/dev/null | grep -v certbot; echo "0 3 * * * /usr/bin/docker stop aifilm_nginx && /usr/bin/certbot renew --quiet && /usr/bin/docker start aifilm_nginx") | crontab -
 
 # Systemd service oluştur (boot'ta otomatik başlatma GARANTİSİ)
 echo "🔧 Systemd service oluşturuluyor..."
