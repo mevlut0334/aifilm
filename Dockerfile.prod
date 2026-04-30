@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     libzip-dev \
+    libicu-dev \
     nodejs \
     npm \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl \
