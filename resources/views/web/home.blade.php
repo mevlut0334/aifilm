@@ -483,7 +483,7 @@
                         };
                     @endphp
 
-                    <a href="@guest {{ route('login') }} @else {{ route('templates.show', $template->uuid) }} @endguest"
+                    <a href="{{ route('templates.show', $template->uuid) }}"
                        class="template-link">
                         <div class="template-card">
                             <div class="video-ratio-box" style="padding-bottom: {{ $paddingBottom }};">
