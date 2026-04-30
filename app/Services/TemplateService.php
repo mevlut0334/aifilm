@@ -54,7 +54,7 @@ class TemplateService
 
     public function deleteTemplate(Template $template): bool
     {
-        // Delete associated video files
+        // Delete associated video files (only local ones)
         $this->deleteTemplateVideos($template);
 
         return $this->templateRepository->delete($template);
@@ -62,9 +62,9 @@ class TemplateService
 
     public function uploadVideo(Template $template, $file, string $orientation): string
     {
-        // Delete old video if exists
+        // Delete old video only if it's a local file (not a CDN URL)
         $oldPath = $template->getVideoPathForOrientation($orientation);
-        if ($oldPath) {
+        if ($oldPath && ! $this->isExternalUrl($oldPath)) {
             Storage::disk('public')->delete($oldPath);
         }
 
@@ -78,6 +78,18 @@ class TemplateService
         return $path;
     }
 
+    public function saveVideoUrl(Template $template, string $url, string $orientation): void
+    {
+        // Delete old video only if it's a local file (not a CDN URL)
+        $oldPath = $template->getVideoPathForOrientation($orientation);
+        if ($oldPath && ! $this->isExternalUrl($oldPath)) {
+            Storage::disk('public')->delete($oldPath);
+        }
+
+        $fieldName = "{$orientation}_video_path";
+        $template->update([$fieldName => $url]);
+    }
+
     public function deleteVideo(Template $template, string $orientation): bool
     {
         $path = $template->getVideoPathForOrientation($orientation);
@@ -86,10 +98,12 @@ class TemplateService
             return false;
         }
 
-        // Delete file from storage
-        Storage::disk('public')->delete($path);
+        // Delete from storage only if it's a local file (not a CDN URL)
+        if (! $this->isExternalUrl($path)) {
+            Storage::disk('public')->delete($path);
+        }
 
-        // Update template
+        // Clear from DB
         $fieldName = "{$orientation}_video_path";
         $template->update([$fieldName => null]);
 
@@ -102,10 +116,15 @@ class TemplateService
 
         foreach ($orientations as $orientation) {
             $path = $template->getVideoPathForOrientation($orientation);
-            if ($path) {
+            if ($path && ! $this->isExternalUrl($path)) {
                 Storage::disk('public')->delete($path);
             }
         }
+    }
+
+    private function isExternalUrl(string $path): bool
+    {
+        return str_starts_with($path, 'http://') || str_starts_with($path, 'https://');
     }
 
     public function toggleActive(Template $template): bool

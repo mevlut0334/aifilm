@@ -80,6 +80,11 @@ class Template extends Model
             return null;
         }
 
+        // Eğer zaten bir URL ise (Bunny CDN vb.) direkt döndür
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
         return url('storage/'.$path);
     }
 
