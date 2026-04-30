@@ -341,6 +341,7 @@ Authorization: Bearer {token}
       "landscape_video_url": "https://example.com/storage/templates/landscape.mp4",
       "portrait_video_url": "https://example.com/storage/templates/portrait.mp4",
       "square_video_url": "https://example.com/storage/templates/square.mp4",
+      "poster_url": "https://cdn.example.com/templates/poster.jpg",
       "created_at": "2026-04-24T12:00:00+00:00"
     }
   ],
@@ -384,6 +385,7 @@ Authorization: Bearer {token}
     "landscape_video_url": "https://example.com/storage/templates/landscape.mp4",
     "portrait_video_url": "https://example.com/storage/templates/portrait.mp4",
     "square_video_url": "https://example.com/storage/templates/square.mp4",
+    "poster_url": "https://cdn.example.com/templates/poster.jpg",
     "created_at": "2026-04-24T12:00:00+00:00"
   },
   "locale": "tr"

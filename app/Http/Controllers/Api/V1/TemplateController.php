@@ -42,6 +42,7 @@ class TemplateController extends Controller
                     'square_video_url' => $template->square_video_path
                         ? asset('storage/'.$template->square_video_path)
                         : null,
+                    'poster_url' => $template->poster_url,
                     'created_at' => $template->created_at->toIso8601String(),
                 ];
             })->values()
@@ -74,6 +75,7 @@ class TemplateController extends Controller
                 'square_video_url' => $template->square_video_path
                     ? asset('storage/'.$template->square_video_path)
                     : null,
+                'poster_url' => $template->poster_url,
                 'created_at' => $template->created_at->toIso8601String(),
             ]
         );
