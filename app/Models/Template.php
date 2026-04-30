@@ -19,6 +19,7 @@ class Template extends Model
         'landscape_video_path',
         'portrait_video_path',
         'square_video_path',
+        'poster_url',
         'order',
     ];
 

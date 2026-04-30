@@ -191,15 +191,21 @@
         <!-- VIDEO -->
         <div class="video-isolation">
             <div class="video-box {{ $displayOrientation }}">
-                <video controls autoplay loop muted playsinline
-                    style="width:auto; height:auto; max-width:100%; max-height:80vh; object-fit:contain; display:block; margin:auto;">
-
-                    <source src="{{ $template->getVideoUrlForOrientation($displayOrientation) }}" type="video/mp4">
+                <video
+                    id="template-video"
+                    controls
+                    autoplay
+                    loop
+                    muted
+                    playsinline
+                    poster="{{ $template->poster_url ?? '' }}"
+                    data-src="{{ $template->getVideoUrlForOrientation($displayOrientation) }}"
+                    style="width:auto; height:auto; max-width:100%; max-height:80vh; object-fit:contain; display:block; margin:auto; border-radius:12px;">
                 </video>
             </div>
         </div>
 
-        <!-- 🔥 UPLOAD ALANI GERİ GELDİ -->
+        <!-- 🔥 UPLOAD ALANI -->
         @auth
             <div class="upload-area">
 
@@ -267,9 +273,39 @@
 
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/browser-image-compression/2.0.2/browser-image-compression.min.js">
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/browser-image-compression/2.0.2/browser-image-compression.min.js"></script>
+
     <script>
+        // HLS.js ile video oynat
+        document.addEventListener('DOMContentLoaded', function () {
+            const video = document.getElementById('template-video');
+            if (!video) return;
+
+            const src = video.dataset.src;
+            if (!src) return;
+
+            if (src.includes('.m3u8')) {
+                if (Hls.isSupported()) {
+                    const hls = new Hls();
+                    hls.loadSource(src);
+                    hls.attachMedia(video);
+                    hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                        video.play();
+                    });
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    // iPhone Safari native HLS
+                    video.src = src;
+                    video.play();
+                }
+            } else {
+                // Direkt MP4
+                video.src = src;
+                video.play();
+            }
+        });
+
+        // Görsel sıkıştırma ve önizleme
         const compressionOptions = {
             maxSizeMB: 0.5,
             maxWidthOrHeight: 1920,

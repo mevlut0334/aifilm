@@ -47,6 +47,7 @@ class TemplateController extends Controller
             'portrait_video_url' => 'nullable|string',
             'square_video' => 'nullable|file|mimes:mp4,mov,avi,webm|max:51200',
             'square_video_url' => 'nullable|string',
+            'poster_url' => 'nullable|url',
         ]);
 
         $data = [
@@ -64,6 +65,11 @@ class TemplateController extends Controller
         ];
 
         $template = $this->templateService->createTemplate($data);
+
+        // Save poster URL if provided
+        if ($request->filled('poster_url')) {
+            $template->update(['poster_url' => $request->input('poster_url')]);
+        }
 
         // Upload videos if provided
         foreach (['landscape', 'portrait', 'square'] as $orientation) {
@@ -109,6 +115,7 @@ class TemplateController extends Controller
                 'portrait_video_url' => 'nullable|string',
                 'square_video' => 'nullable|file|mimes:mp4,mov,avi,webm|max:51200',
                 'square_video_url' => 'nullable|string',
+                'poster_url' => 'nullable|url',
             ]);
 
             $oldTokenCost = $template->token_cost;
@@ -128,6 +135,11 @@ class TemplateController extends Controller
             ];
 
             $this->templateService->updateTemplate($template, $data);
+
+            // Save poster URL if provided
+            if ($request->filled('poster_url')) {
+                $template->update(['poster_url' => $request->input('poster_url')]);
+            }
 
             // Upload new videos if provided
             foreach (['landscape', 'portrait', 'square'] as $orientation) {
@@ -200,23 +212,19 @@ class TemplateController extends Controller
                 $response = Http::timeout(120)->get($url);
 
                 if ($response->successful()) {
-                    // Get extension
                     $extension = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
                     if (empty($extension)) {
                         $extension = 'mp4';
                     }
 
-                    // Delete old video if exists
                     $oldPath = $template->getVideoPathForOrientation($orientation);
                     if ($oldPath) {
                         Storage::disk('public')->delete($oldPath);
                     }
 
-                    // Store new video
                     $path = "templates/{$template->uuid}/{$orientation}/".time().'.'.$extension;
                     Storage::disk('public')->put($path, $response->body());
 
-                    // Update template
                     $fieldName = "{$orientation}_video_path";
                     $template->update([$fieldName => $path]);
                 }
