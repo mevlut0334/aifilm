@@ -12,12 +12,10 @@
         --text-secondary: #BFBFBF;
     }
 
-    /* Sayfanın kendi scroll'unu kapat */
     body, html {
         overflow: hidden;
     }
 
-    /* Ana kapsayıcı */
     .swipe-container {
         position: fixed;
         top: 0; left: 0;
@@ -29,7 +27,6 @@
         z-index: 999;
     }
 
-    /* Telefonda tam ekran, tablet/masaüstünde ortalanmış kutu */
     .swipe-viewport {
         position: relative;
         width: 100%;
@@ -48,7 +45,6 @@
         }
     }
 
-    /* Her bir slide */
     .swipe-slide {
         position: absolute;
         top: 0; left: 0;
@@ -57,14 +53,32 @@
         transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
 
-    .swipe-slide video {
-        width: 100%;
-        height: 100%;
+    /* Poster img — video hazır olana kadar gösterilir */
+    .swipe-slide .slide-poster {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
         object-fit: cover;
         display: block;
+        z-index: 1;
+        transition: opacity 0.3s ease;
     }
 
-    /* Gradient overlay (alt kısım okunabilir olsun) */
+    .swipe-slide video {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        object-fit: cover;
+        display: block;
+        z-index: 2;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    /* Video oynatılınca poster gizlenir */
+    .swipe-slide.playing video   { opacity: 1; }
+    .swipe-slide.playing .slide-poster { opacity: 0; }
+
     .swipe-slide::after {
         content: '';
         position: absolute;
@@ -73,20 +87,41 @@
         height: 40%;
         background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
         pointer-events: none;
-        z-index: 2;
+        z-index: 3;
     }
+
+    /* Skeleton / yükleniyor göstergesi */
+    .slide-loading-indicator {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 4;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        pointer-events: none;
+    }
+
+    .swipe-slide.buffering .slide-loading-indicator { opacity: 1; }
+
+    .loading-spinner {
+        width: 40px; height: 40px;
+        border: 3px solid rgba(255,255,255,0.2);
+        border-top-color: var(--gold);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     /* Geri butonu */
     .swipe-back-btn {
         position: absolute;
-        top: 16px;
-        left: 16px;
+        top: 16px; left: 16px;
         z-index: 100;
         background: rgba(0,0,0,0.5);
         border: none;
         border-radius: 50%;
-        width: 44px;
-        height: 44px;
+        width: 44px; height: 44px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -97,13 +132,10 @@
         text-decoration: none;
     }
 
-    .swipe-back-btn:hover {
-        background: rgba(212,175,55,0.3);
-    }
+    .swipe-back-btn:hover { background: rgba(212,175,55,0.3); }
 
     .swipe-back-btn svg {
-        width: 22px;
-        height: 22px;
+        width: 22px; height: 22px;
         fill: none;
         stroke: #fff;
         stroke-width: 2.5;
@@ -111,12 +143,10 @@
         stroke-linejoin: round;
     }
 
-    /* Template başlığı */
     .swipe-title {
         position: absolute;
         bottom: 90px;
-        left: 16px;
-        right: 80px;
+        left: 16px; right: 80px;
         z-index: 10;
         color: var(--text-primary);
         font-size: 1.1rem;
@@ -125,11 +155,9 @@
         line-height: 1.4;
     }
 
-    /* Kullan / Giriş Yap butonu */
     .swipe-use-btn {
         position: absolute;
-        bottom: 30px;
-        right: 16px;
+        bottom: 30px; right: 16px;
         z-index: 10;
         padding: 12px 22px;
         background: linear-gradient(135deg, var(--gold), var(--gold-hover));
@@ -149,11 +177,9 @@
         color: #0B0B0B;
     }
 
-    /* Slide sayacı */
     .swipe-counter {
         position: absolute;
-        top: 16px;
-        right: 16px;
+        top: 16px; right: 16px;
         z-index: 100;
         background: rgba(0,0,0,0.5);
         color: var(--text-primary);
@@ -165,11 +191,9 @@
         -webkit-backdrop-filter: blur(4px);
     }
 
-    /* Kaydır ipucu (ilk açılışta göster) */
     .swipe-hint {
         position: absolute;
-        bottom: 100px;
-        left: 50%;
+        bottom: 100px; left: 50%;
         transform: translateX(-50%);
         z-index: 10;
         display: flex;
@@ -184,18 +208,14 @@
     .swipe-hint.hidden { opacity: 0; }
 
     .swipe-hint svg {
-        width: 28px;
-        height: 28px;
+        width: 28px; height: 28px;
         stroke: rgba(255,255,255,0.7);
         fill: none;
         stroke-width: 2;
         animation: bounceUp 1.2s infinite;
     }
 
-    .swipe-hint span {
-        color: rgba(255,255,255,0.7);
-        font-size: 0.75rem;
-    }
+    .swipe-hint span { color: rgba(255,255,255,0.7); font-size: 0.75rem; }
 
     @keyframes bounceUp {
         0%, 100% { transform: translateY(0); }
@@ -206,17 +226,14 @@
 <div class="swipe-container">
     <div class="swipe-viewport" id="swipeViewport">
 
-        <!-- Geri butonu -->
         <a href="{{ url()->previous() }}" class="swipe-back-btn" id="backBtn" aria-label="{{ __('templates.swipe_back') }}">
             <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
         </a>
 
-        <!-- Sayaç -->
         <div class="swipe-counter" id="swipeCounter">
             <span id="currentIndex">1</span> / {{ count($templates) }}
         </div>
 
-        <!-- Kaydır ipucu -->
         <div class="swipe-hint" id="swipeHint">
             <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="18 15 12 9 6 15"/>
@@ -224,7 +241,6 @@
             <span>{{ __('templates.swipe_hint') }}</span>
         </div>
 
-        <!-- Slide'lar -->
         @foreach ($templates as $i => $template)
             @php
                 $orientation = $template->hasVideoForOrientation('portrait')
@@ -232,29 +248,43 @@
                     : ($template->hasVideoForOrientation('landscape')
                         ? 'landscape'
                         : 'square');
-                $videoUrl = $template->getVideoUrlForOrientation($orientation);
+                $videoUrl  = $template->getVideoUrlForOrientation($orientation);
+                $posterUrl = $template->poster_url ?? '';
             @endphp
 
             <div class="swipe-slide"
                  data-index="{{ $i }}"
                  data-uuid="{{ $template->uuid }}"
+                 data-video-src="{{ $videoUrl }}"
                  style="transform: translateY({{ $i === 0 ? '0%' : '100%' }})">
 
+                {{-- Poster: siyah ekran yerine thumbnail göster --}}
+                @if ($posterUrl)
+                    <img
+                        class="slide-poster"
+                        src="{{ $posterUrl }}"
+                        alt=""
+                        loading="{{ $i === 0 ? 'eager' : 'lazy' }}">
+                @endif
+
+                {{-- Video src'yi data-src'de tut, JS ile yönetilecek --}}
                 <video
                     muted
                     loop
                     playsinline
-                    preload="{{ $i === 0 ? 'auto' : 'none' }}"
-                    data-src="{{ $videoUrl }}"
-                    {{ $i === 0 ? 'src='.$videoUrl : '' }}>
+                    preload="none"
+                    @if ($posterUrl) poster="{{ $posterUrl }}" @endif>
                 </video>
 
-                <!-- Başlık -->
+                {{-- Yükleniyor spinner --}}
+                <div class="slide-loading-indicator">
+                    <div class="loading-spinner"></div>
+                </div>
+
                 <div class="swipe-title">
                     {{ $template->getTranslation('title', app()->getLocale()) }}
                 </div>
 
-                <!-- Kullan / Giriş Yap butonu -->
                 @auth
                     <a href="{{ route('templates.show', $template->uuid) }}"
                        class="swipe-use-btn">
@@ -274,77 +304,166 @@
 </div>
 
 <script>
+(function () {
     const slides      = Array.from(document.querySelectorAll('.swipe-slide'));
     const counter     = document.getElementById('currentIndex');
     const hint        = document.getElementById('swipeHint');
     const viewport    = document.getElementById('swipeViewport');
     const total       = slides.length;
+
     let current       = 0;
     let isAnimating   = false;
     let hintDismissed = false;
 
-    // Başlangıç: tıklanan template'e göre index bul
-    const startUuid = '{{ $currentUuid }}';
-    const startIndex = slides.findIndex(s => s.dataset.uuid === startUuid);
-    if (startIndex > 0) goTo(startIndex, false);
+    // Pencere boyutu: bu kadar uzaktaki slide'ların src'si bellekte tutulur
+    const PRELOAD_AHEAD  = 2;
+    const PRELOAD_BEHIND = 1;
+    const UNLOAD_AFTER   = 4; // bu mesafeden uzaktaki videoların src'si temizlenir
 
-    /* ---------- Video yönetimi ---------- */
-    function playSlide(index) {
-        const video = slides[index]?.querySelector('video');
-        if (!video) return;
-        if (!video.src && video.dataset.src) {
-            video.src = video.dataset.src;
-            video.load();
+    /* ─────────────────────────────────────────
+       Video src yönetimi (sanal liste mantığı)
+    ───────────────────────────────────────── */
+    function loadVideo(index) {
+        const slide = slides[index];
+        if (!slide) return;
+        const video = slide.querySelector('video');
+        const src   = slide.dataset.videoSrc;
+        if (!video || !src || video.src) return; // zaten yüklü
+        video.src = src;
+        video.load();
+    }
+
+    function unloadVideo(index) {
+        const slide = slides[index];
+        if (!slide) return;
+        const video = slide.querySelector('video');
+        if (!video || !video.src) return;
+        video.pause();
+        video.removeAttribute('src');
+        video.load(); // belleği serbest bırak
+        slide.classList.remove('playing', 'buffering');
+    }
+
+    function manageWindow(center) {
+        for (let i = 0; i < total; i++) {
+            const dist = i - center;
+            if (dist >= -PRELOAD_BEHIND && dist <= PRELOAD_AHEAD) {
+                loadVideo(i);
+            } else if (Math.abs(dist) > UNLOAD_AFTER) {
+                unloadVideo(i);
+            }
         }
-        video.play().catch(() => {});
+    }
+
+    /* ─────────────────────────────────────────
+       Oynatma: canplay beklenerek siyah ekran önlenir
+    ───────────────────────────────────────── */
+    function playSlide(index) {
+        const slide = slides[index];
+        if (!slide) return;
+        const video = slide.querySelector('video');
+        if (!video) return;
+
+        loadVideo(index); // src yoksa yükle
+
+        const doPlay = () => {
+            slide.classList.remove('buffering');
+            video.play().then(() => {
+                slide.classList.add('playing');
+            }).catch(() => {});
+        };
+
+        // readyState 3 = HAVE_FUTURE_DATA, oynatmaya hazır
+        if (video.readyState >= 3) {
+            doPlay();
+        } else {
+            slide.classList.add('buffering');
+            video.addEventListener('canplay', doPlay, { once: true });
+        }
     }
 
     function pauseSlide(index) {
-        const video = slides[index]?.querySelector('video');
-        if (video) { video.pause(); video.currentTime = 0; }
+        const slide = slides[index];
+        if (!slide) return;
+        const video = slide.querySelector('video');
+        if (video) {
+            video.pause();
+            video.currentTime = 0;
+        }
+        slide.classList.remove('playing', 'buffering');
     }
 
-    /* ---------- Geçiş ---------- */
+    /* ─────────────────────────────────────────
+       Geçiş animasyonu
+    ───────────────────────────────────────── */
     function goTo(next, animate = true) {
-        if (next < 0 || next >= total || next === current) return;
+        if (next < 0 || next >= total || next === current || isAnimating) return;
 
+        isAnimating = true;
         const direction = next > current ? 1 : -1;
+        const duration  = animate ? 400 : 0;
 
-        // Bir sonraki slide'ı hazırla
-        slides[next].style.transition = animate ? 'transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94)' : 'none';
-        slides[current].style.transition = animate ? 'transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94)' : 'none';
+        const easing = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        const trans  = animate ? `transform ${duration}ms ${easing}` : 'none';
 
+        slides[next].style.transition    = trans;
+        slides[current].style.transition = trans;
+
+        // Gelen slide'ı kaydırma yönünden yerleştir
         slides[next].style.transform = `translateY(${direction * 100}%)`;
-        // Reflow zorla
-        slides[next].getBoundingClientRect();
+        slides[next].getBoundingClientRect(); // reflow
 
-        slides[next].style.transform = 'translateY(0%)';
+        slides[next].style.transform    = 'translateY(0%)';
         slides[current].style.transform = `translateY(${-direction * 100}%)`;
 
         pauseSlide(current);
 
-        // Önceden video yükle (bir sonraki)
-        const preloadIndex = next + 1;
-        if (preloadIndex < total) {
-            const preloadVideo = slides[preloadIndex].querySelector('video');
-            if (preloadVideo && !preloadVideo.src && preloadVideo.dataset.src) {
-                preloadVideo.src = preloadVideo.dataset.src;
-                preloadVideo.load();
-            }
-        }
-
+        const prev = current;
         current = next;
         counter.textContent = current + 1;
-        playSlide(current);
 
-        // Hint'i gizle
+        // Animasyon bittikten sonra oynat & pencereyi yönet
+        setTimeout(() => {
+            isAnimating = false;
+            playSlide(current);
+            manageWindow(current);
+        }, duration);
+
+        // İpucunu gizle
         if (!hintDismissed) {
             hintDismissed = true;
             hint.classList.add('hidden');
         }
     }
 
-    /* ---------- Touch / Swipe ---------- */
+    /* ─────────────────────────────────────────
+       Başlangıç: tıklanan template'e göre pozisyon
+    ───────────────────────────────────────── */
+    const startUuid  = '{{ $currentUuid }}';
+    const startIndex = slides.findIndex(s => s.dataset.uuid === startUuid);
+    if (startIndex > 0) {
+        // Animasyonsuz, sessiz geçiş
+        slides.forEach((s, i) => {
+            s.style.transition = 'none';
+            s.style.transform  = `translateY(${(i - startIndex) * 100}%)`;
+        });
+        current = startIndex;
+        counter.textContent = current + 1;
+    }
+
+    /* ─────────────────────────────────────────
+       İlk video: DOM hazır olunca oynat
+    ───────────────────────────────────────── */
+    document.addEventListener('DOMContentLoaded', () => {
+        manageWindow(current);  // başlangıç penceresini yükle
+        playSlide(current);
+
+        setTimeout(() => hint.classList.add('hidden'), 3000);
+    });
+
+    /* ─────────────────────────────────────────
+       Touch / Swipe
+    ───────────────────────────────────────── */
     let touchStartY = 0;
     let touchDeltaY = 0;
 
@@ -359,44 +478,39 @@
 
     viewport.addEventListener('touchend', () => {
         if (Math.abs(touchDeltaY) > 50) {
-            if (touchDeltaY < 0) goTo(current + 1); // yukarı kaydır → ileri
-            else                  goTo(current - 1); // aşağı kaydır → geri
+            goTo(touchDeltaY < 0 ? current + 1 : current - 1);
         }
         touchDeltaY = 0;
     });
 
-    /* ---------- Mouse Wheel (desktop) ---------- */
+    /* ─────────────────────────────────────────
+       Mouse wheel (masaüstü)
+    ───────────────────────────────────────── */
     let wheelLock = false;
     viewport.addEventListener('wheel', e => {
         e.preventDefault();
         if (wheelLock) return;
         wheelLock = true;
-        if (e.deltaY > 0) goTo(current + 1);
-        else              goTo(current - 1);
+        goTo(e.deltaY > 0 ? current + 1 : current - 1);
         setTimeout(() => { wheelLock = false; }, 700);
     }, { passive: false });
 
-    /* ---------- Klavye ---------- */
+    /* ─────────────────────────────────────────
+       Klavye
+    ───────────────────────────────────────── */
     document.addEventListener('keydown', e => {
         if (e.key === 'ArrowUp')   goTo(current - 1);
         if (e.key === 'ArrowDown') goTo(current + 1);
     });
 
-    /* ---------- İlk video oynat ---------- */
-    document.addEventListener('DOMContentLoaded', () => {
-        playSlide(current);
-        // 3 saniye sonra hint kaybolsun
-        setTimeout(() => hint.classList.add('hidden'), 3000);
-    });
-
-    /* ---------- Geri butonu: önceki sayfa yoksa ana sayfaya ---------- */
-    document.getElementById('backBtn').addEventListener('click', function(e) {
+    /* ─────────────────────────────────────────
+       Geri butonu
+    ───────────────────────────────────────── */
+    document.getElementById('backBtn').addEventListener('click', function (e) {
         e.preventDefault();
-        if (document.referrer) {
-            history.back();
-        } else {
-            window.location.href = '{{ route("home") }}';
-        }
+        if (document.referrer) history.back();
+        else window.location.href = '{{ route("home") }}';
     });
+})();
 </script>
 @endsection

@@ -16,11 +16,13 @@ class TemplateSwipeController extends Controller
     {
         $templates = $this->templateService->getActiveTemplates();
 
-        // Tıklanan template'i başa al
-        $sorted = $templates->sortBy(fn($t) => $t->uuid === $uuid ? 0 : 1)->values();
+        // Tıklanan template'i tek geçişte başa al
+        $target = $templates->firstWhere('uuid', $uuid);
+        $others = $templates->filter(fn($t) => $t->uuid !== $uuid)->values();
+        $sorted = $target ? $others->prepend($target) : $templates->values();
 
         return view('web.templates.swipe', [
-            'templates' => $sorted,
+            'templates'   => $sorted,
             'currentUuid' => $uuid,
         ]);
     }
