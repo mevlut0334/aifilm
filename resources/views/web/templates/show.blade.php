@@ -184,6 +184,18 @@
 
     <div class="container text-center mt-4">
 
+        <div style="text-align:left; margin-bottom:10px;">
+            <a href="javascript:history.back()"
+                style="display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; background:rgba(255,255,255,0.08); border-radius:50%; text-decoration:none; transition:background 0.2s;"
+                onmouseover="this.style.background='rgba(212,175,55,0.2)'"
+                onmouseout="this.style.background='rgba(255,255,255,0.08)'">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6" />
+                </svg>
+            </a>
+        </div>
+
         <h1 class="mb-4">
             {{ $template->getTranslation('title', app()->getLocale()) }}
         </h1>
@@ -191,13 +203,7 @@
         <!-- VIDEO -->
         <div class="video-isolation">
             <div class="video-box {{ $displayOrientation }}">
-                <video
-                    id="template-video"
-                    controls
-                    autoplay
-                    loop
-                    muted
-                    playsinline
+                <video id="template-video" controls autoplay loop muted playsinline
                     poster="{{ $template->poster_url ?? '' }}"
                     data-src="{{ $template->getVideoUrlForOrientation($displayOrientation) }}"
                     style="width:auto; height:auto; max-width:100%; max-height:80vh; object-fit:contain; display:block; margin:auto; border-radius:12px;">
@@ -274,11 +280,12 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/browser-image-compression/2.0.2/browser-image-compression.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/browser-image-compression/2.0.2/browser-image-compression.min.js">
+    </script>
 
     <script>
         // HLS.js ile video oynat
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const video = document.getElementById('template-video');
             if (!video) return;
 
@@ -290,7 +297,7 @@
                     const hls = new Hls();
                     hls.loadSource(src);
                     hls.attachMedia(video);
-                    hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                    hls.on(Hls.Events.MANIFEST_PARSED, function() {
                         video.play();
                     });
                 } else if (video.canPlayType('application/vnd.apple.mpegurl')) {

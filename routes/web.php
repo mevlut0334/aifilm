@@ -8,6 +8,7 @@ use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Web\PackageController;
 use App\Http\Controllers\Web\ProfileController;
 use App\Http\Controllers\Web\TemplateController;
+use App\Http\Controllers\Web\TemplateSwipeController;
 use Illuminate\Support\Facades\Route;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 
@@ -63,6 +64,8 @@ Route::group([
     // Public templates pages (no auth required)
     Route::get('/templates', [TemplateController::class, 'index'])->name('templates.index');
     Route::get('/templates/{uuid}', [TemplateController::class, 'show'])->name('templates.show');
+
+    Route::get('/templates/{uuid}/swipe', [TemplateSwipeController::class, 'show'])->name('templates.swipe');
 
     Route::middleware('auth')->group(function () {
         Route::get('/profile', [ProfileController::class, 'show'])->name('profile');

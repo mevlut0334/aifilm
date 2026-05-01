@@ -483,7 +483,7 @@
                         };
                     @endphp
 
-                    <a href="{{ route('templates.show', $template->uuid) }}"
+                    <a href="{{ route('templates.swipe', $template->uuid) }}"
                        class="template-link">
                         <div class="template-card">
                             <div class="video-ratio-box" style="padding-bottom: {{ $paddingBottom }};">
