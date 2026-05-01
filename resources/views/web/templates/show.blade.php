@@ -203,7 +203,7 @@
         <!-- VIDEO -->
         <div class="video-isolation">
             <div class="video-box {{ $displayOrientation }}">
-                <video id="template-video" controls autoplay loop muted playsinline
+                <video id="template-video"  autoplay loop muted playsinline
                     poster="{{ $template->poster_url ?? '' }}"
                     data-src="{{ $template->getVideoUrlForOrientation($displayOrientation) }}"
                     style="width:auto; height:auto; max-width:100%; max-height:80vh; object-fit:contain; display:block; margin:auto; border-radius:12px;">
