@@ -32,6 +32,10 @@
         width: 100%;
         height: 100%;
         overflow: hidden;
+        /* FIX 3: GPU katmanı — iOS'ta composite layer siyah flash önler */
+        will-change: transform;
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
     }
 
     @media (min-width: 768px) {
@@ -49,19 +53,17 @@
         position: absolute;
         top: 0; left: 0;
         width: 100%; height: 100%;
-        background: #000;
-        transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    }
-
-    /* Poster img — video hazır olana kadar gösterilir */
-    .swipe-slide .slide-poster {
-        position: absolute;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        object-fit: cover;
-        display: block;
-        z-index: 1;
-        transition: opacity 0.3s ease;
+        /* FIX 1: Poster artık CSS background — anında render edilir, img lazy'yi beklemez */
+        background-color: #111;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        /* FIX 5: 400ms → 280ms — iOS'ta flash fark edilmez hale gelir */
+        transition: transform 280ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        /* FIX 3: Her slide ayrı GPU katmanı */
+        will-change: transform;
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
     }
 
     .swipe-slide video {
@@ -73,11 +75,13 @@
         z-index: 2;
         opacity: 0;
         transition: opacity 0.3s ease;
+        /* FIX 3: Video da ayrı katmana */
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
     }
 
-    /* Video oynatılınca poster gizlenir */
-    .swipe-slide.playing video   { opacity: 1; }
-    .swipe-slide.playing .slide-poster { opacity: 0; }
+    /* Video oynatılınca görünür olur, CSS bg (poster) zaten altta kalır */
+    .swipe-slide.playing video { opacity: 1; }
 
     .swipe-slide::after {
         content: '';
@@ -304,25 +308,35 @@
                 $posterUrl = $template->poster_url ?? '';
             @endphp
 
+            {{--
+                FIX 1: Poster artık CSS background-image olarak set ediliyor.
+                Bu sayede sayfa render'lanır render'lanmaz poster görünür,
+                <img loading="lazy"> gecikmesinden kaynaklan siyah flash olmaz.
+
+                FIX 6: <img> etiketi tamamen kaldırıldı.
+                        CSS background zaten eager davranır.
+            --}}
             <div class="swipe-slide"
                  data-index="{{ $i }}"
                  data-uuid="{{ $template->uuid }}"
                  data-video-src="{{ $videoUrl }}"
-                 style="transform: translateY({{ $i === 0 ? '0%' : '100%' }})">
+                 @if ($posterUrl)
+                     style="transform: translateY({{ $i === 0 ? '0%' : '100%' }}); background-image: url('{{ $posterUrl }}');"
+                 @else
+                     style="transform: translateY({{ $i === 0 ? '0%' : '100%' }});"
+                 @endif>
 
-                @if ($posterUrl)
-                    <img
-                        class="slide-poster"
-                        src="{{ $posterUrl }}"
-                        alt=""
-                        loading="{{ $i === 0 ? 'eager' : 'lazy' }}">
-                @endif
-
+                {{--
+                    FIX 2: preload="none" → preload="metadata"
+                    "metadata" ile browser ilk kareyi buffer'a alır,
+                    video hazır olmadan önce siyah kare görünmez.
+                    İlk slide "auto" preload alır, daha hızlı açılır.
+                --}}
                 <video
                     muted
                     loop
                     playsinline
-                    preload="none"
+                    preload="{{ $i === 0 ? 'auto' : 'metadata' }}"
                     @if ($posterUrl) poster="{{ $posterUrl }}" @endif>
                 </video>
 
@@ -364,7 +378,6 @@
     let isAnimating   = false;
     let hintDismissed = false;
 
-    // Başta tüm videolar muted — kullanıcı butona basınca açılır
     let isMuted = true;
 
     const muteBtn      = document.getElementById('muteBtn');
@@ -377,14 +390,11 @@
     muteBtn.addEventListener('click', function () {
         isMuted = !isMuted;
 
-        // Şu an oynayan videoyu güncelle
         const activeVideo = slides[current].querySelector('video');
         if (activeVideo) {
             activeVideo.muted = isMuted;
-            // iOS Safari: muted=false yaptıktan sonra play() tekrar çağrılmalı
             if (!isMuted) {
                 activeVideo.play().catch(() => {
-                    // Hâlâ izin vermezse sessiz devam et
                     isMuted = true;
                     activeVideo.muted = true;
                     iconMuted.style.display   = '';
@@ -393,7 +403,6 @@
             }
         }
 
-        // İkon değiştir
         iconMuted.style.display   = isMuted ? ''       : 'none';
         iconUnmuted.style.display = isMuted ? 'none'   : '';
     });
@@ -447,8 +456,6 @@
         if (!video) return;
 
         loadVideo(index);
-
-        // Geçerli ses durumunu uygula
         video.muted = isMuted;
 
         const doPlay = () => {
@@ -456,7 +463,6 @@
             video.play().then(() => {
                 slide.classList.add('playing');
             }).catch(() => {
-                // Sesli oynatma reddedildiyse muted'a dön, tekrar dene
                 video.muted = true;
                 isMuted = true;
                 iconMuted.style.display   = '';
@@ -487,37 +493,60 @@
     }
 
     /* ─────────────────────────────────────────
-       Geçiş animasyonu
+       FIX 4 + FIX 5: Geçiş animasyonu
+       ─────────────────────────────────────────
+       TikTok yöntemi:
+       - Çıkan slide yerinde KALIR (z-index düşürülür)
+       - Giren slide üstten/alttan kayar
+       - Hiçbir anda siyah zemin görünmez
+       - Süre 280ms (400ms'den hızlı, flash fark edilmez)
     ───────────────────────────────────────── */
+    const DURATION = 280; // FIX 5: 400 → 280ms
+    const EASING   = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+
     function goTo(next, animate = true) {
         if (next < 0 || next >= total || next === current || isAnimating) return;
 
         isAnimating = true;
         const direction = next > current ? 1 : -1;
-        const duration  = animate ? 400 : 0;
 
-        const easing = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-        const trans  = animate ? `transform ${duration}ms ${easing}` : 'none';
+        const currentSlide = slides[current];
+        const nextSlide    = slides[next];
 
-        slides[next].style.transition    = trans;
-        slides[current].style.transition = trans;
+        // FIX 4: Çıkan slide'ı altta bırak, giren slide üstten/alttan gelsin
+        currentSlide.style.transition = 'none';
+        currentSlide.style.zIndex     = '1';
+        currentSlide.style.transform  = 'translateY(0%)';
 
-        slides[next].style.transform = `translateY(${direction * 100}%)`;
-        slides[next].getBoundingClientRect();
+        nextSlide.style.transition = 'none';
+        nextSlide.style.zIndex     = '2';
+        nextSlide.style.transform  = `translateY(${direction * 100}%)`;
 
-        slides[next].style.transform    = 'translateY(0%)';
-        slides[current].style.transform = `translateY(${-direction * 100}%)`;
+        // Reflow — iOS'ta transform'un hemen uygulanması için gerekli
+        nextSlide.getBoundingClientRect();
+
+        // Şimdi giren slide'ı animate et
+        if (animate) {
+            nextSlide.style.transition = `transform ${DURATION}ms ${EASING}`;
+        }
+        nextSlide.style.transform = 'translateY(0%)';
 
         pauseSlide(current);
-
         current = next;
         counter.textContent = current + 1;
 
         setTimeout(() => {
+            // Geçiş bitti, z-index sıfırla
+            slides.forEach((s, i) => {
+                s.style.zIndex     = '';
+                s.style.transition = '';
+                s.style.transform  = `translateY(${(i - current) * 100}%)`;
+            });
+
             isAnimating = false;
             playSlide(current);
             manageWindow(current);
-        }, duration);
+        }, animate ? DURATION : 0);
 
         if (!hintDismissed) {
             hintDismissed = true;
