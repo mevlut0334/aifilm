@@ -508,24 +508,28 @@
         if (next < 0 || next >= total || next === current || isAnimating) return;
 
         isAnimating = true;
-        const direction = next > current ? 1 : -1;
-
+        const direction    = next > current ? 1 : -1;
         const currentSlide = slides[current];
         const nextSlide    = slides[next];
 
-        // FIX 4: Çıkan slide'ı altta bırak, giren slide üstten/alttan gelsin
-        currentSlide.style.transition = 'none';
-        currentSlide.style.zIndex     = '1';
-        currentSlide.style.transform  = 'translateY(0%)';
+        // 1) Tüm slide'ların CSS transition'ını dondur.
+        //    Aksi hâlde sadece iki slide'a transition:none yazmak yetmez;
+        //    diğer slide'lar CSS kuralındaki transition ile yerinden oynayabilir.
+        slides.forEach(s => { s.style.transition = 'none'; });
 
-        nextSlide.style.transition = 'none';
-        nextSlide.style.zIndex     = '2';
-        nextSlide.style.transform  = `translateY(${direction * 100}%)`;
+        // 2) Çıkan slide yerinde dursun (z-index:1)
+        currentSlide.style.zIndex    = '1';
+        currentSlide.style.transform = 'translateY(0%)';
 
-        // Reflow — iOS'ta transform'un hemen uygulanması için gerekli
+        // 3) Giren slide ekran dışına konumlan (z-index:2 — üstte)
+        nextSlide.style.zIndex    = '2';
+        nextSlide.style.transform = `translateY(${direction * 100}%)`;
+
+        // 4) Reflow — iOS'ta transition:none'ın ve yeni transform'un
+        //    hemen işlenmesi için zorunlu.
         nextSlide.getBoundingClientRect();
 
-        // Şimdi giren slide'ı animate et
+        // 5) Sadece giren slide'a transition ver ve ekrana taşı
         if (animate) {
             nextSlide.style.transition = `transform ${DURATION}ms ${EASING}`;
         }
@@ -536,17 +540,20 @@
         counter.textContent = current + 1;
 
         setTimeout(() => {
-            // Geçiş bitti, z-index sıfırla
+            // 6) Animasyon bitti — tüm slide'ları yeni current'a göre
+            //    anında (transition:none ile) konumlandır.
+            //    '' yerine 'none' yazıyoruz: '' CSS transition'ı geri getirir
+            //    ve reposition sırasında slide'lar görünür şekilde kayar.
             slides.forEach((s, i) => {
+                s.style.transition = 'none';
                 s.style.zIndex     = '';
-                s.style.transition = '';
                 s.style.transform  = `translateY(${(i - current) * 100}%)`;
             });
 
             isAnimating = false;
             playSlide(current);
             manageWindow(current);
-        }, animate ? DURATION : 0);
+        }, animate ? DURATION + 16 : 0); // +16ms: son frame'in ekrana basılmasını bekle
 
         if (!hintDismissed) {
             hintDismissed = true;
