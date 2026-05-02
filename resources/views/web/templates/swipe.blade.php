@@ -221,6 +221,37 @@
         0%, 100% { transform: translateY(0); }
         50%       { transform: translateY(-8px); }
     }
+
+    /* ── Ses (mute) butonu ── */
+    .swipe-mute-btn {
+        position: absolute;
+        bottom: 30px; left: 16px;
+        z-index: 100;
+        background: rgba(0,0,0,0.5);
+        border: none;
+        border-radius: 50%;
+        width: 44px; height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        transition: background 0.2s;
+        outline: none;
+    }
+
+    .swipe-mute-btn:hover { background: rgba(212,175,55,0.3); }
+
+    .swipe-mute-btn svg {
+        width: 22px; height: 22px;
+        fill: none;
+        stroke: #fff;
+        stroke-width: 2.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        pointer-events: none;
+    }
 </style>
 
 <div class="swipe-container">
@@ -233,6 +264,27 @@
         <div class="swipe-counter" id="swipeCounter">
             <span id="currentIndex">1</span> / {{ count($templates) }}
         </div>
+
+        {{-- Ses butonu: başta muted (kapalı ikon), tıklanınca açılır --}}
+        <button class="swipe-mute-btn" id="muteBtn" aria-label="Sesi aç/kapat">
+            {{-- MUTED ikonu (başta görünür) --}}
+            <svg id="iconMuted" viewBox="0 0 24 24">
+                <line x1="1"  y1="1"  x2="23" y2="23"/>
+                <path d="M9 9v3a3 3 0 0 0 5.12 2.12"/>
+                <path d="M15 9.34V4a3 3 0 0 0-5.94-.6"/>
+                <path d="M17 16.95A7 7 0 0 1 5 12v-2"/>
+                <path d="M19 12a7 7 0 0 0-.89-3.45"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8"  y1="23" x2="16" y2="23"/>
+            </svg>
+            {{-- UNMUTED ikonu (gizli, sesi açınca gösterilir) --}}
+            <svg id="iconUnmuted" viewBox="0 0 24 24" style="display:none;">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8"  y1="23" x2="16" y2="23"/>
+            </svg>
+        </button>
 
         <div class="swipe-hint" id="swipeHint">
             <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
@@ -258,7 +310,6 @@
                  data-video-src="{{ $videoUrl }}"
                  style="transform: translateY({{ $i === 0 ? '0%' : '100%' }})">
 
-                {{-- Poster: siyah ekran yerine thumbnail göster --}}
                 @if ($posterUrl)
                     <img
                         class="slide-poster"
@@ -267,7 +318,6 @@
                         loading="{{ $i === 0 ? 'eager' : 'lazy' }}">
                 @endif
 
-                {{-- Video src'yi data-src'de tut, JS ile yönetilecek --}}
                 <video
                     muted
                     loop
@@ -276,7 +326,6 @@
                     @if ($posterUrl) poster="{{ $posterUrl }}" @endif>
                 </video>
 
-                {{-- Yükleniyor spinner --}}
                 <div class="slide-loading-indicator">
                     <div class="loading-spinner"></div>
                 </div>
@@ -315,20 +364,53 @@
     let isAnimating   = false;
     let hintDismissed = false;
 
-    // Pencere boyutu: bu kadar uzaktaki slide'ların src'si bellekte tutulur
-    const PRELOAD_AHEAD  = 2;
-    const PRELOAD_BEHIND = 1;
-    const UNLOAD_AFTER   = 4; // bu mesafeden uzaktaki videoların src'si temizlenir
+    // Başta tüm videolar muted — kullanıcı butona basınca açılır
+    let isMuted = true;
+
+    const muteBtn      = document.getElementById('muteBtn');
+    const iconMuted    = document.getElementById('iconMuted');
+    const iconUnmuted  = document.getElementById('iconUnmuted');
 
     /* ─────────────────────────────────────────
-       Video src yönetimi (sanal liste mantığı)
+       Ses toggle
+    ───────────────────────────────────────── */
+    muteBtn.addEventListener('click', function () {
+        isMuted = !isMuted;
+
+        // Şu an oynayan videoyu güncelle
+        const activeVideo = slides[current].querySelector('video');
+        if (activeVideo) {
+            activeVideo.muted = isMuted;
+            // iOS Safari: muted=false yaptıktan sonra play() tekrar çağrılmalı
+            if (!isMuted) {
+                activeVideo.play().catch(() => {
+                    // Hâlâ izin vermezse sessiz devam et
+                    isMuted = true;
+                    activeVideo.muted = true;
+                    iconMuted.style.display   = '';
+                    iconUnmuted.style.display = 'none';
+                });
+            }
+        }
+
+        // İkon değiştir
+        iconMuted.style.display   = isMuted ? ''       : 'none';
+        iconUnmuted.style.display = isMuted ? 'none'   : '';
+    });
+
+    const PRELOAD_AHEAD  = 2;
+    const PRELOAD_BEHIND = 1;
+    const UNLOAD_AFTER   = 4;
+
+    /* ─────────────────────────────────────────
+       Video src yönetimi
     ───────────────────────────────────────── */
     function loadVideo(index) {
         const slide = slides[index];
         if (!slide) return;
         const video = slide.querySelector('video');
         const src   = slide.dataset.videoSrc;
-        if (!video || !src || video.src) return; // zaten yüklü
+        if (!video || !src || video.src) return;
         video.src = src;
         video.load();
     }
@@ -340,7 +422,7 @@
         if (!video || !video.src) return;
         video.pause();
         video.removeAttribute('src');
-        video.load(); // belleği serbest bırak
+        video.load();
         slide.classList.remove('playing', 'buffering');
     }
 
@@ -356,7 +438,7 @@
     }
 
     /* ─────────────────────────────────────────
-       Oynatma: canplay beklenerek siyah ekran önlenir
+       Oynatma
     ───────────────────────────────────────── */
     function playSlide(index) {
         const slide = slides[index];
@@ -364,16 +446,27 @@
         const video = slide.querySelector('video');
         if (!video) return;
 
-        loadVideo(index); // src yoksa yükle
+        loadVideo(index);
+
+        // Geçerli ses durumunu uygula
+        video.muted = isMuted;
 
         const doPlay = () => {
             slide.classList.remove('buffering');
             video.play().then(() => {
                 slide.classList.add('playing');
-            }).catch(() => {});
+            }).catch(() => {
+                // Sesli oynatma reddedildiyse muted'a dön, tekrar dene
+                video.muted = true;
+                isMuted = true;
+                iconMuted.style.display   = '';
+                iconUnmuted.style.display = 'none';
+                video.play().then(() => {
+                    slide.classList.add('playing');
+                }).catch(() => {});
+            });
         };
 
-        // readyState 3 = HAVE_FUTURE_DATA, oynatmaya hazır
         if (video.readyState >= 3) {
             doPlay();
         } else {
@@ -409,27 +502,23 @@
         slides[next].style.transition    = trans;
         slides[current].style.transition = trans;
 
-        // Gelen slide'ı kaydırma yönünden yerleştir
         slides[next].style.transform = `translateY(${direction * 100}%)`;
-        slides[next].getBoundingClientRect(); // reflow
+        slides[next].getBoundingClientRect();
 
         slides[next].style.transform    = 'translateY(0%)';
         slides[current].style.transform = `translateY(${-direction * 100}%)`;
 
         pauseSlide(current);
 
-        const prev = current;
         current = next;
         counter.textContent = current + 1;
 
-        // Animasyon bittikten sonra oynat & pencereyi yönet
         setTimeout(() => {
             isAnimating = false;
             playSlide(current);
             manageWindow(current);
         }, duration);
 
-        // İpucunu gizle
         if (!hintDismissed) {
             hintDismissed = true;
             hint.classList.add('hidden');
@@ -437,12 +526,11 @@
     }
 
     /* ─────────────────────────────────────────
-       Başlangıç: tıklanan template'e göre pozisyon
+       Başlangıç pozisyonu
     ───────────────────────────────────────── */
     const startUuid  = '{{ $currentUuid }}';
     const startIndex = slides.findIndex(s => s.dataset.uuid === startUuid);
     if (startIndex > 0) {
-        // Animasyonsuz, sessiz geçiş
         slides.forEach((s, i) => {
             s.style.transition = 'none';
             s.style.transform  = `translateY(${(i - startIndex) * 100}%)`;
@@ -452,12 +540,11 @@
     }
 
     /* ─────────────────────────────────────────
-       İlk video: DOM hazır olunca oynat
+       İlk video
     ───────────────────────────────────────── */
     document.addEventListener('DOMContentLoaded', () => {
-        manageWindow(current);  // başlangıç penceresini yükle
+        manageWindow(current);
         playSlide(current);
-
         setTimeout(() => hint.classList.add('hidden'), 3000);
     });
 
@@ -484,7 +571,7 @@
     });
 
     /* ─────────────────────────────────────────
-       Mouse wheel (masaüstü)
+       Mouse wheel
     ───────────────────────────────────────── */
     let wheelLock = false;
     viewport.addEventListener('wheel', e => {
