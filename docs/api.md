@@ -654,9 +654,56 @@ Authorization: Bearer {token}
 
 ---
 
-## 4. Custom Video Talepleri & Segment Düzenleme
+## 4. Slider
 
-### 4.1 Custom Video Talebi Oluşturma
+### 4.1 Slider Listesi
+
+Aktif slider'ları sıralı şekilde listeler. Authentication gerektirmez, yalnızca API Key zorunludur.
+
+```
+GET /api/v1/sliders
+```
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "title": {
+        "tr": "Başlık",
+        "en": "Title"
+      },
+      "description": {
+        "tr": "Açıklama",
+        "en": "Description"
+      },
+      "button_text": {
+        "tr": "Daha Fazla",
+        "en": "Learn More"
+      },
+      "button_link": "https://example.com",
+      "image_url": "https://example.com/storage/sliders/image.jpg",
+      "order": 0
+    }
+  ],
+  "locale": "tr"
+}
+```
+
+**Notlar:**
+
+- Yalnızca `is_active: true` olan slider'lar döner
+- `order` alanına göre artan sırada listelenir
+- `button_text` ve `button_link` opsiyoneldir, slider'a göre `null` gelebilir
+
+---
+
+## 5. Custom Video Talepleri & Segment Düzenleme
+
+### 5.1 Custom Video Talebi Oluşturma
 
 Kullanıcı prompt ile özel video üretim talebi oluşturur.
 
@@ -708,7 +755,7 @@ Content-Type: multipart/form-data
 
 ---
 
-### 4.2 Custom Video Talepleri Listesi
+### 5.2 Custom Video Talepleri Listesi
 
 Kullanıcının oluşturduğu tüm custom video taleplerini listeler.
 
@@ -757,7 +804,7 @@ Authorization: Bearer {token}
 
 ---
 
-### 4.3 Custom Video Talep Detayı (Segmentlerle)
+### 5.3 Custom Video Talep Detayı (Segmentlerle)
 
 Belirli bir video talebinin detaylarını ve segment durumlarını getirir.
 
@@ -851,7 +898,7 @@ Authorization: Bearer {token}
 
 ---
 
-### 4.4 Segment Düzenleme Talebi Oluşturma
+### 5.4 Segment Düzenleme Talebi Oluşturma
 
 Tamamlanmış bir segment için düzenleme talebi oluşturur.
 
@@ -900,7 +947,7 @@ Authorization: Bearer {token}
 
 ---
 
-### 4.5 Custom Video Talebi Silme
+### 5.5 Custom Video Talebi Silme
 
 Henüz tamamlanmamış video talebini siler.
 
