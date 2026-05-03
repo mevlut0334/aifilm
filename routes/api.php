@@ -8,12 +8,15 @@ use App\Http\Controllers\Api\V1\PurchaseController;
 use App\Http\Controllers\Api\V1\TemplateController;
 use App\Http\Controllers\Api\V1\TokenController;
 use App\Http\Middleware\ApiKeyMiddleware;
+use App\Http\Controllers\Api\V1\SliderController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->middleware(['setLocaleFromHeader', ApiKeyMiddleware::class])->group(function () {
     Route::get('/health', function () {
         return response()->json(['status' => 'ok', 'locale' => app()->getLocale()]);
     });
+
+    Route::get('/sliders', [SliderController::class, 'index']);
 
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
