@@ -17,6 +17,9 @@ Route::prefix('v1')->middleware(['setLocaleFromHeader', ApiKeyMiddleware::class]
     });
 
     Route::get('/sliders', [SliderController::class, 'index']);
+    // Templates
+    Route::get('/templates', [TemplateController::class, 'index']);
+    Route::get('/templates/{uuid}', [TemplateController::class, 'show']);
 
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
@@ -35,9 +38,7 @@ Route::prefix('v1')->middleware(['setLocaleFromHeader', ApiKeyMiddleware::class]
         // Packages
         Route::get('/packages', [PackageController::class, 'index']);
 
-        // Templates
-        Route::get('/templates', [TemplateController::class, 'index']);
-        Route::get('/templates/{uuid}', [TemplateController::class, 'show']);
+
 
         // Generation Requests
         Route::get('/generation-requests', [GenerationRequestController::class, 'index']);
