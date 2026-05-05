@@ -299,21 +299,55 @@ Authorization: Bearer {token}
 
 ---
 
-## 2. Template Bazlı Görsel/Video Talepleri
+### 1.7 Token Bakiyesi (Token Balance)
 
-### 2.1 Template Listesi (Templates)
-
-Aktif template'leri listeler. Orientation'a göre filtreleme yapılabilir.
+Giriş yapmış kullanıcının token bakiyesini getirir.
 
 ```
-GET /api/v1/templates
-GET /api/v1/templates?orientation=landscape
+GET /api/v1/tokens/balance
 ```
 
 **Headers:**
 
 ```
 Authorization: Bearer {token}
+```
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "message": null,
+  "data": {
+    "balance": 150
+  },
+  "locale": "tr"
+}
+```
+
+**Hata Response (401):**
+
+```json
+{
+  "success": false,
+  "message": "Unauthorized",
+  "data": null,
+  "locale": "tr"
+}
+```
+
+---
+
+## 2. Template Bazlı Görsel/Video Talepleri
+
+### 2.1 Template Listesi (Templates)
+
+Aktif template'leri listeler. Orientation'a göre filtreleme yapılabilir. **Authentication gerektirmez**, yalnızca API Key zorunludur.
+
+```
+GET /api/v1/templates
+GET /api/v1/templates?orientation=landscape
 ```
 
 **Query Parameters:**
@@ -353,16 +387,10 @@ Authorization: Bearer {token}
 
 ### 2.2 Template Detay
 
-Belirli bir template'in detaylarını getirir.
+Belirli bir template'in detaylarını getirir. **Authentication gerektirmez**, yalnızca API Key zorunludur.
 
 ```
 GET /api/v1/templates/{uuid}
-```
-
-**Headers:**
-
-```
-Authorization: Bearer {token}
 ```
 
 **Response (200):**
