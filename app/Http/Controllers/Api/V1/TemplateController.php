@@ -16,6 +16,14 @@ class TemplateController extends Controller
         private TemplateService $templateService
     ) {}
 
+    private function resolveVideoUrl(?string $path): ?string
+    {
+        if (!$path) return null;
+        return str_starts_with($path, 'http')
+            ? $path
+            : asset('storage/' . $path);
+    }
+
     public function index(Request $request): JsonResponse
     {
         $orientation = $request->query('orientation');
@@ -33,15 +41,9 @@ class TemplateController extends Controller
                     'title' => $template->getTranslations('title'),
                     'description' => $template->getTranslations('description'),
                     'token_cost' => $template->token_cost,
-                    'landscape_video_url' => $template->landscape_video_path
-                        ? asset('storage/'.$template->landscape_video_path)
-                        : null,
-                    'portrait_video_url' => $template->portrait_video_path
-                        ? asset('storage/'.$template->portrait_video_path)
-                        : null,
-                    'square_video_url' => $template->square_video_path
-                        ? asset('storage/'.$template->square_video_path)
-                        : null,
+                    'landscape_video_url' => $this->resolveVideoUrl($template->landscape_video_path),
+                    'portrait_video_url' => $this->resolveVideoUrl($template->portrait_video_path),
+                    'square_video_url' => $this->resolveVideoUrl($template->square_video_path),
                     'poster_url' => $template->poster_url,
                     'created_at' => $template->created_at->toIso8601String(),
                 ];
@@ -66,15 +68,9 @@ class TemplateController extends Controller
                 'title' => $template->getTranslations('title'),
                 'description' => $template->getTranslations('description'),
                 'token_cost' => $template->token_cost,
-                'landscape_video_url' => $template->landscape_video_path
-                    ? asset('storage/'.$template->landscape_video_path)
-                    : null,
-                'portrait_video_url' => $template->portrait_video_path
-                    ? asset('storage/'.$template->portrait_video_path)
-                    : null,
-                'square_video_url' => $template->square_video_path
-                    ? asset('storage/'.$template->square_video_path)
-                    : null,
+                'landscape_video_url' => $this->resolveVideoUrl($template->landscape_video_path),
+                'portrait_video_url' => $this->resolveVideoUrl($template->portrait_video_path),
+                'square_video_url' => $this->resolveVideoUrl($template->square_video_path),
                 'poster_url' => $template->poster_url,
                 'created_at' => $template->created_at->toIso8601String(),
             ]
