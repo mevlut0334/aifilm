@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\TokenController;
 use App\Http\Middleware\ApiKeyMiddleware;
 use App\Http\Controllers\Api\V1\SliderController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\V1\CustomImageApiController;
 
 Route::prefix('v1')->middleware(['setLocaleFromHeader', ApiKeyMiddleware::class])->group(function () {
     Route::get('/health', function () {
@@ -45,6 +46,9 @@ Route::prefix('v1')->middleware(['setLocaleFromHeader', ApiKeyMiddleware::class]
         Route::post('/generation-requests', [GenerationRequestController::class, 'store']);
         Route::get('/generation-requests/{uuid}', [GenerationRequestController::class, 'show']);
         Route::delete('/generation-requests/{uuid}', [GenerationRequestController::class, 'destroy']);
+
+        // Custom Image Requests
+        Route::get('/custom-image-requests', [CustomImageApiController::class, 'index']);
 
         // Custom Video Requests
         Route::get('/custom-video-requests', [CustomVideoRequestController::class, 'index']);
