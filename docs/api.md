@@ -664,21 +664,50 @@ Content-Type: multipart/form-data
 
 ---
 
+
+
 ### 3.2 Custom Görsel Talepleri Listesi
 
-Kullanıcının custom görsel taleplerini template bazlı taleplerle birlikte görür (aynı endpoint).
+Kullanıcının oluşturduğu tüm custom görsel taleplerini listeler.
 
-```
-GET /api/v1/generation-requests
-```
+GET /api/v1/custom-image-requests
 
 **Headers:**
 
-```
 Authorization: Bearer {token}
-```
 
-**Response:** Bölüm 2.4'teki ile aynı formattadır. `type` alanı `custom_image` olan kayıtlar custom görsellerdir.
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "Requests retrieved successfully",
+  "data": {
+    "requests": [
+      {
+        "uuid": "770e8400-e29b-41d4-a716-446655440002",
+        "type": "custom_image",
+        "status": "pending",
+        "progress": 0,
+        "orientation": "portrait",
+        "description": "Fütüristik şehir manzarası",
+        "token_cost": 100,
+        "output_url": null,
+        "failure_reason": null,
+        "created_at": "2026-04-24T12:00:00+00:00",
+        "updated_at": "2026-04-24T12:00:00+00:00"
+      }
+    ],
+    "pagination": {
+      "current_page": 1,
+      "last_page": 1,
+      "per_page": 20,
+      "total": 1
+    }
+  },
+  "locale": "tr"
+}
+```
 
 ---
 
