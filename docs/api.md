@@ -1033,6 +1033,174 @@ Authorization: Bearer {token}
 
 ---
 
+## 6. Mobil Paketler
+
+### 6.1 Mobil Paket Listesi
+
+iOS ve Android için mevcut abonelik paketlerini listeler. Authentication gerektirmez, yalnızca API Key zorunludur.
+
+GET /api/v1/mobile-packages
+GET /api/v1/mobile-packages?platform=ios
+GET /api/v1/mobile-packages?platform=android
+
+**Query Parameters:**
+
+- `platform` (optional): `ios`, `android`
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "message": null,
+  "data": [
+    {
+      "id": 1,
+      "title": "Standart Plan",
+      "description": "Aylık 660 token",
+      "token_amount": 660,
+      "ios_product_id": "com.aifilm.subscription.monthly",
+      "android_product_id": "aifilm_subscription_monthly",
+      "order": 1
+    }
+  ],
+  "locale": "tr"
+}
+```
+
+---
+
+## 7. Satın Alma & Abonelik
+
+### 7.1 iOS Abonelik Doğrulama
+
+POST /api/v1/purchases/ios/subscribe
+
+**Headers:**
+
+**Request Body:**
+```json
+{
+  "product_id": "com.aifilm.subscription.monthly",
+  "receipt_data": "base64_encoded_receipt"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "tokens_added": 660,
+    "purchase_id": 1,
+    "expires_at": "2026-06-08T10:00:00.000000Z"
+  }
+}
+```
+
+---
+
+### 7.2 Android Abonelik Doğrulama
+
+POST /api/v1/purchases/android/subscribe
+
+**Headers:**
+
+**Request Body:**
+```json
+{
+  "product_id": "aifilm_subscription_monthly",
+  "purchase_token": "google_purchase_token",
+  "package_name": "com.aifilm.app"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "tokens_added": 660,
+    "purchase_id": 1,
+    "expires_at": "2026-06-08T10:00:00.000000Z"
+  }
+}
+```
+
+---
+
+### 7.3 Abonelik Durumu Sorgulama
+
+GET /api/v1/subscriptions/status?platform=ios
+
+**Headers:**
+
+**Query Parameters:**
+- `platform` (zorunlu): `ios`, `android`
+
+**Response (200) — Aktif:**
+```json
+{
+  "success": true,
+  "data": {
+    "is_active": true,
+    "platform": "ios",
+    "expires_at": "2026-06-08T10:00:00.000000Z",
+    "auto_renewing": true,
+    "status": "active",
+    "package_id": 1,
+    "token_amount": 660
+  }
+}
+```
+
+**Response (200) — Aktif Değil:**
+```json
+{
+  "success": true,
+  "data": {
+    "is_active": false,
+    "platform": "ios",
+    "expires_at": null,
+    "auto_renewing": false,
+    "status": "none"
+  }
+}
+```
+
+---
+
+### 7.4 iOS Tek Seferlik Satın Alma (Mevcut)
+
+POST /api/v1/purchases/ios/verify
+
+**Headers:**
+
+**Request Body:**
+```json
+{
+  "product_id": "com.aifilm.onetiime.tokens",
+  "receipt_data": "base64_encoded_receipt"
+}
+```
+
+---
+
+### 7.5 Android Tek Seferlik Satın Alma (Mevcut)
+
+POST /api/v1/purchases/android/verify
+
+**Headers:**
+
+**Request Body:**
+```json
+{
+  "product_id": "aifilm_tokens_pack",
+  "purchase_token": "google_purchase_token",
+  "package_name": "com.aifilm.app"
+}
+```
+
 ## Validation Kuralları
 
 ### Register Request
@@ -1087,6 +1255,27 @@ Authorization: Bearer {token}
 
 ---
 
+### Mobile Package Request
+
+| Alan     | Tip    | Zorunlu | Validasyon          |
+| -------- | ------ | ------- | ------------------- |
+| platform | string | Hayır   | `ios`, `android`    |
+
+### iOS Subscribe Request
+
+| Alan         | Tip    | Zorunlu | Validasyon |
+| ------------ | ------ | ------- | ---------- |
+| product_id   | string | Evet    | -          |
+| receipt_data | string | Evet    | -          |
+
+### Android Subscribe Request
+
+| Alan          | Tip    | Zorunlu | Validasyon |
+| ------------- | ------ | ------- | ---------- |
+| product_id    | string | Evet    | -          |
+| purchase_token | string | Evet   | -          |
+| package_name  | string | Evet    | -          |
+
 ## HTTP Status Codes
 
 | Code | Açıklama                                         |
@@ -1098,3 +1287,14 @@ Authorization: Bearer {token}
 | 404  | Bulunamadı (Not Found)                           |
 | 422  | İşlenemeyen veri (Unprocessable Entity)          |
 | 500  | Sunucu hatası (Internal Server Error)            |
+
+
+## Web Ödeme (Paddle)
+
+Web tarafında ödeme Paddle üzerinden yapılmaktadır. Paddle entegrasyonu
+doğrudan web arayüzü üzerinden çalışır ve ayrı bir API endpoint'i gerektirmez.
+
+- Paket listesi: `GET /api/v1/packages`
+- Ödeme: Paddle.js ile client-side başlatılır
+- Webhook: Paddle → backend otomatik işler
+- Abonelik yönetimi: Paddle Dashboard üzerinden yapılır
