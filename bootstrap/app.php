@@ -25,13 +25,13 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'localize' => LaravelLocalizationRoutes::class,
+            'localize'              => LaravelLocalizationRoutes::class,
             'localeSessionRedirect' => LocaleSessionRedirect::class,
-            'localeCookieRedirect' => LocaleCookieRedirect::class,
-            'localizationRedirect' => LaravelLocalizationRedirectFilter::class,
-            'localeViewPath' => LaravelLocalizationViewPath::class,
-            'setLocaleFromHeader' => SetLocaleFromHeader::class,
-            'api.key'                => \App\Http\Middleware\ApiKeyMiddleware::class,
+            'localeCookieRedirect'  => LocaleCookieRedirect::class,
+            'localizationRedirect'  => LaravelLocalizationRedirectFilter::class,
+            'localeViewPath'        => LaravelLocalizationViewPath::class,
+            'setLocaleFromHeader'   => SetLocaleFromHeader::class,
+            'api.key'               => \App\Http\Middleware\ApiKeyMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

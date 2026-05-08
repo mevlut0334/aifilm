@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AdminManagementController;
 use App\Http\Controllers\Admin\Auth\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GenerationRequestController as AdminGenerationRequestController;
+use App\Http\Controllers\Admin\MobilePackageController;
 use App\Http\Controllers\Admin\PackageController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\SliderController;
@@ -37,6 +38,9 @@ Route::prefix('admin')->group(function () {
 
         // Packages
         Route::resource('packages', PackageController::class)->names('admin.packages');
+
+        // Mobile Packages
+        Route::resource('mobile-packages', MobilePackageController::class)->names('admin.mobile-packages');
 
         // Templates
         Route::resource('templates', TemplateController::class)->except(['show'])->names('admin.templates');
