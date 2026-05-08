@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ app()->getLocale() }}" data-bs-theme="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,7 +22,8 @@
             --text-passive: #6B6B6B;
         }
 
-        html, body {
+        html,
+        body {
             overflow-x: hidden;
             max-width: 100%;
             margin: 0;
@@ -48,7 +50,9 @@
             transform: scale(1.05);
         }
 
-        .navbar-toggler { border-color: var(--gold); }
+        .navbar-toggler {
+            border-color: var(--gold);
+        }
 
         .navbar-toggler-icon {
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23D4AF37' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
@@ -75,7 +79,9 @@
             transition: all 0.3s ease;
         }
 
-        .navbar .btn-link:hover { color: var(--gold) !important; }
+        .navbar .btn-link:hover {
+            color: var(--gold) !important;
+        }
 
         .badge.bg-primary {
             background: linear-gradient(135deg, var(--gold), var(--gold-hover)) !important;
@@ -86,7 +92,10 @@
             margin-left: 5px;
         }
 
-        .alert { border-radius: 8px; border: none; }
+        .alert {
+            border-radius: 8px;
+            border: none;
+        }
 
         .alert-success {
             background: rgba(34, 197, 94, 0.1);
@@ -108,7 +117,10 @@
                 border-radius: 8px;
                 border: 1px solid var(--gold);
             }
-            .nav-link { margin: 5px 0; }
+
+            .nav-link {
+                margin: 5px 0;
+            }
         }
 
         /* ── Footer ─────────────────────────────── */
@@ -179,11 +191,13 @@
             transition: color 0.2s;
         }
 
-        .footer-links a:hover { color: var(--gold); }
+        .footer-links a:hover {
+            color: var(--gold);
+        }
 
         /* Bottom bar */
         .footer-bottom {
-            border-top: 1px solid rgba(255,255,255,0.06);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
             padding-top: 1.2rem;
             display: flex;
             align-items: center;
@@ -210,13 +224,16 @@
             transition: color 0.2s;
         }
 
-        .footer-legal-links a:hover { color: var(--gold); }
+        .footer-legal-links a:hover {
+            color: var(--gold);
+        }
 
         @media (max-width: 768px) {
             .footer-top {
                 grid-template-columns: 1fr;
                 gap: 1.8rem;
             }
+
             .footer-bottom {
                 flex-direction: column;
                 align-items: flex-start;
@@ -224,6 +241,7 @@
         }
     </style>
 </head>
+
 <body style="display:flex; flex-direction:column; min-height:100vh;">
 
     <nav class="navbar navbar-expand-lg">
@@ -236,55 +254,67 @@
                 <ul class="navbar-nav ms-auto">
                     {{-- About & Contact her zaman görünür --}}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ LaravelLocalization::getLocalizedURL(null, route('about', [], false)) }}">
+                        <a class="nav-link"
+                            href="{{ LaravelLocalization::getLocalizedURL(null, route('about', [], false)) }}">
                             {{ app()->getLocale() === 'tr' ? 'Hakkımızda' : 'About' }}
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ LaravelLocalization::getLocalizedURL(null, route('contact', [], false)) }}">
+                        <a class="nav-link"
+                            href="{{ LaravelLocalization::getLocalizedURL(null, route('contact', [], false)) }}">
                             {{ app()->getLocale() === 'tr' ? 'İletişim' : 'Contact' }}
                         </a>
                     </li>
 
                     @guest
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ LaravelLocalization::getLocalizedURL(null, route('register', [], false)) }}">{{ __('auth.Register') }}</a>
+                            <a class="nav-link"
+                                href="{{ LaravelLocalization::getLocalizedURL(null, route('register', [], false)) }}">{{ __('auth.Register') }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ LaravelLocalization::getLocalizedURL(null, route('login', [], false)) }}">{{ __('auth.Login') }}</a>
+                            <a class="nav-link"
+                                href="{{ LaravelLocalization::getLocalizedURL(null, route('login', [], false)) }}">{{ __('auth.Login') }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ LaravelLocalization::getLocalizedURL(null, route('packages.index', [], false)) }}">
+                            <a class="nav-link"
+                                href="{{ LaravelLocalization::getLocalizedURL(null, route('packages.index', [], false)) }}">
                                 {{ __('packages.Buy Tokens') }}
                             </a>
                         </li>
                     @else
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ LaravelLocalization::getLocalizedURL(null, route('packages.index', [], false)) }}">
+                            <a class="nav-link"
+                                href="{{ LaravelLocalization::getLocalizedURL(null, route('packages.index', [], false)) }}">
                                 {{ __('packages.Buy Tokens') }}
                                 <span class="badge bg-primary">{{ auth()->user()->tokenBalance->balance ?? 0 }}</span>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ LaravelLocalization::getLocalizedURL(null, route('generation-requests.index', [], false)) }}">
+                            <a class="nav-link"
+                                href="{{ LaravelLocalization::getLocalizedURL(null, route('generation-requests.index', [], false)) }}">
                                 {{ __('navigation.my_templates') }}
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ LaravelLocalization::getLocalizedURL(null, route('custom-images.index', [], false)) }}">
+                            <a class="nav-link"
+                                href="{{ LaravelLocalization::getLocalizedURL(null, route('custom-images.index', [], false)) }}">
                                 {{ __('navigation.my_images') }}
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ LaravelLocalization::getLocalizedURL(null, route('custom-videos.index', [], false)) }}">
+                            <a class="nav-link"
+                                href="{{ LaravelLocalization::getLocalizedURL(null, route('custom-videos.index', [], false)) }}">
                                 {{ __('navigation.my_videos') }}
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ LaravelLocalization::getLocalizedURL(null, route('profile', [], false)) }}">{{ __('auth.Profile') }}</a>
+                            <a class="nav-link"
+                                href="{{ LaravelLocalization::getLocalizedURL(null, route('profile', [], false)) }}">{{ __('auth.Profile') }}</a>
                         </li>
                         <li class="nav-item">
-                            <form method="POST" action="{{ LaravelLocalization::getLocalizedURL(null, route('logout', [], false)) }}" style="display: inline;">
+                            <form method="POST"
+                                action="{{ LaravelLocalization::getLocalizedURL(null, route('logout', [], false)) }}"
+                                style="display: inline;">
                                 @csrf
                                 <button type="submit" class="btn btn-link nav-link">{{ __('auth.Logout') }}</button>
                             </form>
@@ -295,12 +325,12 @@
         </div>
     </nav>
 
-    @if(session('success'))
+    @if (session('success'))
         <div class="container">
             <div class="alert alert-success">{{ session('success') }}</div>
         </div>
     @endif
-    @if(session('error'))
+    @if (session('error'))
         <div class="container">
             <div class="alert alert-danger">{{ session('error') }}</div>
         </div>
@@ -325,7 +355,8 @@
                     </p>
                     <div class="footer-company">
                         Gökbey Savunma Sanayi Limited Şirketi<br>
-                        <a href="mailto:asilovstudio@gmail.com" style="color:var(--text-passive);text-decoration:none;">asilovstudio@gmail.com</a>
+                        <a href="mailto:asilovstudio@gmail.com"
+                            style="color:var(--text-passive);text-decoration:none;">asilovstudio@gmail.com</a>
                     </div>
                 </div>
 
@@ -341,15 +372,12 @@
                             </a>
                         </li>
                         <li>
-                            <a href="{{ LaravelLocalization::getLocalizedURL(null, route('packages.index', [], false)) }}">
+                            <a
+                                href="{{ LaravelLocalization::getLocalizedURL(null, route('packages.index', [], false)) }}">
                                 {{ app()->getLocale() === 'tr' ? 'Paketler' : 'Packages' }}
                             </a>
                         </li>
-                        <li>
-                            <a href="{{ LaravelLocalization::getLocalizedURL(null, route('templates.index', [], false)) }}">
-                                {{ app()->getLocale() === 'tr' ? 'Şablonlar' : 'Templates' }}
-                            </a>
-                        </li>
+
                         <li>
                             <a href="{{ LaravelLocalization::getLocalizedURL(null, route('contact', [], false)) }}">
                                 {{ app()->getLocale() === 'tr' ? 'İletişim' : 'Contact' }}
@@ -408,4 +436,5 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ asset('js/theme.js') }}"></script>
 </body>
+
 </html>
