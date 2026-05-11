@@ -12,7 +12,7 @@ return [
     'section1_items' => [
         '<strong>Email address:</strong> For account creation, login, and communication purposes.',
         '<strong>IP address:</strong> For security, fraud detection, and system logs.',
-        '<strong>Payment information:</strong> Payments are processed via Paddle\'s infrastructure; your card or payment details are never stored on our servers.',
+        '<strong>Payment information:</strong> Payments are processed via secure infrastructure; your card or payment details are never stored on our servers.',
         '<strong>Usage data:</strong> Which features you use, session duration, and in-platform activity.',
         '<strong>Cookies and local storage:</strong> For session management, remembering your preferences, and analytics.',
     ],
@@ -30,7 +30,6 @@ return [
     'section3_title' => '3. Sharing with Third Parties',
     'section3_text' => 'Your personal data is only shared with third parties essential to the operation of the service:',
     'section3_items' => [
-        '<strong>Paddle:</strong> Our payment infrastructure provider. Payment information is processed directly through Paddle\'s secure systems. You can view Paddle\'s privacy policy at <a href="https://www.paddle.com/legal/privacy" target="_blank" class="policy-link">paddle.com</a>.',
         '<strong>Analytics tools:</strong> Anonymous usage data may be collected to measure platform performance.',
     ],
     'section3_note' => 'Your data is never sold to third parties or shared for advertising purposes.',

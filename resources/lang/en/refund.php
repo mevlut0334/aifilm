@@ -40,16 +40,12 @@ return [
         '<strong>Step 1:</strong> Send an email to <a href="mailto:asilovstudio@gmail.com" style="color:#D4AF37;">asilovstudio@gmail.com</a> with the subject "Refund Request".',
         '<strong>Step 2:</strong> Include your order number, registered email address and reason for refund in your email.',
         '<strong>Step 3:</strong> Your request will be reviewed within 3 business days and the result will be notified to you.',
-        '<strong>Step 4:</strong> Approved refunds will be reflected to your original payment method through Paddle within 5-10 business days.',
+        '<strong>Step 4:</strong> Approved refunds will be reflected to your original payment method within 5-10 business days.',
     ],
 
     // Section 5
-    'section5_title' => '5. Important Note Regarding Paddle',
-    'section5_text'  => 'AIFilm processes payments through the Paddle (paddle.com) infrastructure. Paddle acts as the Merchant of Record and may manage refund requests directly in some cases. Paddle\'s own refund policy may also apply. For more information: paddle.com/legal',
-
-    // Section 6
-    'section6_title' => '6. Contact',
-    'section6_text'  => 'To contact us about refunds and payments:',
+    'section5_title' => '5. Contact',
+    'section5_text'  => 'For refund and payment related inquiries, please use the contact information below.',
 
     // Contact
     'contact_title'   => 'Refund Request & Support',

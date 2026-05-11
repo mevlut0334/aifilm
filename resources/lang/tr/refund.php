@@ -40,16 +40,12 @@ return [
         '<strong>1. Adım:</strong> <a href="mailto:asilovstudio@gmail.com" style="color:#D4AF37;">asilovstudio@gmail.com</a> adresine "İade Talebi" konusuyla e-posta gönderin.',
         '<strong>2. Adım:</strong> E-postanızda sipariş numaranızı, kayıtlı e-posta adresinizi ve iade gerekçenizi belirtin.',
         '<strong>3. Adım:</strong> Talebiniz 3 iş günü içinde incelenerek sonuç tarafınıza bildirilir.',
-        '<strong>4. Adım:</strong> Onaylanan iadeler, Paddle altyapısı üzerinden orijinal ödeme yönteminize 5-10 iş günü içinde yansıtılır.',
+        '<strong>4. Adım:</strong> Onaylanan iadeler, orijinal ödeme yönteminize 5-10 iş günü içinde yansıtılır.',
     ],
 
     // Section 5
-    'section5_title' => '5. Paddle ile İlgili Önemli Not',
-    'section5_text'  => 'AIFilm, ödeme işlemlerini Paddle (paddle.com) altyapısı üzerinden gerçekleştirmektedir. Paddle, Merchant of Record (Kayıtlı Satıcı) sıfatıyla hareket etmekte olup bazı durumlarda iade taleplerini doğrudan yönetebilir. Paddle\'ın kendi iade politikası da geçerli olabilir. Detaylı bilgi için: paddle.com/legal',
-
-    // Section 6
-    'section6_title' => '6. İletişim',
-    'section6_text'  => 'İade ve ödeme konularında bize ulaşmak için:',
+    'section5_title' => '5. İletişim',
+    'section5_text'  => 'İade ve ödeme konularında bize ulaşmak için aşağıdaki iletişim bilgilerini kullanabilirsiniz.',
 
     // Contact
     'contact_title'   => 'İade Talebi ve Destek',

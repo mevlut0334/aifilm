@@ -12,7 +12,7 @@ return [
     'section1_items' => [
         '<strong>E-posta adresi:</strong> Hesap oluşturma, giriş yapma ve iletişim amacıyla.',
         '<strong>IP adresi:</strong> Güvenlik, dolandırıcılık tespiti ve sistem logları amacıyla.',
-        '<strong>Ödeme bilgileri:</strong> Ödeme işlemleri Paddle altyapısı üzerinden gerçekleştirilir; kart veya ödeme bilgileriniz bizim sunucularımızda saklanmaz.',
+        '<strong>Ödeme bilgileri:</strong> Ödeme işlemleri güvenli altyapı üzerinden gerçekleştirilir; kart veya ödeme bilgileriniz bizim sunucularımızda saklanmaz.',
         '<strong>Kullanım verileri:</strong> Hangi özellikleri kullandığınız, oturum süresi ve platform içi hareketler.',
         '<strong>Çerezler ve yerel depolama:</strong> Oturum yönetimi, tercihlerinizin hatırlanması ve analitik amaçlı.',
     ],
@@ -30,7 +30,6 @@ return [
     'section3_title' => '3. Üçüncü Taraflarla Paylaşım',
     'section3_text' => 'Kişisel verileriniz yalnızca hizmetin işleyişi için zorunlu olan üçüncü taraflarla paylaşılır:',
     'section3_items' => [
-        '<strong>Paddle:</strong> Ödeme altyapısı sağlayıcımızdır. Ödeme bilgileriniz doğrudan Paddle\'ın güvenli sistemleri üzerinden işlenir. Paddle\'ın gizlilik politikasına <a href="https://www.paddle.com/legal/privacy" target="_blank" class="policy-link">paddle.com</a> adresinden ulaşabilirsiniz.',
         '<strong>Analitik araçlar:</strong> Platform performansını ölçmek amacıyla anonim kullanım verileri toplanabilir.',
     ],
     'section3_note' => 'Verileriniz asla üçüncü taraflara satılmaz veya reklam amacıyla paylaşılmaz.',
