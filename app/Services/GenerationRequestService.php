@@ -90,7 +90,7 @@ class GenerationRequestService
         // Custom requests - default token costs
         // These can be configured in settings or hardcoded for now
         return match ($type) {
-            'custom_image' => 10,
+            'custom_image' => (int) \App\Models\Setting::get('custom_image_token_cost', 50),
             'custom_video' => 50,
             default => throw new Exception('Invalid request type')
         };
