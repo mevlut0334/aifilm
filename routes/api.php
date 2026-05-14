@@ -58,6 +58,7 @@ Route::prefix('v1')->middleware(['setLocaleFromHeader', ApiKeyMiddleware::class]
 
         // Custom Image Requests
         Route::get('/custom-image-requests', [CustomImageApiController::class, 'index']);
+        Route::post('/custom-image-requests', [CustomImageApiController::class, 'store']);
 
         // Custom Video Requests
         Route::get('/custom-video-requests', [CustomVideoRequestController::class, 'index']);
