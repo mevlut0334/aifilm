@@ -13,14 +13,19 @@ class TokenController extends Controller
 
     public function __construct(
         private TokenService $tokenService
-    ) {}
+    ) {
+    }
 
     public function balance(): JsonResponse
     {
         $balance = $this->tokenService->getBalance(auth()->id());
+        $customImageCost = (int) \App\Models\Setting::get('custom_image_token_cost', 50);
 
         return $this->successResponse(
-            data: ['balance' => $balance]
+            data: [
+                'balance' => $balance,
+                'custom_image_token_cost' => $customImageCost,
+            ]
         );
     }
 
