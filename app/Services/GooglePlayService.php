@@ -215,7 +215,7 @@ class GooglePlayService
                 'auto_renewing'       => true,
             ]);
 
-            $this->tokenService->addTokens(
+            $this->tokenService->resetAndAddTokens(
                 $original->user_id,
                 $package->token_amount,
                 'subscription_renewal',
