@@ -41,14 +41,12 @@ class GooglePlayWebhookController extends Controller
 
             Log::info('Google Play webhook received', ['data' => $decoded]);
 
-            // subscriptionNotification veya oneTimeProductNotification
             if (isset($decoded['subscriptionNotification'])) {
                 $this->handleSubscriptionNotification(
                     $decoded['subscriptionNotification'],
                     $decoded['packageName'] ?? ''
                 );
             } elseif (isset($decoded['oneTimeProductNotification'])) {
-                // Tek seferlik satın alma bildirimi — şu an sadece logluyoruz
                 Log::info('Google Play one-time product notification', $decoded['oneTimeProductNotification']);
             } else {
                 Log::info('Google Play webhook: unrecognized notification type', $decoded);
@@ -65,7 +63,7 @@ class GooglePlayWebhookController extends Controller
     {
         $notificationType = $notification['notificationType'] ?? null;
         $purchaseToken    = $notification['purchaseToken'] ?? null;
-        $subscriptionId   = $notification['subscriptionId'] ?? null; // productId
+        $subscriptionId   = $notification['subscriptionId'] ?? null;
 
         if (! $purchaseToken || ! $subscriptionId) {
             Log::warning('Google Play subscription notification: missing fields', $notification);
@@ -73,9 +71,9 @@ class GooglePlayWebhookController extends Controller
         }
 
         Log::info('Google Play subscription notification', [
-            'type'          => $notificationType,
+            'type'           => $notificationType,
             'subscriptionId' => $subscriptionId,
-            'packageName'   => $packageName,
+            'packageName'    => $packageName,
         ]);
 
         // Notification type sabitleri:
@@ -99,12 +97,18 @@ class GooglePlayWebhookController extends Controller
                 $packageName,
                 $subscriptionId
             ),
-            3, 12 => $this->googlePlayService->handleCancellation($purchaseToken),
-            10    => $this->googlePlayService->handlePause($purchaseToken),
-            13    => $this->googlePlayService->handleCancellation($purchaseToken),
-            4     => Log::info('Google Play: new subscription purchased via webhook', [
-                'subscriptionId' => $subscriptionId,
-            ]),
+            3, 12   => $this->googlePlayService->handleCancellation($purchaseToken),
+            10      => $this->googlePlayService->handlePause($purchaseToken),
+            13      => $this->googlePlayService->handleCancellation($purchaseToken),
+
+            // Yeni abonelik: uygulama tarafından zaten işlenmişse skip edilir.
+            // İşlenmemişse (uygulama başarısız olduysa) pending olarak loglanır.
+            4 => $this->googlePlayService->handleNewSubscriptionWebhook(
+                $purchaseToken,
+                $packageName,
+                $subscriptionId
+            ),
+
             default => Log::info("Google Play: unhandled notification type {$notificationType}"),
         };
     }

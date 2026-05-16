@@ -23,7 +23,7 @@ class GooglePlayService
         private TokenService $tokenService
     ) {}
 
-    // Tek seferlik satın alma (mevcut, dokunulmadı)
+    // Tek seferlik satın alma
     public function verifyPurchase(int $userId, string $productId, string $purchaseToken, string $packageName): array
     {
         $package = $this->packageRepository->findByProductId($productId);
@@ -32,7 +32,18 @@ class GooglePlayService
         }
 
         $tokenAmount = $package->token_amount;
-        $result      = $this->verifyProductWithGoogle($packageName, $productId, $purchaseToken);
+
+        Log::info('Google Play verifyPurchase token_amount', [
+            'user_id'      => $userId,
+            'product_id'   => $productId,
+            'token_amount' => $tokenAmount,
+        ]);
+
+        if ($tokenAmount <= 0) {
+            throw new Exception("Package token_amount is not set or zero for product: {$productId}");
+        }
+
+        $result = $this->verifyProductWithGoogle($packageName, $productId, $purchaseToken);
 
         if (! isset($result['purchaseState']) || $result['purchaseState'] != 0) {
             throw new Exception('Google Play purchase verification failed');
@@ -44,49 +55,52 @@ class GooglePlayService
             throw new Exception('Purchase already processed');
         }
 
-        DB::beginTransaction();
-        try {
-            $purchase = $this->purchaseRepository->create([
-                'user_id'                => $userId,
-                'package_id'             => $package->id,
-                'platform'               => 'android',
-                'amount_paid'            => null,
-                'currency'               => null,
-                'gateway_transaction_id' => $transactionId,
-                'token_amount'           => $tokenAmount,
-                'status'                 => 'completed',
-                'is_subscription'        => false,
-            ]);
+        // Purchase kaydı oluştur (tek INSERT, kendi içinde atomik)
+        $purchase = $this->purchaseRepository->create([
+            'user_id'                => $userId,
+            'package_id'             => $package->id,
+            'platform'               => 'android',
+            'amount_paid'            => null,
+            'currency'               => null,
+            'gateway_transaction_id' => $transactionId,
+            'token_amount'           => $tokenAmount,
+            'status'                 => 'completed',
+            'is_subscription'        => false,
+        ]);
 
-            $this->tokenService->addTokens(
-                $userId,
-                $tokenAmount,
-                'purchase',
-                "Android IAP purchase (Product: {$productId})",
-                $transactionId,
-                'google_play'
-            );
+        // TokenService kendi transaction'ını yönetir
+        $this->tokenService->addTokens(
+            $userId,
+            $tokenAmount,
+            'purchase',
+            "Android IAP purchase (Product: {$productId})",
+            $transactionId,
+            'google_play'
+        );
 
-            DB::commit();
-
-            return [
-                'success'      => true,
-                'tokens_added' => $tokenAmount,
-                'purchase_id'  => $purchase->id,
-            ];
-        } catch (Exception $e) {
-            DB::rollBack();
-            Log::error('Google Play purchase failed: ' . $e->getMessage());
-            throw $e;
-        }
+        return [
+            'success'      => true,
+            'tokens_added' => $tokenAmount,
+            'purchase_id'  => $purchase->id,
+        ];
     }
 
-    // Abonelik doğrulama — MobilePackageRepository kullanır
+    // Abonelik doğrulama
     public function verifySubscription(int $userId, string $productId, string $purchaseToken, string $packageName): array
     {
         $package = $this->mobilePackageRepository->findByAndroidProductId($productId);
         if (! $package) {
             throw new Exception("Invalid Android subscription product ID: {$productId}");
+        }
+
+        Log::info('Google Play verifySubscription token_amount', [
+            'user_id'      => $userId,
+            'product_id'   => $productId,
+            'token_amount' => $package->token_amount,
+        ]);
+
+        if ($package->token_amount <= 0) {
+            throw new Exception("Package token_amount is not set or zero for product: {$productId}");
         }
 
         $result = $this->verifySubscriptionWithGoogle($packageName, $purchaseToken);
@@ -116,49 +130,78 @@ class GooglePlayService
             ];
         }
 
-        DB::beginTransaction();
-        try {
-            $purchase = $this->purchaseRepository->create([
-                'user_id'                 => $userId,
-                'package_id'              => $package->id,
-                'platform'                => 'android',
-                'amount_paid'             => null,
-                'currency'                => null,
-                'gateway_transaction_id'  => $transactionId,
-                'original_transaction_id' => $originalTransactionId,
-                'token_amount'            => $package->token_amount,
-                'status'                  => 'completed',
-                'is_subscription'         => true,
-                'subscription_status'     => 'active',
-                'expires_at'              => $expiresAt,
-                'auto_renewing'           => true,
-            ]);
+        // Purchase kaydı oluştur (tek INSERT, kendi içinde atomik)
+        $purchase = $this->purchaseRepository->create([
+            'user_id'                 => $userId,
+            'package_id'              => $package->id,
+            'platform'                => 'android',
+            'amount_paid'             => null,
+            'currency'                => null,
+            'gateway_transaction_id'  => $transactionId,
+            'original_transaction_id' => $originalTransactionId,
+            'token_amount'            => $package->token_amount,
+            'status'                  => 'completed',
+            'is_subscription'         => true,
+            'subscription_status'     => 'active',
+            'expires_at'              => $expiresAt,
+            'auto_renewing'           => true,
+        ]);
 
-            $this->tokenService->addTokens(
-                $userId,
-                $package->token_amount,
-                'purchase',
-                "Android Subscription purchase (Product: {$productId})",
-                $transactionId,
-                'google_play'
-            );
+        // Abonelik başlangıcında: mevcut token sıfırla + paket tokenlarını yükle
+        // TokenService kendi transaction'ını yönetir
+        $this->tokenService->resetAndAddTokens(
+            $userId,
+            $package->token_amount,
+            'purchase',
+            "Android Subscription purchase (Product: {$productId})",
+            $transactionId,
+            'google_play'
+        );
 
-            DB::commit();
+        Log::info('Google Play subscription verified and tokens loaded', [
+            'user_id'        => $userId,
+            'product_id'     => $productId,
+            'token_amount'   => $package->token_amount,
+            'transaction_id' => $transactionId,
+        ]);
 
-            return [
-                'success'      => true,
-                'tokens_added' => $package->token_amount,
-                'purchase_id'  => $purchase->id,
-                'expires_at'   => $expiresAt->toISOString(),
-            ];
-        } catch (Exception $e) {
-            DB::rollBack();
-            Log::error('Google Play subscription failed: ' . $e->getMessage());
-            throw $e;
-        }
+        return [
+            'success'      => true,
+            'tokens_added' => $package->token_amount,
+            'purchase_id'  => $purchase->id,
+            'expires_at'   => $expiresAt->toISOString(),
+        ];
     }
 
-    // Webhook'tan gelen yenileme bildirimi — MobilePackageRepository kullanır
+    // Webhook'tan gelen yeni abonelik bildirimi (type 4)
+    // Uygulama tarafından zaten işlendiyse skip edilir.
+    // İşlenmemişse (uygulama başarısız olduysa) pending olarak loglanır.
+    public function handleNewSubscriptionWebhook(string $purchaseToken, string $packageName, string $productId): void
+    {
+        $existing = $this->purchaseRepository->findByOriginalTransactionId($purchaseToken);
+
+        if ($existing) {
+            Log::info('Google Play type-4 webhook: subscription already processed by app', [
+                'purchase_token' => $purchaseToken,
+                'purchase_id'    => $existing->id,
+                'user_id'        => $existing->user_id,
+            ]);
+            return;
+        }
+
+        // Uygulama bu aboneliği henüz işlemedi (network hatası vb.)
+        // userId webhook'tan gelmiyor; bu kaydı pending olarak logla.
+        // Kullanıcı uygulamayı tekrar açtığında subscribeAndroid endpoint'i
+        // tekrar çağırarak kendi kendine düzelir.
+        Log::critical('Google Play type-4 webhook: UNPROCESSED subscription detected', [
+            'purchase_token' => $purchaseToken,
+            'package_name'   => $packageName,
+            'product_id'     => $productId,
+            'action_needed'  => 'User will self-heal on next app open via subscribeAndroid. Monitor this token.',
+        ]);
+    }
+
+    // Webhook'tan gelen yenileme bildirimi
     public function handleRenewal(string $purchaseToken, string $packageName, string $productId): void
     {
         try {
@@ -186,12 +229,19 @@ class GooglePlayService
                 return;
             }
 
+            if ($package->token_amount <= 0) {
+                Log::error("Google renewal: token_amount is zero for product {$productId}");
+                return;
+            }
+
             $original = $this->purchaseRepository->findByOriginalTransactionId($purchaseToken);
             if (! $original) {
                 Log::warning("Google renewal: original subscription not found for token {$purchaseToken}");
                 return;
             }
 
+            // Purchase kayıtlarını atomik olarak güncelle
+            // (resetAndAddTokens dışarıda, nested transaction çakışması önlenir)
             DB::beginTransaction();
 
             $this->purchaseRepository->create([
@@ -215,6 +265,9 @@ class GooglePlayService
                 'auto_renewing'       => true,
             ]);
 
+            DB::commit();
+
+            // Token sıfırlama ve yükleme — DB commit sonrası, kendi transaction'ında
             $this->tokenService->resetAndAddTokens(
                 $original->user_id,
                 $package->token_amount,
@@ -224,11 +277,10 @@ class GooglePlayService
                 'google_play'
             );
 
-            DB::commit();
-
             Log::info('Google Play renewal processed', [
                 'transaction_id' => $newTransactionId,
                 'user_id'        => $original->user_id,
+                'token_amount'   => $package->token_amount,
             ]);
         } catch (Exception $e) {
             DB::rollBack();
