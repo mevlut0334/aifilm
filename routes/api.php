@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Auth\AccountController;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\V1\AppStoreWebhookController;
 use App\Http\Controllers\Api\V1\CustomVideoRequestController;
@@ -42,6 +43,9 @@ Route::prefix('v1')->middleware(['setLocaleFromHeader', ApiKeyMiddleware::class]
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/profile', [AuthController::class, 'user']);
+
+        // Account
+        Route::delete('/account', [AccountController::class, 'destroy']);
 
         // Tokens
         Route::get('/tokens/balance', [TokenController::class, 'balance']);
