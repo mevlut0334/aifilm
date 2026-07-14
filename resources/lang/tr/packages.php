@@ -47,4 +47,12 @@ return [
     'consent_end' => '\'nı okuduğunuzu ve kabul ettiğinizi onaylıyorsunuz.',
 
     'payment_successful' => 'Ödeme başarılı! krediniz hesabınıza eklendi.',
+
+    // Mobil yönlendirme
+    'mobile_redirect_title' => 'Satın Alma Artık Mobil Uygulamada',
+    'mobile_redirect_text' => 'Token satın alma işlemlerini web üzerinden değil, Android veya iOS uygulamamız üzerinden gerçekleştirebilirsiniz. Aşağıdaki bağlantılardan uygulamayı indirebilirsiniz.',
+    'android_label' => 'Android kullanıyorsanız',
+    'ios_label' => 'iOS kullanıyorsanız',
+    'download_android' => 'Google Play\'den İndir',
+    'ios_coming_soon' => 'Yakında',
 ];

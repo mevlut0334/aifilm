@@ -47,4 +47,12 @@ return [
     'consent_end' => '.',
 
     'payment_successful' => 'Payment successful! Your tokens have been added to your account.',
+
+    // Mobile redirect
+    'mobile_redirect_title' => 'Purchases Are Now on the Mobile App',
+    'mobile_redirect_text' => 'Token purchases are no longer available on the website. Please use our Android or iOS app to buy tokens. You can download the app from the links below.',
+    'android_label' => 'If you use Android',
+    'ios_label' => 'If you use iOS',
+    'download_android' => 'Get it on Google Play',
+    'ios_coming_soon' => 'Coming soon',
 ];
