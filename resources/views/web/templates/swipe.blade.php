@@ -407,9 +407,22 @@
         iconUnmuted.style.display = isMuted ? 'none'   : '';
     });
 
-    const PRELOAD_AHEAD  = 2;
+    /* ─────────────────────────────────────────
+       DÜZELTME: Pencere yönetimi
+       ─────────────────────────────────────────
+       Eski kodda PRELOAD aralığı (-1..+2) ile UNLOAD eşiği (>4)
+       arasında bir "ölü bölge" vardı (mesafe 3 ve 4 olan slaytlar).
+       Bu slaytlar ne yeniden yükleniyor ne de boşaltılıyordu, yani
+       kullanıcı ilerledikçe arkada video'lar hafızada birikiyor,
+       bu da iOS Safari'de bellek taşmasına ve sayfanın
+       "bir sorun oluştu" hatasıyla kapanmasına yol açıyordu.
+
+       Artık PRELOAD ve UNLOAD aynı pencereyi kullanıyor: pencere
+       dışındaki HER slayt anında boşaltılıyor. Her an en fazla
+       3 video (önceki, aktif, sonraki) hafızada tutuluyor.
+    ───────────────────────────────────────── */
+    const PRELOAD_AHEAD  = 1;
     const PRELOAD_BEHIND = 1;
-    const UNLOAD_AFTER   = 4;
 
     /* ─────────────────────────────────────────
        Video src yönetimi
@@ -440,7 +453,7 @@
             const dist = i - center;
             if (dist >= -PRELOAD_BEHIND && dist <= PRELOAD_AHEAD) {
                 loadVideo(i);
-            } else if (Math.abs(dist) > UNLOAD_AFTER) {
+            } else {
                 unloadVideo(i);
             }
         }
