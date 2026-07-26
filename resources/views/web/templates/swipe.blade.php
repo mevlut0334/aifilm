@@ -64,10 +64,7 @@
 
     /* FIX 7: GPU katmanı artık TÜM slaytlara sabit değil, sadece aktif
        pencere içindekilere (JS ile eklenen .gpu-active class'ı üzerinden)
-       uygulanıyor. Aksi halde her template ayrı bir composite layer
-       açıyordu ve template sayısı arttıkça iOS Safari'nin GPU bellek
-       limiti aşılıp sayfa çöküyordu — bu, video sayısından bağımsız
-       ayrı bir sorun kaynağıydı. */
+       uygulanıyor. */
     .swipe-slide.gpu-active {
         will-change: transform;
         -webkit-transform: translateZ(0);
@@ -302,6 +299,23 @@
             <span>{{ __('templates.swipe_hint') }}</span>
         </div>
 
+        @php
+            /*
+             * FIX 8: Poster (background-image) artık HER slayt için değil,
+             * sadece başlangıç penceresindeki (aktif ± 1) slaytlar için
+             * sunucu tarafında set ediliyor. Diğer template'lerin poster
+             * görselleri sayfa ilk açıldığında hiç indirilip decode
+             * edilmiyor — JS, kullanıcı kaydırdıkça bunları devreye sokuyor.
+             */
+            $currentIndex = 0;
+            foreach ($templates as $idx => $tmpl) {
+                if ($tmpl->uuid === $currentUuid) {
+                    $currentIndex = $idx;
+                    break;
+                }
+            }
+        @endphp
+
         @foreach ($templates as $i => $template)
             @php
                 $orientation = $template->hasVideoForOrientation('portrait')
@@ -311,24 +325,23 @@
                         : 'square');
                 $videoUrl  = $template->getVideoUrlForOrientation($orientation);
                 $posterUrl = $template->poster_url ?? '';
+                $inInitialWindow = abs($i - $currentIndex) <= 1;
             @endphp
 
             {{--
                 FIX 1: Poster artık CSS background-image olarak set ediliyor.
-                Bu sayede sayfa render'lanır render'lanmaz poster görünür,
-                <img loading="lazy"> gecikmesinden kaynaklan siyah flash olmaz.
-
-                FIX 6: <img> etiketi tamamen kaldırıldı.
-                        CSS background zaten eager davranır.
+                FIX 8: Ama sadece başlangıç penceresindeki slaytlara — diğerleri
+                       data-poster-url'de tutulur, JS ihtiyaç anında yükler.
             --}}
             <div class="swipe-slide"
                  data-index="{{ $i }}"
                  data-uuid="{{ $template->uuid }}"
                  data-video-src="{{ $videoUrl }}"
-                 @if ($posterUrl)
-                     style="transform: translateY({{ $i === 0 ? '0%' : '100%' }}); background-image: url('{{ $posterUrl }}');"
+                 data-poster-url="{{ $posterUrl }}"
+                 @if ($posterUrl && $inInitialWindow)
+                     style="transform: translateY({{ $i === $currentIndex ? '0%' : ($i < $currentIndex ? '-100%' : '100%') }}); background-image: url('{{ $posterUrl }}');"
                  @else
-                     style="transform: translateY({{ $i === 0 ? '0%' : '100%' }});"
+                     style="transform: translateY({{ $i === $currentIndex ? '0%' : ($i < $currentIndex ? '-100%' : '100%') }});"
                  @endif>
 
                 {{--
@@ -341,8 +354,8 @@
                     muted
                     loop
                     playsinline
-                    preload="{{ $i === 0 ? 'auto' : 'metadata' }}"
-                    @if ($posterUrl) poster="{{ $posterUrl }}" @endif>
+                    preload="{{ $i === $currentIndex ? 'auto' : 'metadata' }}"
+                    @if ($posterUrl && $inInitialWindow) poster="{{ $posterUrl }}" @endif>
                 </video>
 
                 <div class="slide-loading-indicator">
@@ -413,12 +426,12 @@
     });
 
     /* ─────────────────────────────────────────
-       Pencere yönetimi (video + GPU katmanı)
+       Pencere yönetimi (video + poster + GPU katmanı)
        ─────────────────────────────────────────
-       Aktif pencere dışındaki her slayt hem videosunu boşaltıyor
-       hem de GPU compositing katmanını (.gpu-active) kaybediyor.
-       Bu sayede template sayısı ne olursa olsun, her an en fazla
-       3 slayt (önceki, aktif, sonraki) hem video hem GPU belleği
+       Aktif pencere dışındaki her slayt hem videosunu hem poster
+       görselini boşaltıyor, hem de GPU compositing katmanını
+       (.gpu-active) kaybediyor. Template sayısı ne olursa olsun,
+       her an en fazla 3 slayt (önceki, aktif, sonraki) bellek
        tüketiyor — geri kalanlar sıradan, hafif DOM elemanı.
     ───────────────────────────────────────── */
     const PRELOAD_AHEAD  = 1;
@@ -448,14 +461,33 @@
         slide.classList.remove('playing', 'buffering');
     }
 
+    /* ─────────────────────────────────────────
+       FIX 8: Poster (background-image) yönetimi
+    ───────────────────────────────────────── */
+    function loadPoster(index) {
+        const slide = slides[index];
+        if (!slide) return;
+        const poster = slide.dataset.posterUrl;
+        if (!poster) return;
+        slide.style.backgroundImage = `url('${poster}')`;
+    }
+
+    function unloadPoster(index) {
+        const slide = slides[index];
+        if (!slide) return;
+        slide.style.backgroundImage = 'none';
+    }
+
     function manageWindow(center) {
         for (let i = 0; i < total; i++) {
             const dist = i - center;
             if (dist >= -PRELOAD_BEHIND && dist <= PRELOAD_AHEAD) {
                 loadVideo(i);
+                loadPoster(i);
                 slides[i].classList.add('gpu-active');
             } else {
                 unloadVideo(i);
+                unloadPoster(i);
                 slides[i].classList.remove('gpu-active');
             }
         }
