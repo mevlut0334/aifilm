@@ -60,7 +60,15 @@
         background-repeat: no-repeat;
         /* FIX 5: 400ms → 280ms — iOS'ta flash fark edilmez hale gelir */
         transition: transform 280ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        /* FIX 3: Her slide ayrı GPU katmanı */
+    }
+
+    /* FIX 7: GPU katmanı artık TÜM slaytlara sabit değil, sadece aktif
+       pencere içindekilere (JS ile eklenen .gpu-active class'ı üzerinden)
+       uygulanıyor. Aksi halde her template ayrı bir composite layer
+       açıyordu ve template sayısı arttıkça iOS Safari'nin GPU bellek
+       limiti aşılıp sayfa çöküyordu — bu, video sayısından bağımsız
+       ayrı bir sorun kaynağıydı. */
+    .swipe-slide.gpu-active {
         will-change: transform;
         -webkit-transform: translateZ(0);
         transform: translateZ(0);
@@ -75,9 +83,6 @@
         z-index: 2;
         opacity: 0;
         transition: opacity 0.3s ease;
-        /* FIX 3: Video da ayrı katmana */
-        -webkit-transform: translateZ(0);
-        transform: translateZ(0);
     }
 
     /* Video oynatılınca görünür olur, CSS bg (poster) zaten altta kalır */
@@ -408,18 +413,13 @@
     });
 
     /* ─────────────────────────────────────────
-       DÜZELTME: Pencere yönetimi
+       Pencere yönetimi (video + GPU katmanı)
        ─────────────────────────────────────────
-       Eski kodda PRELOAD aralığı (-1..+2) ile UNLOAD eşiği (>4)
-       arasında bir "ölü bölge" vardı (mesafe 3 ve 4 olan slaytlar).
-       Bu slaytlar ne yeniden yükleniyor ne de boşaltılıyordu, yani
-       kullanıcı ilerledikçe arkada video'lar hafızada birikiyor,
-       bu da iOS Safari'de bellek taşmasına ve sayfanın
-       "bir sorun oluştu" hatasıyla kapanmasına yol açıyordu.
-
-       Artık PRELOAD ve UNLOAD aynı pencereyi kullanıyor: pencere
-       dışındaki HER slayt anında boşaltılıyor. Her an en fazla
-       3 video (önceki, aktif, sonraki) hafızada tutuluyor.
+       Aktif pencere dışındaki her slayt hem videosunu boşaltıyor
+       hem de GPU compositing katmanını (.gpu-active) kaybediyor.
+       Bu sayede template sayısı ne olursa olsun, her an en fazla
+       3 slayt (önceki, aktif, sonraki) hem video hem GPU belleği
+       tüketiyor — geri kalanlar sıradan, hafif DOM elemanı.
     ───────────────────────────────────────── */
     const PRELOAD_AHEAD  = 1;
     const PRELOAD_BEHIND = 1;
@@ -453,8 +453,10 @@
             const dist = i - center;
             if (dist >= -PRELOAD_BEHIND && dist <= PRELOAD_AHEAD) {
                 loadVideo(i);
+                slides[i].classList.add('gpu-active');
             } else {
                 unloadVideo(i);
+                slides[i].classList.remove('gpu-active');
             }
         }
     }
