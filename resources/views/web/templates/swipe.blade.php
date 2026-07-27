@@ -326,6 +326,7 @@
                 $videoUrl  = $template->getVideoUrlForOrientation($orientation);
                 $posterUrl = $template->poster_url ?? '';
                 $inInitialWindow = abs($i - $currentIndex) <= 1;
+                $isHls = str_ends_with(strtolower((string) $videoUrl), '.m3u8');
             @endphp
 
             {{--
@@ -337,6 +338,7 @@
                  data-index="{{ $i }}"
                  data-uuid="{{ $template->uuid }}"
                  data-video-src="{{ $videoUrl }}"
+                 data-is-hls="{{ $isHls ? '1' : '0' }}"
                  data-poster-url="{{ $posterUrl }}"
                  @if ($posterUrl && $inInitialWindow)
                      style="transform: translateY({{ $i === $currentIndex ? '0%' : ($i < $currentIndex ? '-100%' : '100%') }}); background-image: url('{{ $posterUrl }}');"
@@ -384,6 +386,10 @@
     </div>
 </div>
 
+{{-- HLS.js: Chrome/Android/Desktop tarayıcılar için gerekli.
+     Safari native HLS destekler, bu kütüphaneyi kullanmaz. --}}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.15/hls.min.js"></script>
+
 <script>
 (function () {
     const slides      = Array.from(document.querySelectorAll('.swipe-slide'));
@@ -401,6 +407,21 @@
     const muteBtn      = document.getElementById('muteBtn');
     const iconMuted    = document.getElementById('iconMuted');
     const iconUnmuted  = document.getElementById('iconUnmuted');
+
+    /* Safari native HLS desteğini bir kere kontrol et */
+    const nativeHlsSupport = (function () {
+        const testVideo = document.createElement('video');
+        return testVideo.canPlayType('application/vnd.apple.mpegurl') !== '';
+    })();
+
+    /* Her slide için ayrı "generation" sayacı — race condition önlemi.
+       Bir video için loadVideo çağrıldığında sayaç artar; canplay/doPlay
+       callback'i tetiklendiğinde sayaç hâlâ aynıysa işleme devam edilir,
+       değilse (araya unload/başka load girmişse) sessizce iptal edilir. */
+    const generations = new Array(total).fill(0);
+
+    /* Her slide'ın hls.js instance'ını saklamak için */
+    const hlsInstances = new Array(total).fill(null);
 
     /* ─────────────────────────────────────────
        Ses toggle
@@ -438,23 +459,65 @@
     const PRELOAD_BEHIND = 1;
 
     /* ─────────────────────────────────────────
-       Video src yönetimi
+       Video src yönetimi (HLS destekli)
     ───────────────────────────────────────── */
     function loadVideo(index) {
         const slide = slides[index];
         if (!slide) return;
         const video = slide.querySelector('video');
         const src   = slide.dataset.videoSrc;
-        if (!video || !src || video.src) return;
-        video.src = src;
-        video.load();
+        const isHls = slide.dataset.isHls === '1';
+
+        // getAttribute kullanıyoruz: video.src property'si WebKit'te
+        // src kaldırılsa bile boş string yerine sayfa URL'sine resolve
+        // olabiliyor, bu yüzden attribute kontrolü daha güvenilir.
+        if (!video || !src || video.getAttribute('src') || hlsInstances[index]) return;
+
+        // Bu slot için yeni bir "nesil" başlat — eski canplay/doPlay
+        // callback'leri artık geçersiz sayılacak.
+        generations[index]++;
+
+        if (isHls && !nativeHlsSupport) {
+            if (window.Hls && window.Hls.isSupported()) {
+                const hls = new Hls({
+                    // Sadece aktif pencere videoları için, agresif ama makul buffer
+                    maxBufferLength: 15,
+                    maxMaxBufferLength: 30,
+                });
+                hls.loadSource(src);
+                hls.attachMedia(video);
+                hlsInstances[index] = hls;
+            } else {
+                // hls.js yüklenemediyse veya desteklenmiyorsa: son çare
+                // olarak direkt src atamayı dene (bazı tarayıcılar yine de
+                // segment segment çekebilir, olmazsa video hata verir ama
+                // sayfa çökmez).
+                video.src = src;
+                video.load();
+            }
+        } else {
+            // Safari native HLS veya düz MP4
+            video.src = src;
+            video.load();
+        }
     }
 
     function unloadVideo(index) {
         const slide = slides[index];
         if (!slide) return;
         const video = slide.querySelector('video');
-        if (!video || !video.src) return;
+        if (!video) return;
+
+        // Nesli ilerlet: bu slota ait bekleyen callback'leri geçersiz kıl
+        generations[index]++;
+
+        if (hlsInstances[index]) {
+            try { hlsInstances[index].destroy(); } catch (e) {}
+            hlsInstances[index] = null;
+        }
+
+        if (!video.getAttribute('src')) return;
+
         video.pause();
         video.removeAttribute('src');
         video.load();
@@ -494,7 +557,7 @@
     }
 
     /* ─────────────────────────────────────────
-       Oynatma
+       Oynatma (race-condition korumalı)
     ───────────────────────────────────────── */
     function playSlide(index) {
         const slide = slides[index];
@@ -505,16 +568,26 @@
         loadVideo(index);
         video.muted = isMuted;
 
+        // Bu playSlide çağrısının ait olduğu nesli sabitle.
+        const myGeneration = generations[index];
+
         const doPlay = () => {
+            // Aradan başka bir load/unload geçtiyse (kullanıcı hızlı
+            // kaydırdıysa) bu callback artık geçersiz, hiçbir şey yapma.
+            if (generations[index] !== myGeneration) return;
+
             slide.classList.remove('buffering');
             video.play().then(() => {
+                if (generations[index] !== myGeneration) return;
                 slide.classList.add('playing');
             }).catch(() => {
+                if (generations[index] !== myGeneration) return;
                 video.muted = true;
                 isMuted = true;
                 iconMuted.style.display   = '';
                 iconUnmuted.style.display = 'none';
                 video.play().then(() => {
+                    if (generations[index] !== myGeneration) return;
                     slide.classList.add('playing');
                 }).catch(() => {});
             });
@@ -534,7 +607,11 @@
         const video = slide.querySelector('video');
         if (video) {
             video.pause();
-            video.currentTime = 0;
+            // readyState 0 iken currentTime ataması Safari'de
+            // InvalidStateError fırlatabiliyor, bu yüzden guard ekliyoruz.
+            if (video.readyState > 0) {
+                try { video.currentTime = 0; } catch (e) {}
+            }
         }
         slide.classList.remove('playing', 'buffering');
     }
@@ -558,6 +635,12 @@
         const direction    = next > current ? 1 : -1;
         const currentSlide = slides[current];
         const nextSlide    = slides[next];
+
+        // Giren videoyu HEMEN yükletmeye başla (animasyon bitmesini bekleme).
+        // Böylece 280ms'lik geçiş süresi boyunca video zaten buffer'a alınıyor
+        // olur; siyah ekran/boş kare ihtimali büyük ölçüde azalır.
+        loadVideo(next);
+        loadPoster(next);
 
         // 1) Tüm slide'ların CSS transition'ını dondur.
         //    Aksi hâlde sadece iki slide'a transition:none yazmak yetmez;
@@ -610,6 +693,11 @@
 
     /* ─────────────────────────────────────────
        Başlangıç pozisyonu
+       ─────────────────────────────────────────
+       Kullanıcı ana sayfada N. videoya tıkladıysa, swipe sayfası
+       doğrudan o videodan (index N) başlar — 1'e dönmez. Bu, sunucudan
+       gelen $currentUuid'ye göre slides dizisinde eşleşen index bulunarak
+       sağlanıyor. Kaydırma da buradan (current = startIndex) devam eder.
     ───────────────────────────────────────── */
     const startUuid  = '{{ $currentUuid }}';
     const startIndex = slides.findIndex(s => s.dataset.uuid === startUuid);
