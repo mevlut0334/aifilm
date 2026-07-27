@@ -14,15 +14,13 @@ class TemplateSwipeController extends Controller
 
     public function show(string $uuid)
     {
-        $templates = $this->templateService->getActiveTemplates();
-
-        // Tıklanan template'i tek geçişte başa al
-        $target = $templates->firstWhere('uuid', $uuid);
-        $others = $templates->filter(fn($t) => $t->uuid !== $uuid)->values();
-        $sorted = $target ? $others->prepend($target) : $templates->values();
+        // Orijinal sıra korunuyor — tıklanan video listenin neresindeyse
+        // orada kalıyor. Böylece swipe sayfası tam olarak o pozisyondan
+        // başlar ve kaydırma ana sayfadaki sırayla (5 -> 6 -> 7 ...) devam eder.
+        $templates = $this->templateService->getActiveTemplates()->values();
 
         return view('web.templates.swipe', [
-            'templates'   => $sorted,
+            'templates'   => $templates,
             'currentUuid' => $uuid,
         ]);
     }
