@@ -695,19 +695,29 @@
        Başlangıç pozisyonu
        ─────────────────────────────────────────
        Kullanıcı ana sayfada N. videoya tıkladıysa, swipe sayfası
-       doğrudan o videodan (index N) başlar — 1'e dönmez. Bu, sunucudan
-       gelen $currentUuid'ye göre slides dizisinde eşleşen index bulunarak
-       sağlanıyor. Kaydırma da buradan (current = startIndex) devam eder.
+       doğrudan o videodan (index N) başlar — 1'e dönmez.
+
+       ÖNEMLİ: index, JS tarafında uuid string eşleştirmesiyle YENİDEN
+       bulunmuyor. Bunun yerine sunucunun (Blade/PHP) zaten hesapladığı
+       $currentIndex değeri doğrudan buraya basılıyor. Önceki sürümde
+       JS kendi içinde slides.findIndex(...) ile uuid'yi tekrar arıyordu;
+       bu eşleşme herhangi bir sebeple başarısız olduğunda (örn. -1 dönüp
+       sessizce yutulduğunda) JS'in bildiği "current" 0'da kalıyor ama
+       ekranda hâlâ doğru slayt (örn. 5.) görünüyordu — ilk swipe'ta kod
+       "current"ı (0) esas alıp slides[0]'ı zorla öne getiriyor, bu da
+       kullanıcının gördüğü "1'e zıplama" hatasına yol açıyordu.
+       $currentIndex'i doğrudan kullanmak bu senkron dışı kalma
+       ihtimalini tamamen ortadan kaldırır: ekranda görünen ile JS'in
+       "current" olarak bildiği değer her zaman birebir aynı olur.
     ───────────────────────────────────────── */
-    const startUuid  = '{{ $currentUuid }}';
-    const startIndex = slides.findIndex(s => s.dataset.uuid === startUuid);
-    if (startIndex > 0) {
+    current = {{ $currentIndex }};
+    counter.textContent = current + 1;
+
+    if (current > 0) {
         slides.forEach((s, i) => {
             s.style.transition = 'none';
-            s.style.transform  = `translateY(${(i - startIndex) * 100}%)`;
+            s.style.transform  = `translateY(${(i - current) * 100}%)`;
         });
-        current = startIndex;
-        counter.textContent = current + 1;
     }
 
     /* ─────────────────────────────────────────
