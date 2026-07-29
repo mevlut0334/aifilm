@@ -6,7 +6,7 @@ return [
     'Package List' => 'Paket Listesi',
     'Create Package' => 'Paket Oluştur',
     'Edit Package' => 'Paket Düzenle',
-    'Buy Tokens' => 'Token Satın Al',
+    'Buy Tokens' => 'Abone Ol ',
 
     // Form fields
     'Title (EN)' => 'Başlık (EN)',

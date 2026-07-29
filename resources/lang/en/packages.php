@@ -6,7 +6,7 @@ return [
     'Package List' => 'Package List',
     'Create Package' => 'Create Package',
     'Edit Package' => 'Edit Package',
-    'Buy Tokens' => 'Buy Tokens',
+    'Buy Tokens' => 'Subscribe',
 
     // Form fields
     'Title (EN)' => 'Title (EN)',

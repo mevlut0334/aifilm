@@ -247,6 +247,18 @@
     <nav class="navbar navbar-expand-lg">
         <div class="container">
             <a class="navbar-brand" href="{{ route('home') }}">{{ config('app.name') }}</a>
+            @guest
+                <div class="d-flex d-lg-none align-items-center gap-2">
+                    <a class="btn btn-outline-warning btn-sm"
+                        href="{{ LaravelLocalization::getLocalizedURL(null, route('login', [], false)) }}">
+                        {{ __('auth.Login') }}
+                    </a>
+                    <a class="btn btn-warning btn-sm"
+                        href="{{ LaravelLocalization::getLocalizedURL(null, route('packages.index', [], false)) }}">
+                        {{ __('packages.Buy Tokens') }}
+                    </a>
+                </div>
+            @endguest
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
