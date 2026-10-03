@@ -55,4 +55,5 @@ return [
     'ios_label' => 'If you use iOS',
     'download_android' => 'Get it on Google Play',
     'ios_coming_soon' => 'Coming soon',
+    'load_tokens' => 'Load Tokens',
 ];

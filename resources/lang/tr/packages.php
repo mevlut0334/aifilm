@@ -55,4 +55,5 @@ return [
     'ios_label' => 'iOS kullanıyorsanız',
     'download_android' => 'Google Play\'den İndir',
     'ios_coming_soon' => 'Yakında',
+    'load_tokens' => 'Token Yükle',
 ];

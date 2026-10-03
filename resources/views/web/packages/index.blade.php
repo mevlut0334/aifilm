@@ -19,26 +19,39 @@
     font-size: 1rem !important;
 }
 
-/* Mobil yönlendirme bloğu */
+/* Token yükle butonu */
+.load-tokens-wrap {
+    text-align: center;
+    margin-top: 1.2rem;
+}
+.btn-load-tokens {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #D4AF37 !important;
+    color: #0B0B0B !important;
+    border: none !important;
+    font-weight: 700 !important;
+    font-size: 1.05rem;
+    border-radius: 8px !important;
+    padding: 0.8rem 2.2rem !important;
+    text-decoration: none;
+    transition: background 0.2s !important;
+}
+.btn-load-tokens:hover {
+    background: #F5D97A !important;
+    color: #0B0B0B !important;
+}
+
+/* Mobil uygulama bloğu */
 .mobile-redirect-box {
-    margin: 3rem auto 0 auto;
+    margin: 2.5rem auto 0 auto;
     max-width: 640px;
-    padding: 2.5rem 2rem;
+    padding: 2rem;
     background: #121212;
     border: 1px solid #2a2a2a;
     border-radius: 14px;
     text-align: center;
-}
-.mobile-redirect-box h4 {
-    color: #FFFFFF;
-    font-weight: 700;
-    margin-bottom: 0.6rem;
-    font-size: 1.3rem;
-}
-.mobile-redirect-box p.desc {
-    color: #BFBFBF;
-    font-size: 0.95rem;
-    margin-bottom: 1.8rem;
 }
 .store-links {
     display: flex;
@@ -99,6 +112,12 @@
         @else
             <p class="lead" style="color: #6B6B6B;">@trans_safe('packages.login_to_see_balance')</p>
         @endauth
+
+        <div class="load-tokens-wrap">
+            <a href="https://www.shopier.com/Asilov/51476418" class="btn-load-tokens" target="_blank" rel="noopener">
+                <i class="bi bi-lightning-charge-fill"></i> @trans_safe('packages.load_tokens')
+            </a>
+        </div>
     </div>
 
     @if(session('success'))
@@ -107,10 +126,8 @@
         </div>
     @endif
 
-    {{-- Mobil uygulamaya yönlendirme bloğu: herkes görür (giriş yapmış/yapmamış), paketler artık webde listelenmiyor --}}
+    {{-- Mobil uygulama indirme bağlantıları --}}
     <div class="mobile-redirect-box">
-        <h4>@trans_safe('packages.mobile_redirect_title')</h4>
-        <p class="desc">@trans_safe('packages.mobile_redirect_text')</p>
         <div class="store-links">
             <div class="store-link-item">
                 <span class="platform-label">@trans_safe('packages.android_label')</span>
