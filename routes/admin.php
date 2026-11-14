@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\TemplateController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\UserTokenController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\Studio\StudioController as AdminStudioController;
 
 Route::prefix('admin')->group(function () {
     Route::middleware('guest:admin')->group(function () {
@@ -24,6 +25,25 @@ Route::prefix('admin')->group(function () {
     Route::middleware('auth:admin')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout'])->name('admin.logout');
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+
+        // ASILOV STUDIO
+        Route::get('/studio', [AdminStudioController::class, 'index'])
+            ->name('admin.studio.index');
+
+        Route::get('/studio/{uuid}', [AdminStudioController::class, 'show'])
+            ->name('admin.studio.show');
+
+        Route::post('/studio/{uuid}/video', [AdminStudioController::class, 'updateVideo'])
+            ->name('admin.studio.update-video');
+
+        Route::post('/studio/revisions/{revision}/complete', [AdminStudioController::class, 'completeRevision'])
+            ->name('admin.studio.revisions.complete');
+
+        Route::get(
+            '/studio/{uuid}/characters/{characterIndex}/voice-download',
+            [AdminStudioController::class, 'downloadCustomVoice']
+        )->whereNumber('characterIndex')
+            ->name('admin.studio.download-voice');
 
         // Users
         Route::get('/users', [UserController::class, 'index'])->name('admin.users.index');

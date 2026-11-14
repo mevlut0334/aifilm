@@ -195,6 +195,12 @@
                 </a>
             </li>
             <li class="sidebar-nav-item">
+                <a class="sidebar-nav-link {{ request()->routeIs('admin.studio.*') ? 'active' : '' }}"
+                   href="{{ route('admin.studio.index') }}">
+                    ASILOV Studio
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
                 <a class="sidebar-nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"
                    href="{{ route('admin.users.index') }}">
                     {{ __('admin.Users') }}

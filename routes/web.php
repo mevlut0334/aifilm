@@ -11,6 +11,7 @@ use App\Http\Controllers\Web\TemplateController;
 use App\Http\Controllers\Web\TemplateSwipeController;
 use Illuminate\Support\Facades\Route;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
+use App\Http\Controllers\Web\Studio\StudioController as WebStudioController;
 
 // Web Routes with locale prefix
 Route::group([
@@ -90,6 +91,23 @@ Route::group([
         Route::post('/custom-videos', [CustomVideoController::class, 'store'])->name('custom-videos.store');
         Route::get('/custom-videos/{uuid}', [CustomVideoController::class, 'show'])->name('custom-videos.show');
         Route::post('/custom-videos/segments/{segment}/edit-request', [CustomVideoController::class, 'requestSegmentEdit'])->name('custom-videos.segments.request-edit');
+
+
+        // ASILOV STUDIO
+        Route::get('/studio', [WebStudioController::class, 'index'])
+            ->name('studio.index');
+
+        Route::get('/studio/create', [WebStudioController::class, 'create'])
+            ->name('studio.create');
+
+        Route::post('/studio', [WebStudioController::class, 'store'])
+            ->name('studio.store');
+
+        Route::get('/studio/{uuid}', [WebStudioController::class, 'show'])
+            ->name('studio.show');
+
+        Route::post('/studio/{uuid}/revisions', [WebStudioController::class, 'storeRevision'])
+            ->name('studio.revisions.store');
     });
 });
 
