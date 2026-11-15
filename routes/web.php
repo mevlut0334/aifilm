@@ -106,6 +106,9 @@ Route::group([
         Route::get('/studio/{uuid}', [WebStudioController::class, 'show'])
             ->name('studio.show');
 
+        Route::get('/studio/{uuid}/download', [WebStudioController::class, 'downloadVideo'])
+            ->name('studio.download');
+
         Route::post('/studio/{uuid}/revisions', [WebStudioController::class, 'storeRevision'])
             ->name('studio.revisions.store');
     });
