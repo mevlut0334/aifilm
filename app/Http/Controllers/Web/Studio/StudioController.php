@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Studio\StoreStudioRequest;
 use App\Models\Studio\StudioRequest as StudioRequestModel;
 use App\Models\Studio\StudioRevision;
+use App\Services\TelegramNotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -135,6 +136,11 @@ class StudioController extends Controller
                 ]);
             });
 
+            // Yeni talep başarıyla kaydedildiğinde Telegram bildirimi gönder.
+            app(TelegramNotificationService::class)->send(
+                '🎬 Yeni video talebi oluşturuldu.'
+            );
+
             return redirect()
                 ->route('studio.show', $studioRequest->uuid)
                 ->with('success', 'Studio video talebin başarıyla oluşturuldu.');
@@ -202,6 +208,11 @@ class StudioController extends Controller
                 'status' => 'processing',
             ]);
         });
+
+        // Revize başarıyla kaydedildiğinde Telegram bildirimi gönder.
+        app(TelegramNotificationService::class)->send(
+            '🔄 Yeni revize talebi oluşturuldu.'
+        );
 
         return redirect()
             ->route('studio.show', $studioRequest->uuid)

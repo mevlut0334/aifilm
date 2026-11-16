@@ -598,8 +598,8 @@
             </div>
 
             <div class="mb-3">
-                <label class="studio-label">Karakter Adı <span class="studio-optional">İsteğe bağlı</span></label>
-                <input type="text" class="studio-input character-name" placeholder="Örn. Ana karakter">
+                <label class="studio-label">Karakter Adı <span style="color:#ef4444">*</span></label>
+                <input type="text" class="studio-input character-name" placeholder="Örn. Ana karakter" required>
             </div>
 
             <div class="mb-3">
@@ -609,6 +609,10 @@
                     <input type="file" class="character-image" accept="image/jpeg,image/png,image/webp">
                 </label>
                 <img class="studio-preview character-preview" alt="Karakter önizlemesi">
+                <button type="button" class="studio-btn studio-btn-remove image-remove"
+                    style="display:none; margin-top:8px;">
+                    × Görseli Kaldır
+                </button>
             </div>
 
             <div class="studio-divider"></div>
@@ -652,8 +656,9 @@
             </div>
 
             <div class="mb-3">
-                <label class="studio-label">Ortam Adı <span class="studio-optional">İsteğe bağlı</span></label>
-                <input type="text" class="studio-input environment-name" placeholder="Örn. Orman, ev, sokak...">
+                <label class="studio-label">Ortam Adı <span style="color:#ef4444">*</span></label>
+                <input type="text" class="studio-input environment-name" placeholder="Örn. Orman, ev, sokak..."
+                    required>
             </div>
 
             <div>
@@ -663,6 +668,10 @@
                     <input type="file" class="environment-image" accept="image/jpeg,image/png,image/webp">
                 </label>
                 <img class="studio-preview environment-preview" alt="Ortam önizlemesi">
+                <button type="button" class="studio-btn studio-btn-remove image-remove"
+                    style="display:none; margin-top:8px;">
+                    × Görseli Kaldır
+                </button>
             </div>
         </div>
     </template>
@@ -676,6 +685,24 @@
             const studioVoices = @json(array_values($voices ?? []));
             let characterCount = 0;
             let environmentCount = 0;
+
+            // Form alanlarının indekslerini ekrandaki sıraya göre günceller.
+            // Böylece en son eklenen (en üstteki) kart ilk sırada kaydedilir.
+            function reindexCharacters() {
+                charactersContainer.querySelectorAll('.character-card').forEach((card, index) => {
+                    card.querySelector('.character-name').name = `characters[${index}][name]`;
+                    card.querySelector('.character-image').name = `characters[${index}][image]`;
+                    card.querySelector('.voice-key').name = `characters[${index}][voice_key]`;
+                    card.querySelector('.custom-voice').name = `characters[${index}][custom_voice]`;
+                });
+            }
+
+            function reindexEnvironments() {
+                environmentsContainer.querySelectorAll('.environment-card').forEach((card, index) => {
+                    card.querySelector('.environment-name').name = `environments[${index}][name]`;
+                    card.querySelector('.environment-image').name = `environments[${index}][image]`;
+                });
+            }
 
             function categoryLabel(category) {
                 const labels = {
@@ -768,7 +795,7 @@
                                     play.textContent = '▶ Dinle';
                                     alert(
                                         'Ses örneği oynatılamadı. CDN bağlantısını kontrol et.'
-                                        );
+                                    );
                                 }
                             } else {
                                 audio.pause();
@@ -830,24 +857,36 @@
             }
 
             function previewImage(input, preview) {
+                const card = input.closest('.studio-card');
+                const removeButton = card.querySelector('.image-remove');
+
+                function clearImage() {
+                    input.value = '';
+                    preview.removeAttribute('src');
+                    preview.style.display = 'none';
+                    removeButton.style.display = 'none';
+                }
+
                 input.addEventListener('change', function() {
                     const file = this.files[0];
 
                     if (!file) {
-                        preview.removeAttribute('src');
-                        preview.style.display = 'none';
+                        clearImage();
                         return;
                     }
 
                     if (!file.type.startsWith('image/')) {
                         alert('Lütfen geçerli bir görsel dosyası seç.');
-                        this.value = '';
+                        clearImage();
                         return;
                     }
 
                     preview.src = URL.createObjectURL(file);
                     preview.style.display = 'block';
+                    removeButton.style.display = 'inline-block';
                 });
+
+                removeButton.addEventListener('click', clearImage);
             }
 
             function addCharacter() {
@@ -884,9 +923,14 @@
                     }
                 });
 
-                card.querySelector('.remove-item').addEventListener('click', () => card.remove());
+                card.querySelector('.remove-item').addEventListener('click', () => {
+                    card.remove();
+                    reindexCharacters();
+                });
 
-                charactersContainer.appendChild(card);
+                // Yeni karakter her zaman listenin en üstüne eklenir.
+                charactersContainer.prepend(card);
+                reindexCharacters();
             }
 
             function addEnvironment() {
@@ -903,9 +947,14 @@
                     card.querySelector('.environment-preview')
                 );
 
-                card.querySelector('.remove-item').addEventListener('click', () => card.remove());
+                card.querySelector('.remove-item').addEventListener('click', () => {
+                    card.remove();
+                    reindexEnvironments();
+                });
 
-                environmentsContainer.appendChild(card);
+                // Yeni ortam her zaman listenin en üstüne eklenir.
+                environmentsContainer.prepend(card);
+                reindexEnvironments();
             }
 
             document.getElementById('addCharacter').addEventListener('click', addCharacter);
