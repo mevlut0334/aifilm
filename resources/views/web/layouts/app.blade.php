@@ -315,7 +315,7 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link"
-                                href="{{ LaravelLocalization::getLocalizedURL(null, route('custom-videos.index', [], false)) }}">
+                                href="{{ LaravelLocalization::getLocalizedURL(null, route('studio.index', [], false)) }}">
                                 {{ __('navigation.my_videos') }}
                             </a>
                         </li>

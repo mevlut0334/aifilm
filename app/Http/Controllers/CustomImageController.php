@@ -6,6 +6,7 @@ use App\Jobs\ProcessCustomImageRequest;
 use App\Models\CustomImage;
 use App\Models\Setting;
 use App\Services\TokenService;
+use App\Services\TelegramNotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -94,6 +95,11 @@ class CustomImageController extends Controller
                 ]);
             }
         }
+
+        // Telegram bildirimi
+        app(TelegramNotificationService::class)->send(
+            '🎨 Yeni görsel talebi oluşturuldu.'
+        );
 
         return redirect()
             ->route('custom-images.show', $customImage->uuid)

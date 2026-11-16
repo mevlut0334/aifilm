@@ -78,6 +78,13 @@ class GenerationRequestController extends Controller
             // Arka planda işleme al
             ProcessGenerationRequest::dispatch($generationRequest);
 
+            // Yalnızca şablon taleplerinde Telegram bildirimi gönder
+            if (in_array($validated['type'], ['template_image', 'template_video'], true)) {
+                app(\App\Services\TelegramNotificationService::class)->send(
+                    '🎬 Yeni şablon üretim talebi oluşturuldu.'
+                );
+            }
+
             return redirect()->route('generation-requests.show', $generationRequest->uuid)
                 ->with('success', __('Talebiniz başarıyla oluşturuldu.'));
         } catch (\Exception $e) {

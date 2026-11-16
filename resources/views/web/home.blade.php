@@ -430,7 +430,7 @@
                 </div>
                 <h3 class="nav-card-title">{{ __('home.nav_images') }}</h3>
             </a>
-            <a href="{{ route('custom-videos.create') }}" class="nav-card">
+            <a href="{{ route('studio.create') }}" class="nav-card">
                 <div class="nav-card-icon">
                     <!-- AI Video / Film ikonu (klapör) -->
                     <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
