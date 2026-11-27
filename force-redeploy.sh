@@ -107,7 +107,9 @@ docker exec aifilm_app php artisan storage:link
 echo ""
 echo "Laravel optimizasyonu..."
 
-docker exec aifilm_app php artisan optimize
+docker exec aifilm_app php artisan config:cache
+docker exec aifilm_app php artisan event:cache
+docker exec aifilm_app php artisan view:cache
 
 echo ""
 echo "OPcache temizleniyor..."

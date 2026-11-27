@@ -96,7 +96,9 @@ docker exec aifilm_app php artisan migrate --force
 echo ""
 echo "Laravel önbellekleri hazırlanıyor..."
 
-docker exec aifilm_app php artisan optimize
+docker exec aifilm_app php artisan config:cache
+docker exec aifilm_app php artisan event:cache
+docker exec aifilm_app php artisan view:cache
 
 echo ""
 echo "OPcache temizleniyor..."
