@@ -8,6 +8,7 @@ echo "============================================"
 
 PROJECT_DIR="/var/www/aifilm"
 REPO_URL="https://github.com/mevlut0334/aifilm"
+BRANCH="main"
 
 # Root kontrolü
 if [ "$EUID" -eq 0 ]; then
@@ -47,7 +48,7 @@ fi
 
 # Gerekli araçlar
 sudo apt-get update
-sudo apt-get install -y git openssl
+sudo apt-get install -y git openssl curl
 
 # Kullanıcı girdileri
 echo ""
@@ -95,18 +96,30 @@ if [ "$CONFIRM" != "y" ]; then
     exit 0
 fi
 
-# Projeyi indir
+# Projeyi GitHub'dan indir
+echo ""
+echo "GitHub'dan güncel main kodu indiriliyor..."
+
 sudo mkdir -p /var/www
 
-sudo git clone "$REPO_URL" "$PROJECT_DIR"
+sudo git clone \
+    --branch "$BRANCH" \
+    --single-branch \
+    "$REPO_URL" \
+    "$PROJECT_DIR"
 
 sudo chown -R "$USER":"$USER" "$PROJECT_DIR"
 
 cd "$PROJECT_DIR"
 
-# Traefik Nginx yapılandırması kontrolü
-if [ ! -f docker/nginx/traefik.conf ]; then
-    echo "docker/nginx/traefik.conf bulunamadı!"
+echo "İndirilen commit:"
+git log -1 --oneline
+
+# Gerekli dosyalar
+if [ ! -f docker/nginx/traefik.conf ] || \
+   [ ! -f docker-compose.prod.yml ] || \
+   [ ! -f Dockerfile.prod ]; then
+    echo "Gerekli Docker veya Traefik dosyaları bulunamadı."
     exit 1
 fi
 
@@ -215,6 +228,9 @@ do
 done
 
 # Storage izinleri
+echo ""
+echo "Storage izinleri düzenleniyor..."
+
 docker exec aifilm_app chown -R www-data:www-data \
     /var/www/html/storage \
     /var/www/html/bootstrap/cache
@@ -224,19 +240,70 @@ docker exec aifilm_app chmod -R 775 \
     /var/www/html/bootstrap/cache
 
 # Laravel hazırlıkları
+echo ""
+echo "Laravel kurulumu hazırlanıyor..."
+
 docker exec aifilm_app php artisan migrate --force
 docker exec aifilm_app php artisan db:seed --force
 docker exec aifilm_app php artisan storage:link
+
+# Laravel önbellekleri
+echo ""
+echo "Laravel önbellekleri hazırlanıyor..."
+
 docker exec aifilm_app php artisan config:cache
 docker exec aifilm_app php artisan event:cache
 docker exec aifilm_app php artisan view:cache
+
+# PHP-FPM ve OPcache yenile
+echo ""
+echo "PHP-FPM yeniden başlatılıyor..."
+
+docker restart aifilm_app
+
+sleep 10
+
+if ! docker ps --format '{{.Names}}' | grep -qx "aifilm_app"; then
+    echo "HATA: aifilm_app yeniden başlatılamadı."
+    docker logs aifilm_app --tail 50 2>/dev/null || true
+    exit 1
+fi
+
+# HTTP kontrolleri
+echo ""
+echo "Web sitesi kontrolleri yapılıyor..."
+
+APP_URL=$(grep '^APP_URL=' .env | cut -d '=' -f2- | tr -d '"' | tr -d "'")
+APP_URL="${APP_URL%/}"
+
+if [ -z "$APP_URL" ]; then
+    echo "APP_URL bulunamadı."
+    exit 1
+fi
+
+for PATH_CHECK in /tr /en
+do
+    URL="${APP_URL}${PATH_CHECK}"
+
+    if curl -fsSL --max-time 30 -o /dev/null "$URL"; then
+        echo "OK: $URL"
+    else
+        echo "HATA: $URL erişilemiyor."
+        exit 1
+    fi
+done
 
 echo ""
 echo "============================================"
 echo "       AIFILM KURULUMU TAMAMLANDI"
 echo "============================================"
-echo "Web sitesi: https://${DOMAIN}"
+
+echo "Web sitesi: ${APP_URL}"
 echo "SSL: Merkezi Traefik tarafından yönetiliyor"
+echo "PHP-FPM: Yeniden başlatıldı"
+echo "OPcache: Yeni PHP-FPM süreciyle yenilendi"
 echo ""
+
 docker ps --filter name=aifilm
+
 echo "============================================"

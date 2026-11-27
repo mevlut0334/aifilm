@@ -101,25 +101,47 @@ docker exec aifilm_app php artisan event:cache
 docker exec aifilm_app php artisan view:cache
 
 echo ""
-echo "OPcache temizleniyor..."
+echo "Queue worker'lara yeniden başlama sinyali gönderiliyor..."
 
-docker exec aifilm_app php -r "opcache_reset();" || true
+docker exec aifilm_app php artisan queue:restart
 
 echo ""
-echo "HTTP kontrolü yapılıyor..."
+echo "PHP-FPM yeniden başlatılıyor..."
 
-APP_URL=$(grep '^APP_URL=' .env | cut -d '=' -f2- | tr -d '"')
+# PHP-FPM ve OPcache belleğini tamamen yenile
+docker restart aifilm_app
+
+echo ""
+echo "Uygulamanın yeniden hazırlanması bekleniyor..."
+sleep 10
+
+if ! docker ps --format '{{.Names}}' | grep -qx "aifilm_app"; then
+    echo "HATA: aifilm_app yeniden başlatılamadı."
+    docker logs aifilm_app --tail 50 2>/dev/null || true
+    exit 1
+fi
+
+echo ""
+echo "HTTP kontrolleri yapılıyor..."
+
+APP_URL=$(grep '^APP_URL=' .env | cut -d '=' -f2- | tr -d '"' | tr -d "'")
 
 if [ -z "$APP_URL" ]; then
     echo "APP_URL bulunamadı."
     exit 1
 fi
 
-if curl -fsSL --max-time 30 -o /dev/null "$APP_URL"; then
-    echo "Site erişilebilir: $APP_URL"
-else
-    echo "UYARI: Site kontrolü başarısız. Logları inceleyin."
-fi
+for PATH_CHECK in /tr /en
+do
+    URL="${APP_URL%/}${PATH_CHECK}"
+
+    if curl -fsSL --max-time 30 -o /dev/null "$URL"; then
+        echo "OK: $URL"
+    else
+        echo "HATA: $URL erişilemiyor."
+        exit 1
+    fi
+done
 
 echo ""
 echo "============================================"

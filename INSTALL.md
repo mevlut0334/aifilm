@@ -1,537 +1,662 @@
-# AiFilm - Kurulum Talimatları
 
-## 📋 Son Güncellemeler (Nisan 2026)
+# AiFilm - Kurulum ve Production Yönetim Kılavuzu
 
-- ✅ **Otomatik Kurulum** - Sadece 2 soru (Domain + Email)
-- ✅ **Redis Cache** - Yüksek performans için Redis entegrasyonu
-- ✅ **Akıllı DB İsimlendirme** - Domain'den otomatik DB adı
-- ✅ **RAM Kontrolü** - Düşük RAM'de otomatik swap oluşturma
-- ✅ **Sistem Nginx Yönetimi** - Port çakışmasını önler
-- ✅ **SSL Otomasyonu** - Certbot standalone + cron job
-- ✅ **Bilgi Saklama** - Deployment bilgileri dosyaya kaydedilir
-- ✅ **OPcache + JIT** - PHP 8.3 JIT compiler ile süper hız
-- ✅ **Auto Restart** - Systemd service ile boot'ta otomatik başlatma
+AiFilm, Laravel tabanlı uygulamanın Docker Compose ile production ortamında çalıştırılması için hazırlanmıştır.
+
+Bu doküman ilk kurulum, sunucu yönetimi, güncelleme, yedekleme ve sorun giderme işlemlerini açıklar.
 
 ---
 
-## 🚀 Yeni Sunucuya Kurulum Adımları
+## 1. Production Mimarisi
 
-### 1️⃣ Sunucuya SSH ile Bağlan
+AiFilm production ortamında aşağıdaki teknolojileri kullanır:
+
+| Bileşen | Teknoloji |
+|---|---|
+| İşletim sistemi | Ubuntu 24.04 LTS |
+| Backend | Laravel |
+| PHP | PHP 8.3 |
+| Web sunucusu | Nginx |
+| PHP çalışma ortamı | PHP-FPM |
+| Veritabanı | MySQL |
+| Cache ve queue | Redis |
+| Container yönetimi | Docker Compose |
+| Reverse proxy | Traefik |
+| SSL | Merkezi Traefik yönetimi |
+| Kaynak kod | GitHub |
+
+### Docker container yapısı
+
+| Container | Görevi |
+|---|---|
+| `aifilm_app` | Laravel ve PHP-FPM |
+| `aifilm_nginx` | Nginx web sunucusu |
+| `aifilm_queue` | Laravel queue işlemleri |
+| `aifilm_redis` | Cache ve queue altyapısı |
+| `aifilm_mysql` | MySQL veritabanı |
+| `traefik` | Merkezi reverse proxy ve SSL |
+
+**Önemli:** Traefik ortak altyapıdır. AiFilm kurulumu ve güncellemeleri sırasında Traefik durdurulmamalı veya gereksiz yere yeniden yapılandırılmamalıdır.
+
+SSL sertifikaları ve dış trafik yönlendirmesi merkezi Traefik altyapısı üzerinden yönetilir. Bu nedenle AiFilm için ayrıca Certbot kurulumu veya bağımsız SSL cron job oluşturulması gerekmez.
+
+---
+
+## 2. Sistem Gereksinimleri
+
+### Minimum önerilen gereksinimler
+
+- CPU: 2 çekirdek
+- RAM: 4 GB
+- Disk: 20 GB
+- İşletim sistemi: Ubuntu 24.04 LTS
+- Docker Engine
+- Docker Compose Plugin
+
+Daha yüksek trafik ve yoğun video işleme işlemleri için sunucu kaynakları ayrıca değerlendirilmelidir.
+
+---
+
+## 3. Yeni Sunucuya Kurulum
+
+> Bu bölüm yalnızca yeni bir production sunucusu kurulurken uygulanmalıdır. Mevcut çalışan AiFilm sunucusunda ilk kurulum işlemini tekrar çalıştırmayın.
+
+### 3.1. Sunucuya SSH ile bağlan
+
 ```bash
-ssh ubuntu@SUNUCU_IP
+ssh administrator@SUNUCU_IP
 ```
 
-### 2️⃣ Sistem Güncellemesi
+### 3.2. Sistemi güncelle
+
 ```bash
-sudo apt update && sudo apt upgrade -y
+sudo apt update
+sudo apt upgrade -y
 ```
 
-### 3️⃣ Docker Kurulumu
+### 3.3. Docker kurulumunu kontrol et
+
 ```bash
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-sudo apt-get install docker-compose-plugin -y
-sudo usermod -aG docker $USER
-newgrp docker
+docker --version
+docker compose version
 ```
 
-### 4️⃣ Firewall Ayarları
+Docker kurulu değilse resmi Ubuntu kurulum dokümanını kullan:
+
+https://docs.docker.com/engine/install/ubuntu/
+
+Docker kurulumu sonrasında kullanıcı izinlerini kontrol et.
+
 ```bash
-sudo apt install ufw -y
+docker ps
+```
+
+Yetki hatası alırsan Docker kullanıcı grubunu yapılandır:
+
+```bash
+sudo usermod -aG docker "$USER"
+```
+
+Oturumu kapatıp yeniden aç.
+
+### 3.4. Firewall ayarları
+
+Sunucunun güvenlik duvarında gerekli portları kontrol et.
+
+- SSH: 22
+- HTTP: 80
+- HTTPS: 443
+
+MySQL ve Redis portlarını doğrudan internete açma.
+
+UFW kullanılıyorsa örnek:
+
+```bash
 sudo ufw allow 22/tcp
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
-# MySQL ve Redis portunu AÇMA - Docker internal network kullanacak
-sudo ufw --force enable
+sudo ufw status
 ```
 
-### 5️⃣ **Tek Komutla Otomatik Kurulum! 🎉**
+Firewall'ı etkinleştirmeden önce SSH erişiminin izinli olduğundan emin ol.
 
-**Önemli:** Domain DNS kayıtlarını önce sunucuya yönlendir!
+### 3.5. Domain DNS ayarları
+
+Kurulumdan önce domain DNS kayıtlarının sunucuya yönlendirilmesi gerekir.
+
+Örnek:
+
+```text
+asilov.com       -> SUNUCU_IP
+www.asilov.com   -> SUNUCU_IP
+```
+
+DNS değişikliklerinin yayılmasını bekle.
+
+### 3.6. Merkezi Traefik altyapısını kontrol et
+
+AiFilm, merkezi Traefik reverse proxy altyapısını kullanır.
+
+Sunucuda Traefik container'ının çalıştığını kontrol et:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/mevlut0334/aifilm/main/deploy.sh | bash
+docker ps
 ```
 
-veya manuel kurulum (daha stabil):
+Proxy ağının mevcut olduğunu kontrol et:
+
+```bash
+docker network ls
+```
+
+Kurulumdan önce merkezi proxy altyapısının çalışır durumda olması gerekir.
+
+### 3.7. Projeyi GitHub'dan indir
+
 ```bash
 sudo mkdir -p /var/www
-sudo chown -R $USER:$USER /var/www
+sudo chown -R "$USER":"$USER" /var/www
 
 cd /var/www
-git clone https://github.com/mevlut0334/aifilm.git aifilm
+
+git clone https://github.com/mevlut0334/aifilm.git
 cd aifilm
+```
+
+### 3.8. İlk kurulum scriptini çalıştır
+
+```bash
 chmod +x deploy.sh
 ./deploy.sh
 ```
 
-**Script Sadece 2 Soru Sorar:**
-- **Domain adı:** `aifilm.com`
-- **SSL Email:** `admin@aifilm.com`
+Kurulum scripti gerekli yapılandırma bilgilerini isteyerek production ortamını hazırlar.
 
-Script otomatik olarak:
-- ✅ Domain'den DB adı oluşturur (`aifilm` -> `aifilm_db`)
-- ✅ Güvenli random şifreler üretir (DB, Redis)
-- ✅ RAM kontrolü yapar, gerekirse swap ekler
-- ✅ Sistem Nginx'i durdurur (port çakışması önlenir)
-- ✅ SSL sertifikası alır (certbot standalone)
-- ✅ Redis'i şifre ile yapılandırır
-- ✅ Container'ları başlatır
-- ✅ Migration + Seed çalıştırır
-- ✅ Laravel'i optimize eder (OPcache + JIT)
-- ✅ SSL otomatik yenileme için cron job ekler
-- ✅ Systemd service oluşturur (boot'ta otomatik başlatma)
-- ✅ Tüm bilgileri `~/deployment-info-aifilm.com.txt` dosyasına kaydeder
+Scriptin istediği bilgileri doğru gir.
 
----
+Kurulum tamamlandığında container durumlarını kontrol et:
 
-## ✅ Kurulum Sonrası Kontroller
-
-### 📊 Container'ları Kontrol Et
 ```bash
-cd /var/www/aifilm
 docker ps
 ```
 
-**Beklenen Çıktı:** 
-```
-aifilm_nginx     Up
-aifilm_app       Up (healthy)
-aifilm_mysql     Up (healthy)
-aifilm_redis     Up (healthy)
+**Önemli:** `deploy.sh` ilk kurulum içindir. Mevcut veritabanı bulunan production ortamında tekrar çalıştırılmamalıdır.
+
+---
+
+## 4. Production Dosyaları
+
+Proje dizini:
+
+```text
+/var/www/aifilm
 ```
 
-### 📝 Deployment Bilgilerini Görüntüle
+Önemli dosyalar:
+
+```text
+aifilm/
+├── deploy.sh
+├── redeploy.sh
+├── force-redeploy.sh
+├── docker-compose.prod.yml
+├── Dockerfile.prod
+├── .env
+├── .env.docker
+├── docker/
+│   ├── nginx/
+│   └── php/
+├── app/
+├── bootstrap/
+├── config/
+├── database/
+├── public/
+├── resources/
+├── routes/
+└── storage/
+```
+
+### Ortam dosyaları
+
+`.env` ve `.env.docker` production ortamına ait özel yapılandırma bilgilerini içerir.
+
+Bu dosyalar:
+
+- GitHub'a gönderilmemelidir.
+- Yetkisiz kişilerle paylaşılmamalıdır.
+- Deployment sırasında korunmalıdır.
+- Uygulama ve veritabanı bağlantı ayarları için kullanılmalıdır.
+
+---
+
+## 5. Kurulum Sonrası Kontroller
+
+### Container durumları
+
 ```bash
-cat ~/deployment-info-aifilm.com.txt
+docker ps
 ```
 
-Bu dosyada:
-- Database bilgileri (name, user, password, root password)
-- Redis password
-- APP_KEY
-- Domain ve SSL bilgileri
+AiFilm servislerinin çalışır durumda olduğunu kontrol et:
 
-### 📋 Log'ları İzle
+- `aifilm_app`
+- `aifilm_nginx`
+- `aifilm_queue`
+- `aifilm_redis`
+- `aifilm_mysql`
+
+### Laravel logları
+
+```bash
+docker exec aifilm_app tail -100 /var/www/html/storage/logs/laravel.log
+```
+
+### Nginx logları
+
+```bash
+docker logs aifilm_nginx --tail=100
+```
+
+### MySQL logları
+
+```bash
+docker logs aifilm_mysql --tail=100
+```
+
+### Redis logları
+
+```bash
+docker logs aifilm_redis --tail=100
+```
+
+### Site testi
+
+```bash
+curl -I https://asilov.com/tr
+curl -I https://asilov.com/en
+```
+
+Türkçe ve İngilizce sayfaların başarılı HTTP yanıtı vermesi beklenir.
+
+---
+
+## 6. GitHub'dan Güncelleme (Redeploy)
+
+Geliştirme bilgisayarında yaptığın değişiklikleri GitHub `main` dalına gönderdikten sonra production sunucusunda güncelleme yapabilirsin.
+
+### 6.1. Sunucuya bağlan
+
+```bash
+ssh administrator@SUNUCU_IP
+```
+
+### 6.2. Proje dizinine geç
+
+```bash
+cd /var/www/aifilm
+```
+
+### 6.3. GitHub'dan güncel kodu çek
+
+```bash
+git fetch origin main
+git pull --ff-only origin main
+```
+
+### 6.4. Deployment scriptini çalıştır
+
+```bash
+chmod +x redeploy.sh
+./redeploy.sh
+```
+
+### Normal redeploy işlemi
+
+`redeploy.sh` aşağıdaki işlemleri gerçekleştirir:
+
+1. GitHub'dan güncel kodu alır.
+2. Docker Compose yapılandırmasını kontrol eder.
+3. Gerekli container'ları build eder ve başlatır.
+4. Storage ve cache izinlerini düzenler.
+5. Laravel migration işlemlerini çalıştırır.
+6. Laravel cache işlemlerini oluşturur.
+7. Queue worker'ların güncel kodla çalışmasını sağlar.
+8. PHP-FPM container'ını yeniden başlatarak eski OPcache kodunun kullanılmasını önler.
+9. `/tr` ve `/en` sayfalarını kontrol eder.
+
+### Güncelleme sonrası kontrol
+
+```bash
+docker ps
+docker logs aifilm_app --tail=100
+curl -I https://asilov.com/tr
+curl -I https://asilov.com/en
+```
+
+---
+
+## 7. Normal Redeploy ve Force Redeploy
+
+### Normal güncelleme
+
+```bash
+./redeploy.sh
+```
+
+Günlük güncellemelerde kullanılmalıdır.
+
+### Force güncelleme
+
+```bash
+./force-redeploy.sh
+```
+
+Yalnızca normal deployment ile çözülemeyen özel durumlarda kullanılmalıdır.
+
+Force deployment, GitHub'daki `origin/main` sürümünü esas alır ve sunucudaki takip edilen yerel dosya değişikliklerini silebilir.
+
+**Dikkat:** Force deployment öncesinde sunucuda saklanması gereken yerel değişiklik bulunmadığından emin ol.
+
+Force deployment veritabanını sıfırlamak için kullanılmaz. Container'ların yeniden oluşturulması sırasında kısa süreli erişim kesintisi yaşanabilir.
+
+---
+
+## 8. PHP OPcache ve PHP-FPM
+
+Production ortamında PHP OPcache etkin olarak çalışır.
+
+Örnek OPcache ayarları:
+
+```ini
+opcache.enable=1
+opcache.validate_timestamps=0
+opcache.revalidate_freq=0
+```
+
+`opcache.validate_timestamps=0` olduğunda PHP-FPM, PHP dosyalarındaki değişiklikleri otomatik olarak kontrol etmez.
+
+Bu nedenle yalnızca GitHub'dan kodu çekmek her zaman yeterli değildir. PHP-FPM belleğinde eski kod bulunabilir.
+
+AiFilm deployment sürecinde `aifilm_app` container'ı yeniden başlatılarak PHP-FPM'in yeni kodla çalışması sağlanır.
+
+**Önemli:** CLI üzerinden çalıştırılan `opcache_reset()` komutu PHP-FPM'in ayrı OPcache belleğini sıfırlamaz. Bu nedenle container restart işlemi önemlidir.
+
+---
+
+## 9. Yararlı Docker Komutları
+
+### Container durumları
+
+```bash
+docker ps
+```
+
+### Kaynak kullanımı
+
+```bash
+docker stats
+```
+
+### Uygulama logları
+
 ```bash
 docker logs aifilm_app -f
+```
+
+### Nginx logları
+
+```bash
 docker logs aifilm_nginx -f
-docker logs aifilm_mysql -f
-docker logs aifilm_redis -f
 ```
 
-### 🌐 Siteyi Test Et
-1. Ana sayfa: `https://aifilm.com`
-2. Admin panel: `https://aifilm.com/admin/login` (varsa)
-
----
-
-## 🔧 Yararlı Yönetim Komutları
-
-### Container Yönetimi
+### Container yeniden başlatma
 
 ```bash
-# Tüm container'ları göster
-docker ps
-
-# Container'ları durdur
-cd /var/www/aifilm
-docker compose -f docker-compose.prod.yml down
-
-# Container'ları başlat
-docker compose -f docker-compose.prod.yml up -d
-
-# Belirli bir container'ı restart et
-docker restart aifilm_nginx
 docker restart aifilm_app
-docker restart aifilm_mysql
-docker restart aifilm_redis
 ```
 
-### GitHub'dan Güncelleme (Redeploy)
+### Laravel migration
 
 ```bash
-# Proje dizinindeyken
-cd /var/www/aifilm
-./redeploy.sh
-
-# veya herhangi bir yerden
-cd /var/www/aifilm && ./redeploy.sh
-```
-
-**Redeploy scripti otomatik olarak:**
-- ✅ GitHub'dan son kodu çeker
-- ✅ Container'ları yeniden build eder
-- ✅ Migration çalıştırır
-- ✅ Cache'i temizler ve optimize eder
-
-### Laravel Komutları
-
-```bash
-# Cache temizle
-docker exec aifilm_app php artisan cache:clear
-docker exec aifilm_app php artisan config:clear
-docker exec aifilm_app php artisan view:clear
-docker exec aifilm_app php artisan route:clear
-
-# Optimize et
-docker exec aifilm_app php artisan config:cache
-docker exec aifilm_app php artisan route:cache
-docker exec aifilm_app php artisan view:cache
-docker exec aifilm_app php artisan optimize
-
-# Migration
 docker exec aifilm_app php artisan migrate --force
-
-# Veritabanını sıfırla (⚠️ Tüm veriler silinir!)
-docker exec aifilm_app php artisan migrate:fresh --seed --force
-
-# Storage link
-docker exec aifilm_app php artisan storage:link
-
-# Queue worker (eğer kullanıyorsanız)
-docker exec -d aifilm_app php artisan queue:work --tries=3
 ```
 
-### Veritabanı Yönetimi
+### Laravel cache temizleme
 
 ```bash
-# Veritabanı yedeği al
-DB_NAME=$(grep "^DB Name:" ~/deployment-info-*.txt | awk '{print $3}')
-DB_ROOT_PASS=$(grep "^DB Root Password:" ~/deployment-info-*.txt | awk '{print $4}')
-docker exec aifilm_mysql mysqldump -u root -p"${DB_ROOT_PASS}" ${DB_NAME} > backup_$(date +%Y%m%d_%H%M%S).sql
-
-# Yedekten geri yükle
-docker exec -i aifilm_mysql mysql -u root -p"${DB_ROOT_PASS}" ${DB_NAME} < backup_20260424_120000.sql
-
-# MySQL içine gir
-docker exec -it aifilm_mysql mysql -u root -p
-
-# Redis içine gir
-REDIS_PASS=$(grep "^Redis Password:" ~/deployment-info-*.txt | awk '{print $3}')
-docker exec -it aifilm_redis redis-cli -a "${REDIS_PASS}"
+docker exec aifilm_app php artisan optimize:clear
 ```
 
-### SSL Yönetimi
+### Laravel cache oluşturma
 
 ```bash
-# SSL sertifikasını manuel yenile
-sudo certbot renew
+docker exec aifilm_app php artisan config:cache
+docker exec aifilm_app php artisan event:cache
+docker exec aifilm_app php artisan view:cache
+```
 
-# SSL sertifikası durumunu kontrol et
-sudo certbot certificates
+### Queue worker yenileme
 
-# SSL yenileme cron job'ını kontrol et
-crontab -l | grep certbot
+```bash
+docker exec aifilm_app php artisan queue:restart
+```
+
+> Queue worker'lar ayrı `aifilm_queue` container'ında çalıştığı için queue container loglarını da kontrol et.
+
+```bash
+docker logs aifilm_queue --tail=100
 ```
 
 ---
 
-## 🐛 Sorun Giderme
+## 10. Veritabanı Yedekleme
 
-### ❌ Site Açılmıyor (500 Error veya Timeout)
+Production veritabanı kullanıcı ve uygulama verilerini içerir.
+
+Önemli migration veya veritabanı değişikliklerinden önce yedek alınması önerilir.
+
+Örnek yedekleme işlemi:
 
 ```bash
-# 1. Container'lar çalışıyor mu?
+cd /var/www/aifilm
+
+mkdir -p backups
+
+docker exec aifilm_mysql sh -c \
+  'exec mysqldump -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"' \
+  > "backups/aifilm_$(date +%Y%m%d_%H%M%S).sql"
+```
+
+Bu örnek komut MySQL container ortam değişkenlerinin `MYSQL_USER`, `MYSQL_PASSWORD` ve `MYSQL_DATABASE` olarak tanımlandığını varsayar. Mevcut Compose yapılandırmasındaki değişken adları farklıysa komut uyarlanmalıdır.
+
+Yedekleri kontrol et:
+
+```bash
+ls -lh backups/
+```
+
+Yedeklerin yalnızca aynı sunucuda tutulması önerilmez. Güvenli başka bir depolama alanına da kopyalanmalıdır.
+
+---
+
+## 11. Sorun Giderme
+
+### Site açılmıyorsa
+
+```bash
 docker ps
+docker logs aifilm_app --tail=100
+docker logs aifilm_nginx --tail=100
+```
 
-# 2. Laravel log'larını kontrol et
+### Laravel 500 hatası veriyorsa
+
+```bash
 docker exec aifilm_app tail -100 /var/www/html/storage/logs/laravel.log
-
-# 3. Nginx log'larını kontrol et
-docker logs aifilm_nginx --tail=50
-
-# 4. .env dosyası var mı?
-docker exec aifilm_app cat /var/www/html/.env | head -10
-
-# 5. Container'ları yeniden başlat
-docker restart aifilm_app aifilm_nginx
 ```
 
-### 🖼️ Görseller Yüklenmiyor
+### Sayfalar 404 dönüyorsa
+
+Route kayıtlarını kontrol et:
 
 ```bash
-# Storage link'i kontrol et
-docker exec aifilm_app ls -la /var/www/html/public/storage
-
-# Yoksa yeniden oluştur
-docker exec aifilm_app php artisan storage:link
-
-# İzinleri düzelt
-docker exec aifilm_app chown -R www-data:www-data /var/www/html/storage
-docker exec aifilm_app chown -R www-data:www-data /var/www/html/public
-docker exec aifilm_app chmod -R 775 /var/www/html/storage
+docker exec aifilm_app php artisan route:list
 ```
 
-### 🔑 APP_KEY Hatası
+PHP-FPM container'ını yeniden başlat:
 
 ```bash
-# APP_KEY yeniden oluştur
-docker exec aifilm_app php artisan key:generate --force
-docker exec aifilm_app php artisan config:clear
 docker restart aifilm_app
 ```
 
-### 🗄️ MySQL Bağlantı Hatası
+Sayfaları tekrar kontrol et:
 
 ```bash
-# MySQL çalışıyor mu?
-docker logs aifilm_mysql --tail=30
+curl -I https://asilov.com/tr
+curl -I https://asilov.com/en
+```
 
-# MySQL'i yeniden başlat
-docker restart aifilm_mysql
+### Görseller yüklenmiyorsa
 
-# 10 saniye bekle, sonra test et
-sleep 10
+Storage link'ini kontrol et:
+
+```bash
+docker exec aifilm_app ls -la /var/www/html/public/storage
+```
+
+Gerekirse oluştur:
+
+```bash
+docker exec aifilm_app php artisan storage:link
+```
+
+Storage izinlerini kontrol et:
+
+```bash
+docker exec aifilm_app ls -la /var/www/html/storage
+```
+
+### MySQL bağlantı sorunu varsa
+
+```bash
+docker logs aifilm_mysql --tail=100
 docker exec aifilm_app php artisan migrate:status
 ```
 
-### 📦 Redis Bağlantı Hatası
+### Redis bağlantı sorunu varsa
 
 ```bash
-# Redis çalışıyor mu?
-docker logs aifilm_redis --tail=30
-
-# Redis'i test et
-REDIS_PASS=$(grep "^Redis Password:" ~/deployment-info-*.txt | awk '{print $3}')
-docker exec aifilm_redis redis-cli -a "${REDIS_PASS}" ping
-
-# Redis'i yeniden başlat
-docker restart aifilm_redis
+docker logs aifilm_redis --tail=100
+docker logs aifilm_queue --tail=100
 ```
 
-### 🐳 Container Başlamıyor
+### Traefik veya SSL sorunu varsa
 
 ```bash
-# Log'ları kontrol et
-docker logs aifilm_app
-docker logs aifilm_nginx
-docker logs aifilm_mysql
-docker logs aifilm_redis
-
-# Container'ları tamamen sil ve yeniden başlat
-cd /var/www/aifilm
-docker compose -f docker-compose.prod.yml down -v
-docker compose -f docker-compose.prod.yml up -d --build
+docker logs traefik --tail=100
+docker logs aifilm_nginx --tail=100
 ```
 
-### 🔒 SSL Hatası
+Traefik ortak altyapı olduğundan, yalnızca AiFilm'de sorun görülüyorsa öncelikle AiFilm container'larını incele.
+
+### Sunucu yeniden başlatıldıysa
 
 ```bash
-# Certbot lock dosyalarını temizle
-sudo pkill certbot
-sudo rm -rf /tmp/certbot-*
-
-# Sertifikayı manuel al
-sudo certbot certonly --standalone --non-interactive --agree-tos --email admin@aifilm.com -d aifilm.com --http-01-port=80
-
-# Nginx'i restart et
-docker restart aifilm_nginx
-```
-
-### 🔄 Sunucu Restart Sonrası
-
-```bash
-# Container'lar otomatik başladı mı kontrol et
 docker ps
-
-# Başlamadıysa systemd service kontrol et
-sudo systemctl status aifilm
-
-# Manuel başlat
-sudo systemctl start aifilm
-
-# Auto-restart policy kontrol et
-docker inspect aifilm_app | grep -A 3 RestartPolicy
 ```
 
-### 💾 Düşük Disk Alanı
+Container'ların yeniden başladığını kontrol et. Başlamayan servislerin loglarını incele.
+
+---
+
+## 12. Güvenlik ve Veri Koruma
+
+### Production ortamında dikkat edilmesi gerekenler
+
+- `.env` ve `.env.docker` dosyalarını GitHub'a gönderme.
+- Veritabanı ve Redis portlarını doğrudan internete açma.
+- Traefik ortak altyapısını gereksiz yere değiştirme.
+- Production veritabanını düzenli yedekle.
+- Migration işlemlerini kontrollü gerçekleştir.
+- APP_KEY değerini mevcut sistemde sebepsiz yere değiştirme.
+- Force deployment öncesinde yerel değişiklikleri kontrol et.
+- Veritabanı volume'larını silme.
+
+### Production ortamında kullanılmaması gereken komutlar
+
+Aşağıdaki komut veritabanı verilerinin silinmesine neden olabilir:
 
 ```bash
-# Docker temizliği
+docker compose -f docker-compose.prod.yml down -v
+```
+
+Aşağıdaki komut da Docker tarafından yönetilen volume'ları silebilir:
+
+```bash
 docker system prune -a --volumes -f
-
-# Eski image'ları sil
-docker image prune -a -f
-
-# Disk kullanımını kontrol et
-df -h
-docker system df
 ```
 
-### 🧠 Yüksek RAM Kullanımı
+Veritabanını sıfırlayabilecek Laravel komutları da production ortamında kullanılmamalıdır:
 
 ```bash
-# Container kaynak kullanımını göster
-docker stats
-
-# PHP-FPM worker sayısını azalt
-# docker/php/php-fpm.conf dosyasında:
-# pm.max_children = 3 (varsayılan 5)
-# Dosyayı düzenle ve redeploy yap
+php artisan migrate:fresh
 ```
+
+**Önemli:** Bu komutları normal sorun giderme veya deployment işlemlerinde kullanma.
 
 ---
 
-## 🚨 Önemli Notlar
+## 13. Production Kontrol Listesi
 
-### 📂 Deployment Bilgileri Dosyası
+### İlk kurulum öncesi
 
-Script çalıştıktan sonra:
-```bash
-~/deployment-info-aifilm.com.txt
-```
+- [ ] Ubuntu sunucu hazır.
+- [ ] Docker ve Docker Compose kurulu.
+- [ ] Domain DNS kayıtları doğru.
+- [ ] Merkezi Traefik çalışıyor.
+- [ ] Proxy Docker ağı mevcut.
+- [ ] Production ortam dosyaları hazır.
 
-Bu dosyada **hassas bilgiler** var:
-- ✅ Dosya izinleri: `600` (sadece siz okuyabilir)
-- ⚠️ Bu dosyayı **GÜVENLİ** bir yere yedekleyin
-- ⚠️ Dosyayı **asla** public repository'ye eklemeyin
+### Güncelleme öncesi
 
-### 🔐 .env Dosyası Güvenliği
+- [ ] Değişiklikler yerel ortamda test edildi.
+- [ ] GitHub `main` dalına gönderildi.
+- [ ] Production `.env` dosyaları korunuyor.
+- [ ] Veritabanı değişikliği varsa yedek alındı.
+- [ ] Normal deployment scripti kullanılacak.
 
-- `.env` dosyası Docker volume olarak mount edilir
-- Container restart edilse bile kaybolmaz ✅
-- Sunucu restart edilse bile kalır ✅
-- `/var/www/aifilm/.env` konumundadır
+### Güncelleme sonrası
 
-### ⚡ PHP-FPM Optimizasyonları
-
-Orta seviye sunucular için optimize edilmiş:
-- **pm.max_children = 5** (varsayılan)
-- **memory_limit = 512M**
-- **OPcache + JIT enabled** (PHP 8.3 performance boost)
-
-Eğer sunucunuzda 8GB+ RAM varsa:
-```bash
-# docker/php/php-fpm.conf dosyasını düzenle
-pm.max_children = 10
-pm.start_servers = 3
-pm.min_spare_servers = 2
-pm.max_spare_servers = 5
-
-# docker/php/php.ini dosyasını düzenle
-memory_limit = 1024M
-
-# Container'ı rebuild et
-cd /var/www/aifilm
-docker compose -f docker-compose.prod.yml up -d --build
-```
-
-### 🔥 Firewall ve Güvenlik
-
-**MySQL ve Redis Portları:**
-- Port `3306` (MySQL) firewall'da **AÇILMAMALI** ❌
-- Port `6379` (Redis) firewall'da **AÇILMAMALI** ❌
-- Docker internal network kullanır ✅
-- Dışarıdan erişim gerekirse SSH tunnel kullanın
-
-**SSH Tunnel Örneği:**
-```bash
-# Local makinenizden
-ssh -L 3307:localhost:3306 -L 6380:localhost:6379 ubuntu@SUNUCU_IP
-# Artık localhost:3307'den MySQL, localhost:6380'den Redis'e erişebilirsiniz
-```
-
-### 🔄 Auto Restart Policy
-
-Tüm container'lar `restart: unless-stopped` ile çalışır:
-- ✅ Sunucu reboot edilirse container'lar otomatik başlar
-- ✅ Container crash olursa otomatik restart olur
-- ⚠️ `docker stop` ile durdurursanız, manuel `docker start` gerekir
-
-### 📅 SSL Otomatik Yenileme
-
-Script otomatik olarak cron job ekler:
-```bash
-# Her gece saat 03:00'te SSL yenileme kontrolü
-0 3 * * * certbot renew --quiet --deploy-hook 'docker restart aifilm_nginx'
-```
-
-Kontrol et:
-```bash
-crontab -l
-```
+- [ ] Container'lar çalışıyor.
+- [ ] Laravel loglarında kritik hata yok.
+- [ ] Queue container çalışıyor.
+- [ ] MySQL bağlantısı çalışıyor.
+- [ ] Redis bağlantısı çalışıyor.
+- [ ] `/tr` sayfası açılıyor.
+- [ ] `/en` sayfası açılıyor.
+- [ ] SSL ve domain yönlendirmesi çalışıyor.
 
 ---
 
-## 🔐 Güvenlik Checklist
+## 14. Production Adresleri
 
-Kurulumdan sonra yapılması gerekenler:
-
-- [ ] Admin şifresini değiştir (varsa)
-- [ ] `~/deployment-info-*.txt` dosyasını güvenli yere yedekle
-- [ ] SSH şifresi yerine SSH key kullan
-- [ ] Firewall ayarlarını kontrol et (`sudo ufw status`)
-- [ ] SSL sertifikası yenileme cron job'ını kontrol et (`crontab -l`)
-- [ ] Düzenli veritabanı yedeği al (haftada 1-2 kez)
-- [ ] `fail2ban` kur (brute force saldırılarına karşı)
-- [ ] Log dosyalarını düzenli kontrol et
-
-**Fail2ban Kurulumu (Opsiyonel):**
-```bash
-sudo apt install fail2ban -y
-sudo systemctl enable fail2ban
-sudo systemctl start fail2ban
-```
+- Ana site: https://asilov.com
+- Türkçe: https://asilov.com/tr
+- İngilizce: https://asilov.com/en
+- GitHub: https://github.com/mevlut0334/aifilm
 
 ---
 
-## 📞 Destek ve İletişim
+## 15. Temel Deployment Kuralları
 
-Sorun yaşarsan kontrol et:
+1. `deploy.sh` yalnızca ilk kurulum içindir.
+2. `redeploy.sh` normal güncellemeler için kullanılır.
+3. `force-redeploy.sh` yalnızca gerektiğinde kullanılır.
+4. Production `.env` dosyaları korunur.
+5. Veritabanı volume'ları silinmez.
+6. Traefik ortak altyapısına gereksiz müdahale edilmez.
+7. PHP kodu güncellendiğinde PHP-FPM yeniden başlatılır.
+8. Deployment sonrasında `/tr` ve `/en` sayfaları kontrol edilir.
+9. Veritabanı değişikliklerinden önce yedek alınır.
 
-1. ✅ Container'lar çalışıyor mu? → `docker ps`
-2. ✅ Log'larda hata var mı? → `docker logs aifilm_app`
-3. ✅ .env dosyası var mı? → `docker exec aifilm_app cat /var/www/html/.env | head -10`
-4. ✅ Storage izinleri doğru mu? → `docker exec aifilm_app ls -la /var/www/html/storage`
-5. ✅ Redis bağlantısı çalışıyor mu? → `docker logs aifilm_redis`
-6. ✅ SSL sertifikası geçerli mi? → `sudo certbot certificates`
-7. ✅ Disk alanı yeterli mi? → `df -h`
-8. ✅ RAM kullanımı normal mi? → `free -h`
-
-**GitHub Issues:**
-https://github.com/mevlut0334/aifilm/issues
-
----
-
-## 📚 Ek Kaynaklar
-
-- [Laravel Resmi Dokümantasyonu](https://laravel.com/docs)
-- [Docker Compose Dokümantasyonu](https://docs.docker.com/compose/)
-- [Let's Encrypt Dokümantasyonu](https://letsencrypt.org/docs/)
-- [Nginx Dokümantasyonu](https://nginx.org/en/docs/)
-- [Redis Dokümantasyonu](https://redis.io/docs/)
-
----
-
-**Son Güncelleme:** 24 Nisan 2026
-**Script Adı:** `deploy.sh` (v1.0)
-**Kullanım:** Her sunucuya bir domain
-**Minimum Sunucu Gereksinimleri:**
-- RAM: 2GB (4GB+ önerilir)
-- Disk: 20GB
-- OS: Ubuntu 20.04 / 22.04 / 24.04
-- Docker: 20.10+
-- Docker Compose: 2.0+
-
----
-
-## 🎯 Güncelleme Notları
-
-### Redeploy İşlemi
-
-Projede değişiklik yapıp GitHub'a push ettikten sonra:
-
-```bash
-cd /var/www/aifilm
-./redeploy.sh
-```
-
-Bu script:
-1. GitHub'dan son kodu çeker
-2. Container'ları rebuild eder
-3. Migration çalıştırır
-4. Cache'leri temizler
-5. Laravel'i optimize eder
-
-**Önemli:** Redeploy sırasında site 30-60 saniye erişilemez olacaktır.
+**AiFilm production yaklaşımı:** Mevcut çalışan sistemi koruyarak yalnızca gerekli uygulama güncellemelerini gerçekleştirmek.

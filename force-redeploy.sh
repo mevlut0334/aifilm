@@ -35,6 +35,12 @@ if [ ! -f "$COMPOSE_FILE" ] || [ ! -f "$ENV_FILE" ] || [ ! -f ".env" ]; then
     exit 1
 fi
 
+# Git kontrolü
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    echo "Git deposu bulunamadı."
+    exit 1
+fi
+
 # Traefik kontrolü
 if ! docker ps --format '{{.Names}}' | grep -qx "traefik"; then
     echo "Traefik çalışmıyor. İşlem iptal edildi."
@@ -112,25 +118,47 @@ docker exec aifilm_app php artisan event:cache
 docker exec aifilm_app php artisan view:cache
 
 echo ""
-echo "OPcache temizleniyor..."
+echo "Queue worker'lara yeniden başlama sinyali gönderiliyor..."
 
-docker exec aifilm_app php -r "opcache_reset();" || true
+docker exec aifilm_app php artisan queue:restart
+
+echo ""
+echo "PHP-FPM yeniden başlatılıyor..."
+
+# PHP-FPM ve OPcache belleğini tamamen yenile
+docker restart aifilm_app
+
+echo ""
+echo "Uygulamanın hazırlanması bekleniyor..."
+sleep 10
+
+if ! docker ps --format '{{.Names}}' | grep -qx "aifilm_app"; then
+    echo "HATA: aifilm_app yeniden başlatılamadı."
+    docker logs aifilm_app --tail 50 2>/dev/null || true
+    exit 1
+fi
 
 echo ""
 echo "Site kontrolü..."
 
-APP_URL=$(grep '^APP_URL=' .env | cut -d '=' -f2- | tr -d '"')
+APP_URL=$(grep '^APP_URL=' .env | cut -d '=' -f2- | tr -d '"' | tr -d "'")
 
 if [ -z "$APP_URL" ]; then
     echo "APP_URL bulunamadı."
     exit 1
 fi
 
-if curl -fsSL --max-time 30 -o /dev/null "$APP_URL"; then
-    echo "Site erişilebilir: $APP_URL"
-else
-    echo "UYARI: Site kontrolü başarısız."
-fi
+for PATH_CHECK in /tr /en
+do
+    URL="${APP_URL%/}${PATH_CHECK}"
+
+    if curl -fsSL --max-time 30 -o /dev/null "$URL"; then
+        echo "OK: $URL"
+    else
+        echo "HATA: $URL erişilemiyor."
+        exit 1
+    fi
+done
 
 echo ""
 echo "============================================"
@@ -140,7 +168,7 @@ echo "============================================"
 docker ps --filter name=aifilm
 
 echo ""
-echo "MySQL ve Redis volume'ları korunmuştur."
-echo ".env dosyaları korunmuştur."
-echo "Traefik çalışmaya devam etmektedir."
+echo "MySQL ve Redis volume'ları silinmedi."
+echo ".env dosyaları korundu."
+echo "Traefik çalışmaya devam ediyor."
 echo "============================================"

@@ -1,7 +1,7 @@
 
 # 🎬 AiFilm
 
-AI-powered film creation and video production platform built with Laravel 11.
+AI-powered film creation and video production platform built with Laravel.
 
 AiFilm transforms written scenarios into cinematic video content using AI technologies.
 
@@ -19,7 +19,7 @@ AiFilm production infrastructure uses Docker Compose and a centralized Traefik r
 - Traefik v3
 - Nginx
 - PHP 8.3 / PHP-FPM
-- Laravel 11
+- Laravel
 - MySQL 8
 - Redis
 
@@ -28,12 +28,12 @@ AiFilm production infrastructure uses Docker Compose and a centralized Traefik r
 ```text
                    Internet
                        |
-                 Domain / DNS
+                  Domain / DNS
                        |
-                 Traefik Proxy
-                  Ports 80/443
+                  Traefik Proxy
+                   Ports 80/443
                        |
-                HTTPS / SSL
+                  HTTPS / SSL
                        |
                  Docker Network
                      proxy
@@ -47,7 +47,7 @@ AiFilm production infrastructure uses Docker Compose and a centralized Traefik r
             MySQL            Redis
               |               |
           Database          Cache
-                           Queue
+                            Queue
 ```
 
 ### Centralized Traefik
@@ -119,13 +119,36 @@ It generates database passwords, Redis password and Laravel APP_KEY automaticall
 
 Traefik handles SSL certificate issuance and renewal.
 
+The initial installation script:
+
+- Checks Docker and Docker Compose.
+- Checks Traefik and the external proxy network.
+- Clones the latest `main` branch from GitHub.
+- Generates production environment files.
+- Starts application containers.
+- Runs Laravel migrations and initial seeders.
+- Creates Laravel storage links.
+- Builds Laravel configuration, event and view caches.
+- Restarts PHP-FPM to reload application code and OPcache.
+- Verifies Turkish and English website routes.
+
+**Do not use this script to update an existing production deployment.**
+
 ---
 
 ## 🔄 Deployment Scripts
 
+AiFilm provides three deployment scripts.
+
+| Situation | Script | Purpose |
+|---|---|---|
+| First installation on a new server | `deploy.sh` | Initial setup |
+| Normal application update | `redeploy.sh` | Update from GitHub |
+| Emergency recovery | `force-redeploy.sh` | Force synchronization with GitHub |
+
 ### 1. Initial Installation: deploy.sh
 
-Use when installing AiFilm for the first time on a new server.
+Use only when installing AiFilm for the first time on a new server.
 
 ```bash
 ./deploy.sh
@@ -140,8 +163,10 @@ Responsibilities:
 - Generate environment files.
 - Configure database and Redis.
 - Start application containers.
-- Register the domain with Traefik.
-- Run Laravel migrations.
+- Run Laravel migrations and initial seeders.
+- Prepare Laravel caches.
+- Restart PHP-FPM.
+- Verify `/tr` and `/en` routes.
 
 Do not use this script to reinstall an existing production deployment.
 
@@ -156,34 +181,106 @@ cd /var/www/aifilm
 
 Responsibilities:
 
-- Pull latest GitHub changes.
+- Fetch the latest GitHub `main` branch.
+- Pull changes using fast-forward only.
 - Validate Docker Compose configuration.
 - Build updated application images.
-- Update required containers.
+- Update application containers.
 - Run database migrations.
-- Optimize Laravel.
+- Prepare Laravel configuration, event and view caches.
+- Notify queue workers to restart.
+- Restart the application container and PHP-FPM.
+- Reload PHP OPcache through a fresh PHP-FPM process.
+- Verify `/tr` and `/en` routes.
 
-The script does not intentionally stop Traefik or delete database volumes.
+This is the recommended deployment method for everyday updates.
+
+**You do not need to run `git pull` separately on the server.** The script fetches and pulls the latest GitHub code automatically.
 
 ### 3. Emergency Update: force-redeploy.sh
 
-Use when you need to restore the tracked project files to the latest GitHub version.
+Use when tracked local server changes must be discarded and the latest GitHub `main` branch restored.
 
 ```bash
 cd /var/www/aifilm
 ./force-redeploy.sh
 ```
 
-This script:
+Responsibilities:
 
-- Resets tracked local code changes.
-- Gets the latest main branch.
-- Recreates application containers.
-- Runs migrations and Laravel optimization.
+- Fetch the latest GitHub `main` branch.
+- Reset tracked files to `origin/main`.
+- Rebuild and recreate application containers.
+- Run database migrations.
+- Prepare Laravel caches.
+- Notify queue workers to restart.
+- Restart PHP-FPM and reload OPcache.
+- Verify `/tr` and `/en` routes.
 
-**Warning:** Local tracked code changes will be discarded.
+**Warning:** This script permanently discards tracked local changes on the server.
 
-Database and Redis volumes must remain protected.
+It does not intentionally delete MySQL or Redis Docker volumes or production environment files.
+
+---
+
+## ⚙️ PHP OPcache and PHP-FPM
+
+Production PHP configuration uses OPcache for performance.
+
+The production configuration may use:
+
+```ini
+opcache.enable = 1
+opcache.validate_timestamps = 0
+opcache.revalidate_freq = 0
+```
+
+When `opcache.validate_timestamps=0`, PHP-FPM does not automatically detect changed PHP files.
+
+This means PHP-FPM may continue executing previously cached PHP code after a deployment.
+
+For this reason, the deployment scripts restart the application container after updating code and preparing Laravel caches.
+
+A fresh PHP-FPM process reloads the application code and creates a fresh OPcache state.
+
+**Important:** Running `opcache_reset()` through PHP CLI does not guarantee that the PHP-FPM OPcache is reset. CLI and PHP-FPM may use separate OPcache processes.
+
+Both `redeploy.sh` and `force-redeploy.sh` automatically restart `aifilm_app`.
+
+---
+
+## 📋 Deployment Verification
+
+After deployment, the scripts verify:
+
+- Application containers are running.
+- Turkish homepage `/tr` returns HTTP 200.
+- English homepage `/en` returns HTTP 200.
+
+For additional manual verification:
+
+```bash
+docker ps --filter name=aifilm
+```
+
+Check website routes:
+
+```bash
+curl -I https://asilov.com/tr
+curl -I https://asilov.com/en
+```
+
+Check application logs:
+
+```bash
+docker logs aifilm_app --tail 100
+```
+
+Check Nginx logs:
+
+```bash
+docker logs aifilm_nginx --tail 100
+```
 
 ---
 
@@ -218,15 +315,17 @@ Never commit real passwords, API keys or APP_KEY values.
 
 Work on the application using your local development environment.
 
+Test your changes before deploying them.
+
 ### 2. Push changes to GitHub
 
 ```bash
 git add .
-git commit -m "Feature update"
+git commit -m "Application update"
 git push origin main
 ```
 
-### 3. Connect to the server
+### 3. Connect to the production server
 
 ```bash
 ssh administrator@SERVER_IP
@@ -239,10 +338,21 @@ cd /var/www/aifilm
 ./redeploy.sh
 ```
 
-### 5. Verify the deployment
+The deployment script automatically fetches the latest GitHub `main` branch.
+
+A separate `git pull` is not required.
+
+### 5. Verify deployment
 
 ```bash
-docker ps
+docker ps --filter name=aifilm
+```
+
+Check the website:
+
+```bash
+curl -I https://asilov.com/tr
+curl -I https://asilov.com/en
 ```
 
 Check application logs:
@@ -299,6 +409,12 @@ docker logs -f traefik
 
 ```bash
 docker compose --env-file .env.docker -f docker-compose.prod.yml restart nginx
+```
+
+### Restart application container
+
+```bash
+docker restart aifilm_app
 ```
 
 Do not use `docker compose down` for routine updates.
@@ -410,7 +526,7 @@ Local development must not depend on the production Traefik network.
 
 | Component | Technology |
 |---|---|
-| Backend | Laravel 11 |
+| Backend | Laravel |
 | PHP | PHP 8.3 |
 | Frontend | Blade, Vite, Tailwind CSS |
 | Database | MySQL 8 |
@@ -450,6 +566,9 @@ Local development must not depend on the production Traefik network.
 7. Use `redeploy.sh` for normal updates.
 8. Use `force-redeploy.sh` only when necessary.
 9. Keep database backups before major migrations.
+10. Restart PHP-FPM after deploying PHP code when OPcache timestamp validation is disabled.
+11. Verify `/tr` and `/en` return HTTP 200 after deployment.
+12. Never run the initial installation script on an existing production installation.
 
 ---
 
