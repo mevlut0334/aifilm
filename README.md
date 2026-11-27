@@ -1,306 +1,494 @@
+
 # 🎬 AiFilm
 
-AI-powered film analysis and recommendation platform built with Laravel 11.
+AI-powered film creation and video production platform built with Laravel 11.
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+AiFilm transforms written scenarios into cinematic video content using AI technologies.
 
 ---
 
 ## 🚀 Production Deployment
 
-**Quick Start (Ubuntu Server):**
+AiFilm production infrastructure uses Docker Compose and a centralized Traefik reverse proxy.
 
-```bash
-# 1. Install Docker
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-sudo apt-get install docker-compose-plugin -y
-sudo usermod -aG docker $USER
-newgrp docker
+### Infrastructure
 
-# 2. Clone & Deploy
-sudo mkdir -p /var/www
-sudo chown -R $USER:$USER /var/www
-cd /var/www
-git clone https://github.com/mevlut0334/aifilm.git aifilm
-cd aifilm
-chmod +x deploy.sh
-./deploy.sh
+- Ubuntu 24.04 LTS
+- Docker Engine
+- Docker Compose
+- Traefik v3
+- Nginx
+- PHP 8.3 / PHP-FPM
+- Laravel 11
+- MySQL 8
+- Redis
+
+### Architecture
+
+```text
+                   Internet
+                       |
+                 Domain / DNS
+                       |
+                 Traefik Proxy
+                  Ports 80/443
+                       |
+                HTTPS / SSL
+                       |
+                 Docker Network
+                     proxy
+                       |
+                  AiFilm Nginx
+                       |
+                  PHP-FPM App
+                       |
+              -----------------
+              |               |
+            MySQL            Redis
+              |               |
+          Database          Cache
+                           Queue
 ```
 
-**That's it!** Script will ask for:
-1. Domain name (e.g., `aifilm.com`)
-2. SSL email (e.g., `admin@aifilm.com`)
+### Centralized Traefik
 
-Everything else is automatic! ✨
+Traefik is installed once on the server and manages all production projects.
 
-**Features:**
-- ✅ SSL/TLS with Let's Encrypt (auto-renewal)
-- ✅ Nginx + PHP-FPM + MySQL + Redis
-- ✅ Production optimized (OPcache + JIT)
-- ✅ Auto-restart on boot (systemd)
-- ✅ Security headers & firewall ready
-- ✅ One-command updates (`./redeploy.sh`)
+- HTTP and HTTPS traffic is handled centrally.
+- SSL certificates are managed by Let's Encrypt through Traefik.
+- SSL renewal is handled automatically by Traefik.
+- Individual projects do not bind host ports 80 or 443.
+- Projects connect to the external Docker network named `proxy`.
+- Each project defines its own domain using Traefik labels.
 
-**📚 Documentation:**
-- [**DEPLOYMENT.md**](DEPLOYMENT.md) - Quick deployment guide
-- [**INSTALL.md**](INSTALL.md) - Detailed installation & troubleshooting
-- [**REDEPLOY-GUIDE.md**](REDEPLOY-GUIDE.md) - Update & redeploy guide
+**Important:** Never install another reverse proxy that attempts to use host ports 80 or 443.
 
 ---
 
-## 🔄 Deployment Scripts - Hangi Scripti Ne Zaman Kullanmalı?
+## 🆕 First Installation
 
-### 🆕 İlk Kurulum: `deploy.sh`
+### Requirements
 
-**Ne Zaman?**
-- Yeni bir sunucuya **ilk kez** kurulum yapıyorsan
-- SSL sertifikası almak istiyorsan
+Before installing AiFilm, the server must have:
 
-**Ne Sorar?**
-1. Domain adı (örn: `aifilm.com`)
-2. SSL email (örn: `admin@aifilm.com`)
+1. Ubuntu 24.04 or compatible Linux.
+2. Docker Engine.
+3. Docker Compose plugin.
+4. Centralized Traefik running.
+5. External Docker network named `proxy`.
+6. Domain DNS pointing to the server.
+7. Ports 80 and 443 accessible.
 
-**Kullanımı:**
+### DNS Configuration
+
+Create an A record:
+
+| Type | Name | Value |
+|---|---|---|
+| A | @ | SERVER_IP |
+| A | www | SERVER_IP (optional) |
+
+### Installation
+
+Clone the repository:
+
 ```bash
-cd /var/www/aifilm
+git clone https://github.com/mevlut0334/aifilm.git
+cd aifilm
+```
+
+Make the deployment script executable:
+
+```bash
 chmod +x deploy.sh
+```
+
+Run the installation:
+
+```bash
 ./deploy.sh
 ```
 
-### 🔄 Normal Güncelleme: `redeploy.sh`
+The script asks for:
 
-**Ne Zaman?**
-- GitHub'a yeni kod push ettin
-- Sunucuda **hiç değişiklik yapmadın**
-- Normal güncellemeler için (en çok bu kullanılır)
+1. Domain name.
+2. Database username.
+3. Resend SMTP API key.
 
-**Kullanımı:**
+It generates database passwords, Redis password and Laravel APP_KEY automatically.
+
+Traefik handles SSL certificate issuance and renewal.
+
+---
+
+## 🔄 Deployment Scripts
+
+### 1. Initial Installation: deploy.sh
+
+Use when installing AiFilm for the first time on a new server.
+
+```bash
+./deploy.sh
+```
+
+Responsibilities:
+
+- Check Docker and Compose.
+- Check Traefik availability.
+- Check the external proxy network.
+- Clone the repository.
+- Generate environment files.
+- Configure database and Redis.
+- Start application containers.
+- Register the domain with Traefik.
+- Run Laravel migrations.
+
+Do not use this script to reinstall an existing production deployment.
+
+### 2. Normal Update: redeploy.sh
+
+Use for normal application updates after pushing code to GitHub.
+
 ```bash
 cd /var/www/aifilm
-chmod +x redeploy.sh
 ./redeploy.sh
 ```
-veya 
 
-bash redeploy.sh
+Responsibilities:
 
-**Downtime:** ~15-30 saniye
+- Pull latest GitHub changes.
+- Validate Docker Compose configuration.
+- Build updated application images.
+- Update required containers.
+- Run database migrations.
+- Optimize Laravel.
 
-### ⚠️ Zorla Güncelleme: `force-redeploy.sh`
+The script does not intentionally stop Traefik or delete database volumes.
 
-**Ne Zaman?**
-- Sunucuda test için değişiklik yaptın ve geri almak istiyorsun
-- Git conflict hatası alıyorsun
-- Container'larda sorun var
+### 3. Emergency Update: force-redeploy.sh
 
-**Kullanımı:**
+Use when you need to restore the tracked project files to the latest GitHub version.
+
 ```bash
 cd /var/www/aifilm
-./force-redeploy.sh  # Onay isteyecek
+./force-redeploy.sh
 ```
 
-**⚠️ Dikkat:** Local değişiklikleri siler!
+This script:
 
-**Downtime:** ~45-60 saniye
+- Resets tracked local code changes.
+- Gets the latest main branch.
+- Recreates application containers.
+- Runs migrations and Laravel optimization.
+
+**Warning:** Local tracked code changes will be discarded.
+
+Database and Redis volumes must remain protected.
 
 ---
 
-## Environment Dosyaları
+## 📁 Environment Files
 
-| Dosya | Kullanım | Git'te var mı? |
-|-------|----------|----------------|
-| `.env` | Laravel config (APP_KEY, DB, MAIL vb.) | ❌ .gitignore'da |
-| `.env.docker` | Docker Compose değişkenleri (DB şifresi, domain vb.) | ❌ .gitignore'da |
-| `.env.example` | Örnek şablon | ✅ Git'te |
+| File | Purpose | Git |
+|---|---|---|
+| `.env` | Laravel application configuration | Ignored |
+| `.env.docker` | Docker Compose variables | Ignored |
+| `.env.example` | Example environment template | Tracked |
 
-### Sunucu Kurulumu
-- `/var/www/aifilm/.env` → Laravel okur
-- `/var/www/aifilm/.env.docker` → Docker Compose okur (`--env-file .env.docker`)
-- MAIL ayarları: `.env.docker`'a eklenir, `docker-compose.prod.yml` üzerinden container'a aktarılır
-- MAIL_PASSWORD: Sadece sunucudaki `.env.docker`'da tutulur, asla git'e pushlama
+Production environment files are generated or maintained on the server.
 
-## 📋 Günlük İş Akışı
+Never commit real passwords, API keys or APP_KEY values.
 
-1. **Local'de kod yaz** (Windows/Mac bilgisayarında)
-2. **GitHub'a push et:**
-   ```bash
-   git add .
-   git commit -m "Yeni özellik eklendi"
-   git push origin main
-   ```
-3. **Sunucuya bağlan ve güncelle:**
-   ```bash
-   ssh ubuntu@sunucu_ip
-   cd /var/www/aifilm
-   ./redeploy.sh
-   ```
-4. **Site açılışını kontrol et** → `https://aifilm.com`
+### Important Environment Variables
+
+- `DOMAIN`
+- `APP_KEY`
+- `DB_DATABASE`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+- `DB_ROOT_PASSWORD`
+- `REDIS_PASSWORD`
+- `MAIL_PASSWORD`
+
+---
+
+## 🔄 Daily Development Workflow
+
+### 1. Develop locally
+
+Work on the application using your local development environment.
+
+### 2. Push changes to GitHub
+
+```bash
+git add .
+git commit -m "Feature update"
+git push origin main
+```
+
+### 3. Connect to the server
+
+```bash
+ssh administrator@SERVER_IP
+```
+
+### 4. Update AiFilm
+
+```bash
+cd /var/www/aifilm
+./redeploy.sh
+```
+
+### 5. Verify the deployment
+
+```bash
+docker ps
+```
+
+Check application logs:
+
+```bash
+docker logs aifilm_app --tail 100
+```
+
+Website:
+
+https://asilov.com
+
+---
+
+## 🐳 Docker Management
+
+### View containers
+
+```bash
+docker ps
+```
+
+### View AiFilm containers
+
+```bash
+docker ps --filter name=aifilm
+```
+
+### Application logs
+
+```bash
+docker logs -f aifilm_app
+```
+
+### Queue logs
+
+```bash
+docker logs -f aifilm_queue
+```
+
+### Nginx logs
+
+```bash
+docker logs -f aifilm_nginx
+```
+
+### Traefik logs
+
+```bash
+docker logs -f traefik
+```
+
+### Restart AiFilm Nginx
+
+```bash
+docker compose --env-file .env.docker -f docker-compose.prod.yml restart nginx
+```
+
+Do not use `docker compose down` for routine updates.
+
+Never use `docker compose down -v` on production.
+
+---
+
+## 🌐 Adding New Projects to the Server
+
+The server supports multiple independent Docker projects through centralized Traefik.
+
+For each new project:
+
+1. Create its own project directory.
+2. Create its own Docker Compose configuration.
+3. Connect its reverse proxy service to the external `proxy` network.
+4. Add Traefik routing labels.
+5. Configure the domain DNS.
+6. Let Traefik obtain and manage its SSL certificate.
+
+Example Docker network configuration:
+
+```yaml
+networks:
+  proxy:
+    external: true
+    name: proxy
+```
+
+Example Traefik labels:
+
+```yaml
+labels:
+  - "traefik.enable=true"
+  - "traefik.docker.network=proxy"
+  - "traefik.http.routers.myapp.rule=Host(`example.com`)"
+  - "traefik.http.routers.myapp.entrypoints=websecure"
+  - "traefik.http.routers.myapp.tls=true"
+  - "traefik.http.routers.myapp.tls.certresolver=letsencrypt"
+  - "traefik.http.services.myapp.loadbalancer.server.port=80"
+```
+
+Each project must use unique:
+
+- Container names
+- Router names
+- Service names
+- Database names
+- Docker volumes
+
+Projects must not publish host ports 80 or 443.
 
 ---
 
 ## 💻 Local Development
 
+Local development continues to use the standard Docker Compose configuration.
+
+Clone the repository:
+
 ```bash
-# 1. Clone repository
 git clone https://github.com/mevlut0334/aifilm.git
 cd aifilm
+```
 
-# 2. Install dependencies
+Install dependencies:
+
+```bash
 composer install
 npm install
+```
 
-# 3. Setup environment
+Configure Laravel:
+
+```bash
 cp .env.example .env
 php artisan key:generate
+```
 
-# 4. Start Docker containers
+Start local containers:
+
+```bash
 docker compose up -d
+```
 
-# 5. Run migrations
+Run migrations:
+
+```bash
 docker exec aifilm_app php artisan migrate --seed
+```
 
-# 6. Build assets
+Build frontend assets:
+
+```bash
 npm run dev
 ```
 
-**Access:**
-- App: http://localhost:8080
-- phpMyAdmin: http://localhost:8081
+**Important:**
 
-**Note:** Local development kullanır `docker-compose.yml`, Production kullanır `docker-compose.prod.yml`
+- Local development: `docker-compose.yml`
+- Production deployment: `docker-compose.prod.yml`
+
+Local development must not depend on the production Traefik network.
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Backend:** Laravel 11 + PHP 8.3
-- **Frontend:** Blade + Vite + Tailwind CSS
-- **Database:** MySQL 8.0
-- **Cache:** Redis
-- **Server:** Nginx + PHP-FPM
-- **SSL:** Let's Encrypt
-- **Container:** Docker + Docker Compose
+| Component | Technology |
+|---|---|
+| Backend | Laravel 11 |
+| PHP | PHP 8.3 |
+| Frontend | Blade, Vite, Tailwind CSS |
+| Database | MySQL 8 |
+| Cache | Redis |
+| Web Server | Nginx |
+| Application Server | PHP-FPM |
+| Reverse Proxy | Traefik |
+| SSL | Let's Encrypt |
+| Containers | Docker |
+| Version Control | Git / GitHub |
 
 ---
 
 ## 📦 Features
 
-- AI-powered film analysis
-- Personalized recommendations
-- User reviews and ratings
-- Advanced search and filters
+- AI-powered film creation
+- Scenario-based video generation
+- User accounts and subscriptions
+- Video production management
+- User dashboard
 - Admin dashboard
 - RESTful API
+- Background queue processing
+- Redis caching
+- MySQL database
 
 ---
 
-## 📊 Deployment Scripts Karşılaştırması
+## ⚠️ Important Production Rules
 
-| Durum | Kullanılacak Script | Açıklama |
-|-------|---------------------|----------|
-| 🆕 Sunucuya ilk kez kuruyorum | `./deploy.sh` | SSL + DB + her şey kurulur |
-| 📤 GitHub'a kod push ettim | `./redeploy.sh` | Normal güncelleme (en çok bu) |
-| 🧪 Sunucuda test değişikliği yaptım | `./force-redeploy.sh` | Local değişiklikleri sil |
-| ⚠️ Git conflict hatası | `./force-redeploy.sh` | Zorla GitHub'dan çek |
-| 🐳 Container'lar çalışmıyor | `./force-redeploy.sh` | Sıfırdan başlat |
+1. Never remove the external `proxy` network.
+2. Never bind project containers directly to host ports 80 or 443.
+3. Never delete production database volumes during deployment.
+4. Never use `docker compose down -v` in production.
+5. Never commit `.env` or `.env.docker`.
+6. Do not modify centralized Traefik configuration when updating AiFilm.
+7. Use `redeploy.sh` for normal updates.
+8. Use `force-redeploy.sh` only when necessary.
+9. Keep database backups before major migrations.
 
 ---
 
-## 📁 Proje Dosya Yapısı
+## 📁 Project Structure
 
-```
+```text
 aifilm/
-├── deploy.sh                    # İlk kurulum scripti
-├── redeploy.sh                  # Normal güncelleme scripti
-├── force-redeploy.sh            # Zorla güncelleme scripti
-├── docker-compose.yml           # Local development config
-├── docker-compose.prod.yml      # Production config
-├── Dockerfile                   # Local development Dockerfile
-├── Dockerfile.prod              # Production optimized Dockerfile
+├── deploy.sh
+├── redeploy.sh
+├── force-redeploy.sh
+├── docker-compose.yml
+├── docker-compose.prod.yml
+├── Dockerfile
+├── Dockerfile.prod
 ├── docker/
 │   ├── nginx/
-│   │   └── prod.conf.template   # Nginx SSL config
+│   │   ├── prod.conf.template
+│   │   └── traefik.conf
 │   └── php/
-│       ├── php.ini              # PHP config (OPcache + JIT)
-│       └── php-fpm.conf         # PHP-FPM worker config
-├── DEPLOYMENT.md                # Deployment kılavuzu
-├── INSTALL.md                   # Detaylı kurulum kılavuzu
-└── REDEPLOY-GUIDE.md            # Güncelleme kılavuzu
+│       ├── php.ini
+│       └── php-fpm.conf
+├── DEPLOYMENT.md
+├── INSTALL.md
+├── REDEPLOY-GUIDE.md
+└── README.md
 ```
 
 ---
 
-## ⚠️ Önemli Notlar
+## 📚 Documentation
 
-### Production Deployment:
-- ✅ `deploy.sh` → **Sadece 1 kez** kullanılır (ilk kurulumda)
-- ✅ `redeploy.sh` → **Her güncelleme için** kullanılır (en çok bu)
-- ✅ `force-redeploy.sh` → **Acil durumlar için** kullanılır (dikkatli ol)
-
-### Domain DNS Ayarları:
-- ⚠️ Deployment'tan **önce** domain'i sunucuya yönlendir
-- ⚠️ A kaydı: `aifilm.com` → `SUNUCU_IP`
-- ⚠️ Kontrol: `nslookup aifilm.com` veya `dig aifilm.com +short`
-
-### Güvenlik:
-- ⚠️ `~/deployment-info-*.txt` dosyasını güvenli yere yedekle
-- ⚠️ Bu dosyada DB şifreleri, Redis şifresi ve APP_KEY var
-- ⚠️ Asla public repository'ye ekleme
+- [Deployment Guide](DEPLOYMENT.md)
+- [Installation Guide](INSTALL.md)
+- [Redeployment Guide](REDEPLOY-GUIDE.md)
 
 ---
 
-## About Laravel
+## 📄 License
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+This project is proprietary software.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
-```
-
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+All rights reserved.

@@ -1,71 +1,144 @@
+
 #!/bin/bash
-set -e
+set -Eeuo pipefail
 
 echo "============================================"
-echo "⚠️  FORCE REDEPLOY (LOCAL DEĞİŞİKLİKLERİ SİLER!)"
+echo "       AIFILM FORCE REDEPLOY"
 echo "============================================"
 
-# Proje dizinine git
-cd /var/www/aifilm
+PROJECT_DIR="/var/www/aifilm"
+COMPOSE_FILE="docker-compose.prod.yml"
+ENV_FILE=".env.docker"
 
-echo "⚠️  Bu işlem:"
-echo "  - Local tüm değişiklikleri silecek"
-echo "  - GitHub'dan temiz kod çekecek"
-echo "  - Container'ları tamamen yeniden oluşturacak"
+cd "$PROJECT_DIR"
+
 echo ""
-read -p "Devam edilsin mi? (y/n): " CONFIRM
+echo "DIKKAT:"
+echo "- Takip edilen yerel kod değişiklikleri silinecek."
+echo "- GitHub'daki main sürümü kullanılacak."
+echo "- Uygulama konteynerleri yeniden oluşturulacak."
+echo "- MySQL ve Redis verileri korunacak."
+echo "- .env ve .env.docker dosyaları korunacak."
+echo "- Traefik durdurulmayacak."
+echo ""
+
+read -rp "Devam etmek istiyor musunuz? (y/n): " CONFIRM
 
 if [ "$CONFIRM" != "y" ]; then
-    echo "❌ Force redeploy iptal edildi."
+    echo "İşlem iptal edildi."
     exit 0
 fi
 
-echo ""
-echo "🗑️ Local değişiklikler siliniyor..."
-git fetch --all
-git reset --hard origin/main
-git clean -fd
-
-echo "🐳 Container'lar durduruluyor (volumes dahil)..."
-docker compose -f docker-compose.prod.yml --env-file .env.docker down -v
-
-echo "🏗️ Container'lar sıfırdan oluşturuluyor..."
-docker compose -f docker-compose.prod.yml --env-file .env.docker up -d --build
-
-echo "⏳ Container'lar hazır olana kadar bekleniyor (45 saniye)..."
-sleep 45
-
-echo "✅ Container'lar kontrol ediliyor..."
-if ! docker ps | grep -q aifilm_app; then
-    echo "❌ Container'lar başlatılamadı!"
-    docker logs aifilm_app --tail=30
-    docker logs aifilm_mysql --tail=30
+# Gerekli dosyalar
+if [ ! -f "$COMPOSE_FILE" ] || [ ! -f "$ENV_FILE" ] || [ ! -f ".env" ]; then
+    echo "Gerekli dosyalar bulunamadı."
     exit 1
 fi
 
-echo "📁 Storage izinleri ayarlanıyor..."
-docker exec aifilm_app chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-docker exec aifilm_app chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+# Traefik kontrolü
+if ! docker ps --format '{{.Names}}' | grep -qx "traefik"; then
+    echo "Traefik çalışmıyor. İşlem iptal edildi."
+    exit 1
+fi
 
-echo "🗄️ Migration çalıştırılıyor..."
+# Proxy ağı kontrolü
+if ! docker network inspect proxy >/dev/null 2>&1; then
+    echo "proxy ağı bulunamadı."
+    exit 1
+fi
+
+echo ""
+echo "GitHub'dan güncel kod alınıyor..."
+
+git fetch origin main
+git reset --hard origin/main
+
+echo ""
+echo "Docker yapılandırması kontrol ediliyor..."
+
+docker compose \
+    --env-file "$ENV_FILE" \
+    -f "$COMPOSE_FILE" \
+    config --quiet
+
+echo ""
+echo "Docker imajları yeniden oluşturuluyor..."
+
+docker compose \
+    --env-file "$ENV_FILE" \
+    -f "$COMPOSE_FILE" \
+    up -d --build --force-recreate
+
+echo ""
+echo "Konteynerlerin hazırlanması bekleniyor..."
+sleep 20
+
+# Konteyner kontrolleri
+for CONTAINER in aifilm_app aifilm_nginx aifilm_mysql aifilm_redis aifilm_queue
+do
+    if ! docker ps --format '{{.Names}}' | grep -qx "$CONTAINER"; then
+        echo "HATA: $CONTAINER çalışmıyor."
+        docker logs "$CONTAINER" --tail 50 2>/dev/null || true
+        exit 1
+    fi
+done
+
+echo ""
+echo "Storage izinleri düzenleniyor..."
+
+docker exec aifilm_app chown -R www-data:www-data \
+    /var/www/html/storage \
+    /var/www/html/bootstrap/cache
+
+docker exec aifilm_app chmod -R 775 \
+    /var/www/html/storage \
+    /var/www/html/bootstrap/cache
+
+echo ""
+echo "Veritabanı migration işlemi..."
+
 docker exec aifilm_app php artisan migrate --force
 
-echo "🔗 Storage link oluşturuluyor..."
-docker exec aifilm_app php artisan storage:link 2>/dev/null || echo "⚠ Storage link zaten var"
+echo ""
+echo "Storage link kontrol ediliyor..."
 
-echo "⚡ Laravel optimize ediliyor..."
+docker exec aifilm_app php artisan storage:link
+
+echo ""
+echo "Laravel optimizasyonu..."
+
 docker exec aifilm_app php artisan optimize
 
-echo "🔄 OPcache temizleniyor..."
-docker exec aifilm_app php -r "opcache_reset();" 2>/dev/null || echo "⚠ OPcache reset edilemedi"
+echo ""
+echo "OPcache temizleniyor..."
+
+docker exec aifilm_app php -r "opcache_reset();" || true
+
+echo ""
+echo "Site kontrolü..."
+
+APP_URL=$(grep '^APP_URL=' .env | cut -d '=' -f2- | tr -d '"')
+
+if [ -z "$APP_URL" ]; then
+    echo "APP_URL bulunamadı."
+    exit 1
+fi
+
+if curl -fsSL --max-time 30 -o /dev/null "$APP_URL"; then
+    echo "Site erişilebilir: $APP_URL"
+else
+    echo "UYARI: Site kontrolü başarısız."
+fi
 
 echo ""
 echo "============================================"
-echo "✅ FORCE REDEPLOY BAŞARIYLA TAMAMLANDI!"
+echo "       FORCE REDEPLOY TAMAMLANDI"
 echo "============================================"
-echo "🌐 Site: https://$(grep DOMAIN .env.docker | cut -d'=' -f2)"
-echo "📋 Container durumu:"
+
 docker ps --filter name=aifilm
+
 echo ""
-echo "⚠️  Not: Database volume'ları korundu, verileriniz güvende."
+echo "MySQL ve Redis volume'ları korunmuştur."
+echo ".env dosyaları korunmuştur."
+echo "Traefik çalışmaya devam etmektedir."
 echo "============================================"

@@ -1,93 +1,127 @@
+
 #!/bin/bash
-set -e
+set -Eeuo pipefail
 
-echo "===================================="
-echo "🚀 AIFILM DOCKER AUTO DEPLOY WITH SSL"
-echo "===================================="
+echo "============================================"
+echo "       AIFILM - TRAEFIK AUTO DEPLOY"
+echo "============================================"
 
-# Sadece 2 soru sor
-read -p "Domain (örn: example.com): " DOMAIN
-read -p "SSL Email: " SSL_EMAIL
+PROJECT_DIR="/var/www/aifilm"
+REPO_URL="https://github.com/mevlut0334/aifilm"
 
-# Domain'den DB name ve username oluştur
-DB_NAME=$(echo "$DOMAIN" | sed 's/\..*//g' | sed 's/-//g')
-DB_USERNAME="${DB_NAME}"
-
-# Güvenli random password üret
-DB_ROOT_PASSWORD=$(openssl rand -base64 24 | tr -d "=+/" | cut -c1-20)
-DB_PASSWORD=$(openssl rand -base64 24 | tr -d "=+/" | cut -c1-20)
-REDIS_PASSWORD=$(openssl rand -base64 24 | tr -d "=+/" | cut -c1-20)
-
-# Port default
-HTTP_PORT=80
-HTTPS_PORT=443
-
-echo ""
-echo "📋 Deployment Bilgileri:"
-echo "  Domain: $DOMAIN"
-echo "  SSL Email: $SSL_EMAIL"
-echo "  HTTP Port: $HTTP_PORT"
-echo "  HTTPS Port: $HTTPS_PORT"
-echo "  DB Name: ${DB_NAME}_db"
-echo "  DB Username: $DB_USERNAME"
-echo "  DB Root Password: $DB_ROOT_PASSWORD"
-echo "  DB Password: $DB_PASSWORD"
-echo "  Redis Password: $REDIS_PASSWORD"
-echo ""
-read -p "Devam edilsin mi? (y/n): " CONFIRM
-if [ "$CONFIRM" != "y" ]; then
-    echo "❌ Deployment iptal edildi."
+# Root kontrolü
+if [ "$EUID" -eq 0 ]; then
+    echo "Bu script root kullanıcısıyla çalıştırılmamalı."
     exit 1
 fi
 
-# RAM ve swap kontrolü
-TOTAL_RAM=$(free -m | awk '/^Mem:/{print $2}')
-echo "💾 Toplam RAM: ${TOTAL_RAM}MB"
-
-if [ "$TOTAL_RAM" -lt 2000 ]; then
-    if [ ! -f /swapfile ]; then
-        echo "⚠ RAM düşük, 2GB swap oluşturuluyor..."
-        sudo fallocate -l 2G /swapfile
-        sudo chmod 600 /swapfile
-        sudo mkswap /swapfile
-        sudo swapon /swapfile
-        echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-    else
-        echo "✔ Swap zaten mevcut"
-    fi
+# Docker kontrolü
+if ! command -v docker >/dev/null 2>&1; then
+    echo "Docker kurulu değil."
+    exit 1
 fi
 
-# Gerekli paketleri kur
-echo "📦 Gerekli paketler kuruluyor..."
-sudo apt update
-sudo apt install -y certbot git curl unzip zip
-
-# Sistem Nginx'i durdur ve devre dışı bırak
-echo "🔧 Sistem Nginx durduruluyor..."
-sudo systemctl stop nginx 2>/dev/null || true
-sudo systemctl disable nginx 2>/dev/null || true
-
-# Repo clone / update
-if [ ! -d /var/www/aifilm ]; then
-    echo "📥 Repo clone..."
-    sudo git clone https://github.com/mevlut0334/aifilm /var/www/aifilm
-else
-    echo "📥 Repo update..."
-    cd /var/www/aifilm && sudo git fetch --all && sudo git reset --hard origin/main
+if ! docker compose version >/dev/null 2>&1; then
+    echo "Docker Compose bulunamadı."
+    exit 1
 fi
 
-cd /var/www/aifilm
+# Traefik kontrolü
+if ! docker ps --format '{{.Names}}' | grep -qx "traefik"; then
+    echo "Traefik çalışmıyor."
+    exit 1
+fi
 
-# Ownership ayarla
-sudo chown -R $USER:$USER /var/www/aifilm
+# Proxy ağı kontrolü
+if ! docker network inspect proxy >/dev/null 2>&1; then
+    echo "proxy Docker ağı bulunamadı."
+    exit 1
+fi
 
-# APP_KEY üret
+# Mevcut proje kontrolü
+if [ -d "$PROJECT_DIR" ]; then
+    echo "Proje dizini zaten mevcut: $PROJECT_DIR"
+    echo "Mevcut projeyi tekrar kurmak için deploy.sh kullanma."
+    exit 1
+fi
+
+# Gerekli araçlar
+sudo apt-get update
+sudo apt-get install -y git openssl
+
+# Kullanıcı girdileri
+echo ""
+read -rp "Domain (örn: example.com): " DOMAIN
+read -rp "Veritabanı kullanıcı adı: " DB_USERNAME
+read -rsp "Resend SMTP API anahtarı: " MAIL_PASSWORD
+echo ""
+
+if [[ ! "$DOMAIN" =~ ^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+    echo "Geçersiz domain."
+    exit 1
+fi
+
+if [[ ! "$DB_USERNAME" =~ ^[a-zA-Z0-9_]+$ ]]; then
+    echo "Geçersiz veritabanı kullanıcı adı."
+    exit 1
+fi
+
+if [ -z "$MAIL_PASSWORD" ]; then
+    echo "Mail API anahtarı boş bırakılamaz."
+    exit 1
+fi
+
+# Veritabanı ve uygulama bilgileri
+DB_NAME=$(echo "$DOMAIN" | cut -d. -f1 | tr -cd 'a-zA-Z0-9_')
+DB_DATABASE="${DB_NAME}_db"
+
+DB_ROOT_PASSWORD=$(openssl rand -hex 24)
+DB_PASSWORD=$(openssl rand -hex 24)
+REDIS_PASSWORD=$(openssl rand -hex 24)
 APP_KEY="base64:$(openssl rand -base64 32)"
 
-# .env dosyası oluştur
-echo "⚙ .env dosyası oluşturuluyor..."
-cat > .env << EOF
-APP_NAME="AiFilm"
+echo ""
+echo "Kurulum bilgileri:"
+echo "Domain: $DOMAIN"
+echo "Database: $DB_DATABASE"
+echo "Docker ağı: proxy"
+echo "SSL: Merkezi Traefik"
+echo ""
+
+read -rp "Kuruluma devam edilsin mi? (y/n): " CONFIRM
+
+if [ "$CONFIRM" != "y" ]; then
+    echo "Kurulum iptal edildi."
+    exit 0
+fi
+
+# Projeyi indir
+sudo mkdir -p /var/www
+
+sudo git clone "$REPO_URL" "$PROJECT_DIR"
+
+sudo chown -R "$USER":"$USER" "$PROJECT_DIR"
+
+cd "$PROJECT_DIR"
+
+# Traefik Nginx yapılandırması kontrolü
+if [ ! -f docker/nginx/traefik.conf ]; then
+    echo "docker/nginx/traefik.conf bulunamadı!"
+    exit 1
+fi
+
+# Gerekli dizinler
+mkdir -p storage/framework/sessions
+mkdir -p storage/framework/views
+mkdir -p storage/framework/cache
+mkdir -p storage/logs
+mkdir -p bootstrap/cache
+
+chmod -R 775 storage bootstrap/cache
+
+# Laravel environment
+cat > .env <<EOF
+APP_NAME=AiFilm
 APP_ENV=production
 APP_KEY=${APP_KEY}
 APP_DEBUG=false
@@ -97,19 +131,13 @@ APP_LOCALE=en
 APP_FALLBACK_LOCALE=en
 APP_FAKER_LOCALE=en_US
 
-APP_MAINTENANCE_DRIVER=file
-
-BCRYPT_ROUNDS=12
-
 LOG_CHANNEL=stack
-LOG_STACK=single
-LOG_DEPRECATIONS_CHANNEL=null
 LOG_LEVEL=error
 
 DB_CONNECTION=mysql
 DB_HOST=mysql
 DB_PORT=3306
-DB_DATABASE=${DB_NAME}_db
+DB_DATABASE=${DB_DATABASE}
 DB_USERNAME=${DB_USERNAME}
 DB_PASSWORD=${DB_PASSWORD}
 
@@ -124,195 +152,89 @@ FILESYSTEM_DISK=local
 QUEUE_CONNECTION=redis
 
 CACHE_STORE=redis
-CACHE_PREFIX=
 
 REDIS_CLIENT=phpredis
 REDIS_HOST=redis
 REDIS_PASSWORD=${REDIS_PASSWORD}
 REDIS_PORT=6379
 
-MAIL_MAILER=log
-MAIL_HOST=127.0.0.1
-MAIL_PORT=2525
-MAIL_USERNAME=null
-MAIL_PASSWORD=null
-MAIL_FROM_ADDRESS="hello@${DOMAIN}"
-MAIL_FROM_NAME="\${APP_NAME}"
-
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_DEFAULT_REGION=us-east-1
-AWS_BUCKET=
-AWS_USE_PATH_STYLE_ENDPOINT=false
-
-VITE_APP_NAME="\${APP_NAME}"
+MAIL_MAILER=smtp
+MAIL_SCHEME=smtps
+MAIL_HOST=smtp.resend.com
+MAIL_PORT=465
+MAIL_USERNAME=resend
+MAIL_PASSWORD=${MAIL_PASSWORD}
+MAIL_FROM_ADDRESS=noreply@${DOMAIN}
+MAIL_FROM_NAME=AiFilm
 EOF
 
-# docker-compose.prod.yml için .env.docker oluştur
-cat > .env.docker << EOF
+# Docker environment
+cat > .env.docker <<EOF
 DOMAIN=${DOMAIN}
-HTTP_PORT=${HTTP_PORT}
-HTTPS_PORT=${HTTPS_PORT}
 DB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
-DB_DATABASE=${DB_NAME}_db
+DB_DATABASE=${DB_DATABASE}
 DB_USERNAME=${DB_USERNAME}
 DB_PASSWORD=${DB_PASSWORD}
 REDIS_PASSWORD=${REDIS_PASSWORD}
 APP_KEY=${APP_KEY}
+MAIL_PASSWORD=${MAIL_PASSWORD}
 EOF
 
-echo "✅ .env dosyaları hazır"
+chmod 600 .env .env.docker
 
-# Storage ve cache klasörlerini hazırla
-echo "📁 Storage ve cache klasörleri hazırlanıyor..."
-mkdir -p storage/framework/{sessions,views,cache}
-mkdir -p storage/logs
-mkdir -p bootstrap/cache
-chmod -R 775 storage bootstrap/cache
+# Compose kontrolü
+echo ""
+echo "Docker yapılandırması kontrol ediliyor..."
 
-# SSL sertifikası dizinini oluştur
-sudo mkdir -p /etc/letsencrypt
+docker compose \
+    --env-file .env.docker \
+    -f docker-compose.prod.yml \
+    config --quiet
 
-# SSL sertifikası al (certbot standalone mode)
-echo "🔒 SSL sertifikası alınıyor (HTTP challenge)..."
-sudo certbot certonly --standalone --non-interactive --agree-tos --email ${SSL_EMAIL} -d ${DOMAIN} --http-01-port=80
+# Container'ları başlat
+echo ""
+echo "AiFilm konteynerleri oluşturuluyor..."
 
-# SSL sertifikası izinlerini ayarla
-sudo chmod -R 755 /etc/letsencrypt/live
-sudo chmod -R 755 /etc/letsencrypt/archive
+docker compose \
+    --env-file .env.docker \
+    -f docker-compose.prod.yml \
+    up -d --build
 
-# Docker Compose ile başlat
-echo "🐳 Docker container'ları başlatılıyor..."
-docker compose -f docker-compose.prod.yml --env-file .env.docker down -v 2>/dev/null || true
-docker compose -f docker-compose.prod.yml --env-file .env.docker up -d --build
+echo ""
+echo "Konteynerlerin hazırlanması bekleniyor..."
+sleep 20
 
-# Container'ların hazır olmasını bekle
-echo "⏳ Container'lar hazırlanıyor..."
-sleep 45
+# Container kontrolleri
+for CONTAINER in aifilm_app aifilm_nginx aifilm_mysql aifilm_redis aifilm_queue
+do
+    if ! docker ps --format '{{.Names}}' | grep -qx "$CONTAINER"; then
+        echo "HATA: $CONTAINER başlatılamadı."
+        docker logs "$CONTAINER" --tail 50 2>/dev/null || true
+        exit 1
+    fi
+done
 
-# Container'lar ayakta mı kontrol et
-if ! docker ps | grep -q aifilm_app; then
-    echo "❌ Container'lar başlatılamadı!"
-    docker logs aifilm_app 2>/dev/null || true
-    docker logs aifilm_mysql 2>/dev/null || true
-    exit 1
-fi
+# Storage izinleri
+docker exec aifilm_app chown -R www-data:www-data \
+    /var/www/html/storage \
+    /var/www/html/bootstrap/cache
 
-if ! docker ps | grep -q aifilm_queue; then
-    echo "❌ Queue worker başlatılamadı!"
-    docker logs aifilm_queue 2>/dev/null || true
-    exit 1
-fi
-echo "✅ Queue worker çalışıyor"
+docker exec aifilm_app chmod -R 775 \
+    /var/www/html/storage \
+    /var/www/html/bootstrap/cache
 
-echo "✅ Container'lar çalışıyor"
-
-# Storage izinlerini Docker içinde ayarla
-echo "📁 Storage izinleri ayarlanıyor..."
-docker exec aifilm_app chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-docker exec aifilm_app chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
-
-# Migration ve seed
-echo "🗄 Database migration çalıştırılıyor..."
-docker exec aifilm_app php artisan migrate --force || echo "⚠ Migration hatası (normal olabilir)"
-docker exec aifilm_app php artisan db:seed --force || echo "⚠ Seed hatası (normal olabilir)"
-
-# Storage link
-echo "🔗 Storage link oluşturuluyor..."
-docker exec aifilm_app php artisan storage:link || echo "⚠ Storage link zaten var"
-
-# Cache temizle ve optimize et
-echo "🔧 Laravel optimize ediliyor..."
-docker exec aifilm_app php artisan config:cache
-docker exec aifilm_app php artisan event:cache
-docker exec aifilm_app php artisan view:cache
-
-# OPcache'i temizle
-echo "🔄 OPcache temizleniyor..."
-docker exec aifilm_app php -r "opcache_reset();" || echo "⚠ OPcache reset edilemedi"
-
-# SSL otomatik yenileme için cron job ekle
-echo "🔄 SSL otomatik yenileme ayarlanıyor..."
-(crontab -l 2>/dev/null | grep -v certbot; echo "0 3 * * * /usr/bin/docker stop aifilm_nginx && /usr/bin/certbot renew --quiet && /usr/bin/docker start aifilm_nginx") | crontab -
-
-# Systemd service oluştur (boot'ta otomatik başlatma GARANTİSİ)
-echo "🔧 Systemd service oluşturuluyor..."
-sudo tee /etc/systemd/system/aifilm.service > /dev/null << SYSTEMD
-[Unit]
-Description=AiFilm Docker Compose Application
-Requires=docker.service
-After=docker.service network-online.target
-Wants=network-online.target
-
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-WorkingDirectory=/var/www/aifilm
-ExecStart=/usr/bin/docker compose -f docker-compose.prod.yml --env-file .env.docker up -d
-ExecStop=/usr/bin/docker compose -f docker-compose.prod.yml --env-file .env.docker down
-TimeoutStartSec=300
-Restart=on-failure
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-SYSTEMD
-
-sudo systemctl daemon-reload
-sudo systemctl enable aifilm.service
-echo "✅ Systemd service aktif - Sunucu restart'ta otomatik başlayacak"
-
-# DB bilgilerini dosyaya kaydet
-echo "💾 DB bilgileri kaydediliyor..."
-cat > ~/deployment-info-${DOMAIN}.txt << EOF
-============================================
-DEPLOYMENT BİLGİLERİ - ${DOMAIN}
-============================================
-Domain: ${DOMAIN}
-SSL Email: ${SSL_EMAIL}
-Deployment Date: $(date)
-
-DATABASE BİLGİLERİ:
--------------------
-DB Name: ${DB_NAME}_db
-DB Username: ${DB_USERNAME}
-DB Password: ${DB_PASSWORD}
-DB Root Password: ${DB_ROOT_PASSWORD}
-
-REDIS BİLGİLERİ:
-----------------
-Redis Password: ${REDIS_PASSWORD}
-
-APP KEY:
---------
-${APP_KEY}
-
-============================================
-⚠ BU BİLGİLERİ GÜVENLİ BİR YERDE SAKLAYIN!
-============================================
-EOF
-
-chmod 600 ~/deployment-info-${DOMAIN}.txt
+# Laravel hazırlıkları
+docker exec aifilm_app php artisan migrate --force
+docker exec aifilm_app php artisan db:seed --force
+docker exec aifilm_app php artisan storage:link
+docker exec aifilm_app php artisan optimize
 
 echo ""
 echo "============================================"
-echo "✅ DEPLOYMENT BAŞARIYLA TAMAMLANDI!"
+echo "       AIFILM KURULUMU TAMAMLANDI"
 echo "============================================"
-echo "🌐 Web Sitesi: https://${DOMAIN}"
-echo "🔒 SSL: Aktif (otomatik yenileme ayarlı)"
-echo "🐳 Docker: Container'lar çalışıyor"
-echo "💾 Database: Hazır"
-echo "📦 Redis: Aktif"
-echo "🔧 Systemd: Boot'ta otomatik başlatma aktif"
+echo "Web sitesi: https://${DOMAIN}"
+echo "SSL: Merkezi Traefik tarafından yönetiliyor"
 echo ""
-echo "📋 DB Bilgileri ~/deployment-info-${DOMAIN}.txt dosyasına kaydedildi"
-echo "   Görüntülemek için: cat ~/deployment-info-${DOMAIN}.txt"
-echo "============================================"
-echo ""
-echo "📋 Faydalı Komutlar:"
-echo "  - Container durumu: docker ps"
-echo "  - Logları görüntüle: docker logs aifilm_app"
-echo "  - Service durumu: sudo systemctl status aifilm"
-echo "  - Container'ları durdur: cd /var/www/aifilm && docker compose -f docker-compose.prod.yml down"
-echo "  - Container'ları başlat: cd /var/www/aifilm && docker compose -f docker-compose.prod.yml up -d"
+docker ps --filter name=aifilm
 echo "============================================"

@@ -1,60 +1,129 @@
+
 #!/bin/bash
-set -e
+set -Eeuo pipefail
 
-echo "===================================="
-echo "🔄 AIFILM REDEPLOY (GİTHUB UPDATE)"
-echo "===================================="
+echo "============================================"
+echo "          AIFILM NORMAL REDEPLOY"
+echo "============================================"
 
-# Proje dizinine git
-cd /var/www/aifilm
+PROJECT_DIR="/var/www/aifilm"
+COMPOSE_FILE="docker-compose.prod.yml"
+ENV_FILE=".env.docker"
 
-echo "📥 GitHub'dan son değişiklikler çekiliyor..."
-git pull origin main
+cd "$PROJECT_DIR"
 
-echo "🐳 Container'lar durduruluyor ve yeniden başlatılıyor..."
-docker compose -f docker-compose.prod.yml --env-file .env.docker down
-docker compose -f docker-compose.prod.yml --env-file .env.docker up -d --build
-
-echo "⏳ Container'lar hazır olana kadar bekleniyor..."
-sleep 15
-
-echo "✅ Container'lar kontrol ediliyor..."
-if ! docker ps | grep -q aifilm_app; then
-    echo "❌ Container'lar başlatılamadı!"
-    docker logs aifilm_app --tail=30
+# Gerekli dosyalar
+if [ ! -f "$COMPOSE_FILE" ] || [ ! -f "$ENV_FILE" ] || [ ! -f ".env" ]; then
+    echo "Gerekli environment veya Compose dosyası bulunamadı."
     exit 1
 fi
 
-if ! docker ps | grep -q aifilm_queue; then
-    echo "❌ Queue worker başlatılamadı!"
-    docker logs aifilm_queue --tail=30
+# Traefik kontrolü
+if ! docker ps --format '{{.Names}}' | grep -qx "traefik"; then
+    echo "Traefik çalışmıyor. Güncelleme iptal edildi."
     exit 1
 fi
-echo "✅ Queue worker çalışıyor"
 
-echo "📁 Storage izinleri ayarlanıyor..."
-docker exec aifilm_app chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-docker exec aifilm_app chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+# Proxy ağı kontrolü
+if ! docker network inspect proxy >/dev/null 2>&1; then
+    echo "proxy ağı bulunamadı."
+    exit 1
+fi
 
-echo "🔗 Storage link kontrol ediliyor..."
-docker exec aifilm_app php artisan storage:link 2>/dev/null || echo "⚠ Storage link zaten var"
+# Git kontrolü
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    echo "Git deposu bulunamadı."
+    exit 1
+fi
 
-echo "🗄️ Migration çalıştırılıyor..."
+echo ""
+echo "GitHub'dan güncel kod alınıyor..."
+
+git fetch origin main
+git pull --ff-only origin main
+
+echo ""
+echo "Docker Compose yapılandırması kontrol ediliyor..."
+
+docker compose \
+    --env-file "$ENV_FILE" \
+    -f "$COMPOSE_FILE" \
+    config --quiet
+
+echo ""
+echo "Uygulama konteynerleri güncelleniyor..."
+
+docker compose \
+    --env-file "$ENV_FILE" \
+    -f "$COMPOSE_FILE" \
+    up -d --build --remove-orphans
+
+echo ""
+echo "Konteynerlerin hazırlanması bekleniyor..."
+sleep 20
+
+# Konteyner kontrolleri
+for CONTAINER in aifilm_app aifilm_nginx aifilm_mysql aifilm_redis aifilm_queue
+do
+    if ! docker ps --format '{{.Names}}' | grep -qx "$CONTAINER"; then
+        echo "HATA: $CONTAINER çalışmıyor."
+        docker logs "$CONTAINER" --tail 50 2>/dev/null || true
+        exit 1
+    fi
+done
+
+echo ""
+echo "Storage izinleri düzenleniyor..."
+
+docker exec aifilm_app chown -R www-data:www-data \
+    /var/www/html/storage \
+    /var/www/html/bootstrap/cache
+
+docker exec aifilm_app chmod -R 775 \
+    /var/www/html/storage \
+    /var/www/html/bootstrap/cache
+
+echo ""
+echo "Storage link kontrol ediliyor..."
+
+docker exec aifilm_app php artisan storage:link
+
+echo ""
+echo "Veritabanı migration işlemi..."
+
 docker exec aifilm_app php artisan migrate --force
 
-echo "⚡ Laravel optimize ediliyor..."
-docker exec aifilm_app php artisan config:cache
-docker exec aifilm_app php artisan event:cache
-docker exec aifilm_app php artisan view:cache
+echo ""
+echo "Laravel önbellekleri hazırlanıyor..."
 
-echo "🔄 OPcache temizleniyor..."
-docker exec aifilm_app php -r "opcache_reset();" 2>/dev/null || echo "⚠ OPcache reset edilemedi"
+docker exec aifilm_app php artisan optimize
+
+echo ""
+echo "OPcache temizleniyor..."
+
+docker exec aifilm_app php -r "opcache_reset();" || true
+
+echo ""
+echo "HTTP kontrolü yapılıyor..."
+
+APP_URL=$(grep '^APP_URL=' .env | cut -d '=' -f2- | tr -d '"')
+
+if [ -z "$APP_URL" ]; then
+    echo "APP_URL bulunamadı."
+    exit 1
+fi
+
+if curl -fsSL --max-time 30 -o /dev/null "$APP_URL"; then
+    echo "Site erişilebilir: $APP_URL"
+else
+    echo "UYARI: Site kontrolü başarısız. Logları inceleyin."
+fi
 
 echo ""
 echo "============================================"
-echo "✅ REDEPLOY BAŞARIYLA TAMAMLANDI!"
+echo "       REDEPLOY TAMAMLANDI"
 echo "============================================"
-echo "🌐 Site: https://$(grep DOMAIN .env.docker | cut -d'=' -f2)"
-echo "📋 Container durumu:"
+
 docker ps --filter name=aifilm
+
 echo "============================================"

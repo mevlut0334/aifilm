@@ -1,3 +1,4 @@
+
 services:
   mysql:
     image: mysql:8.0.35
@@ -30,11 +31,6 @@ services:
       - redis_data:/data
     networks:
       - aifilm_network
-    healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
 
   app:
     build:
@@ -48,32 +44,32 @@ services:
       - ./bootstrap/cache:/var/www/html/bootstrap/cache
       - ./.env:/var/www/html/.env
     environment:
-      - APP_ENV=production
-      - APP_KEY=${APP_KEY}
-      - DB_CONNECTION=mysql
-      - DB_HOST=mysql
-      - DB_PORT=3306
-      - DB_DATABASE=${DB_DATABASE}
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - REDIS_HOST=redis
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - REDIS_PORT=6379
-      - MAIL_MAILER=smtp
-      - MAIL_SCHEME=smtps
-      - MAIL_HOST=smtp.resend.com
-      - MAIL_PORT=465
-      - MAIL_USERNAME=resend
-      - MAIL_PASSWORD=${MAIL_PASSWORD}
-      - MAIL_FROM_ADDRESS=noreply@asilov.com
-      - MAIL_FROM_NAME=aifilm
+      APP_ENV: production
+      APP_KEY: ${APP_KEY}
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: 6379
+      MAIL_MAILER: smtp
+      MAIL_SCHEME: smtps
+      MAIL_HOST: smtp.resend.com
+      MAIL_PORT: 465
+      MAIL_USERNAME: resend
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM_ADDRESS: noreply@${DOMAIN}
+      MAIL_FROM_NAME: aifilm
     networks:
       - aifilm_network
     depends_on:
       mysql:
         condition: service_healthy
       redis:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: ["CMD", "php", "-r", "echo 'OK';"]
       interval: 10s
@@ -93,33 +89,29 @@ services:
       - ./bootstrap/cache:/var/www/html/bootstrap/cache
       - ./.env:/var/www/html/.env
     environment:
-      - APP_ENV=production
-      - APP_KEY=${APP_KEY}
-      - DB_CONNECTION=mysql
-      - DB_HOST=mysql
-      - DB_PORT=3306
-      - DB_DATABASE=${DB_DATABASE}
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - REDIS_HOST=redis
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - REDIS_PORT=6379
-      - MAIL_MAILER=smtp
-      - MAIL_SCHEME=smtps
-      - MAIL_HOST=smtp.resend.com
-      - MAIL_PORT=465
-      - MAIL_USERNAME=resend
-      - MAIL_PASSWORD=${MAIL_PASSWORD}
-      - MAIL_FROM_ADDRESS=noreply@asilov.com
-      - MAIL_FROM_NAME=aifilm
+      APP_ENV: production
+      APP_KEY: ${APP_KEY}
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: 6379
+      MAIL_MAILER: smtp
+      MAIL_SCHEME: smtps
+      MAIL_HOST: smtp.resend.com
+      MAIL_PORT: 465
+      MAIL_USERNAME: resend
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM_ADDRESS: noreply@${DOMAIN}
+      MAIL_FROM_NAME: aifilm
     networks:
       - aifilm_network
     depends_on:
       app:
-        condition: service_healthy
-      mysql:
-        condition: service_healthy
-      redis:
         condition: service_healthy
     command: >
       sh -c "php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600 --verbose"
@@ -128,20 +120,21 @@ services:
     image: nginx:alpine
     container_name: aifilm_nginx
     restart: unless-stopped
-    ports:
-      - "${HTTP_PORT}:80"
-      - "${HTTPS_PORT}:443"
     volumes:
       - ./public:/var/www/html/public:ro
       - ./storage:/var/www/html/storage:ro
-      - ./docker/nginx/prod.conf.template:/etc/nginx/templates/default.conf.template:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-    environment:
-      - DOMAIN=${DOMAIN}
-      - NGINX_ENVSUBST_TEMPLATE_SUFFIX=.template
-      - NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx/conf.d
+      - ./docker/nginx/traefik.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
       - aifilm_network
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.aifilm.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.aifilm.entrypoints=websecure"
+      - "traefik.http.routers.aifilm.tls=true"
+      - "traefik.http.routers.aifilm.tls.certresolver=letsencrypt"
+      - "traefik.http.services.aifilm.loadbalancer.server.port=80"
     depends_on:
       app:
         condition: service_healthy
@@ -155,3 +148,6 @@ volumes:
 networks:
   aifilm_network:
     driver: bridge
+  proxy:
+    external: true
+    name: proxy
